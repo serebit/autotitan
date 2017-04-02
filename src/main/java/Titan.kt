@@ -1,25 +1,31 @@
-
 import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDABuilder
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent
-import net.dv8tion.jda.core.hooks.ListenerAdapter
+import java.io.File
 import java.util.*
 
 fun main(args: Array<String>) {
-  print("Enter token: ")
-  val token = Scanner(System.`in`).nextLine()
+  val classpathFolder = File(ClassLoader.getSystemResource("").toURI()).parentFile
+  val newFile = File(classpathFolder.path + "/token.txt")
+  var token: String
+  if (newFile.exists()) {
+    println("Enter new token, or newline to use saved token:")
+    print(">")
+    token = Scanner(System.`in`).nextLine()
+    if (token == "") {
+      token = newFile.readText()
+    } else {
+      newFile.writeText(token)
+    }
+  } else {
+    println("Enter new token:")
+    print(">")
+    token = Scanner(System.`in`).nextLine()
+    newFile.writeText(token)
+  }
+
   val jda = JDABuilder(AccountType.BOT)
       .setToken(token)
       .buildBlocking()
   jda.addEventListener(MessageListener())
 }
 
-class MessageListener : ListenerAdapter() {
-  override fun onMessageReceived(evt: MessageReceivedEvent) {
-    if (!evt.author.isBot) {
-      val channel = evt.channel
-      println(evt.message.content)
-      channel.sendMessage(evt.message.content).queue()
-    }
-  }
-}
