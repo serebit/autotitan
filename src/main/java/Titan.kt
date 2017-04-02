@@ -23,10 +23,9 @@ fun main(args: Array<String>) {
     token = Scanner(System.`in`).nextLine()
     newFile.writeText(token)
   }
-
   val jda = JDABuilder(AccountType.BOT)
       .setToken(token)
       .buildBlocking()
-  jda.addEventListener(MessageListener())
+  jda.addEventListener(MessageListener(">"))
 }
 
