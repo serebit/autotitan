@@ -8,7 +8,7 @@ import java.util.*
 fun main(args: Array<String>) {
   val useExistingSettings = !(args.contains("-r") || args.contains("--reset"))
   val classpathFolder = File(ClassLoader.getSystemResource("").toURI()).parentFile
-  val dataFile = File(classpathFolder.path + "/data.json")
+  val dataFile = File(classpathFolder.path + "/data/data.json")
   val botData: BotData
   if (useExistingSettings && dataFile.exists()) {
     botData = Gson().fromJson(dataFile.readText(), BotData::class.java)
