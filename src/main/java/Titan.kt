@@ -6,26 +6,41 @@ import java.util.*
 
 fun main(args: Array<String>) {
   val classpathFolder = File(ClassLoader.getSystemResource("").toURI()).parentFile
-  val newFile = File(classpathFolder.path + "/token.txt")
-  var token: String
-  if (newFile.exists()) {
-    println("Enter new token, or newline to use saved token:")
-    print(">")
-    token = Scanner(System.`in`).nextLine()
-    if (token == "") {
-      token = newFile.readText()
+  val tokenFile = File(classpathFolder.path + "/token.txt")
+  val tokenFileIsValid = tokenFile.exists() && tokenFile.readText() != ""
+  var token = if (tokenFileIsValid) {
+    if (args.isNotEmpty() && args[0] == "--quick") {
+      getExistingToken(tokenFile)
     } else {
-      newFile.writeText(token)
+      getNewOrExistingToken(tokenFile)
     }
   } else {
-    println("Enter new token:")
-    print(">")
-    token = Scanner(System.`in`).nextLine()
-    newFile.writeText(token)
+    getNewToken()
   }
   val jda = JDABuilder(AccountType.BOT)
       .setToken(token)
       .buildBlocking()
   jda.addEventListener(MessageListener(">"))
+  tokenFile.writeText(token)
 }
 
+fun getExistingToken(tokenFile: File): String {
+  return tokenFile.readText()
+}
+
+fun getNewOrExistingToken(tokenFile: File): String {
+  println("Enter new token, or newline to use saved token:")
+  print(">")
+  var input = Scanner(System.`in`).nextLine()
+  return if (input == "") {
+    tokenFile.readText()
+  } else {
+    input
+  }
+}
+
+fun getNewToken(): String {
+  println("Enter new token:")
+  print(">")
+  return Scanner(System.`in`).nextLine()
+}
