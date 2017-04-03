@@ -1,7 +1,7 @@
 package annotation
 
 @Target(AnnotationTarget.FUNCTION)
-annotation class Command(
+annotation class Group(
     val name: String = "",
     val group: String = "",
     val serverOnly: Boolean = false
