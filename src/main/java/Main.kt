@@ -22,6 +22,7 @@ fun main(args: Array<String>) {
       .setToken(botData.token)
       .buildBlocking()
   jda.addEventListener(MessageListener(botData.prefix))
+  dataFile.parentFile.mkdirs()
   dataFile.writeText(Gson().toJson(botData))
 }
 
