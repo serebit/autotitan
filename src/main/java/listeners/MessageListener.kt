@@ -35,11 +35,11 @@ class MessageListener(val commandPrefix: String) : ListenerAdapter() {
     val message = evt.message
     if (!author.isBot) {
       if (message.content.startsWith(commandPrefix)) {
-        val command = commands
-            .filter { message.content.startsWith(it.key, commandPrefix.length) }
-            .values
-            .firstOrNull()
-        command?.invoke(command.declaringClass.newInstance(), evt)
+        val commandKey = content.split(" ")[0].substring(commandPrefix.length)
+        if (commandKey in commands) {
+          val command = commands[key]
+          command?.invoke(command.declaringClass.newInstance(), evt)
+        }
       }
     }
   }
