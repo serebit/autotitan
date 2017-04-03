@@ -1,3 +1,4 @@
+import com.google.gson.Gson
 import listeners.MessageListener
 import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDABuilder
@@ -5,42 +6,31 @@ import java.io.File
 import java.util.*
 
 fun main(args: Array<String>) {
+  val useExistingSettings = !(args.contains("-r") || args.contains("--reset"))
   val classpathFolder = File(ClassLoader.getSystemResource("").toURI()).parentFile
-  val tokenFile = File(classpathFolder.path + "/token.txt")
-  val tokenFileIsValid = tokenFile.exists() && tokenFile.readText() != ""
-  var token = if (tokenFileIsValid) {
-    if (args.isNotEmpty() && args[0] == "--quick") {
-      getExistingToken(tokenFile)
-    } else {
-      getNewOrExistingToken(tokenFile)
-    }
+  val dataFile = File(classpathFolder.path + "/data.json")
+  val botData: BotData
+  if (useExistingSettings && dataFile.exists()) {
+    botData = Gson().fromJson(dataFile.readText(), BotData::class.java)
   } else {
-    getNewToken()
+    botData = BotData(
+        getNewToken(),
+        getNewPrefix()
+    )
   }
   val jda = JDABuilder(AccountType.BOT)
-      .setToken(token)
+      .setToken(botData.token)
       .buildBlocking()
-  jda.addEventListener(MessageListener(">"))
-  tokenFile.writeText(token)
-}
-
-fun getExistingToken(tokenFile: File): String {
-  return tokenFile.readText()
-}
-
-fun getNewOrExistingToken(tokenFile: File): String {
-  println("Enter new token, or newline to use saved token:")
-  print(">")
-  var input = Scanner(System.`in`).nextLine()
-  return if (input == "") {
-    tokenFile.readText()
-  } else {
-    input
-  }
+  jda.addEventListener(MessageListener(botData.prefix))
+  dataFile.writeText(Gson().toJson(botData))
 }
 
 fun getNewToken(): String {
-  println("Enter new token:")
-  print(">")
+  print("Enter new token:\n>")
+  return Scanner(System.`in`).nextLine()
+}
+
+fun getNewPrefix(): String {
+  print("Enter new prefix:\n>")
   return Scanner(System.`in`).nextLine()
 }
