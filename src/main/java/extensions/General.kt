@@ -7,6 +7,6 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 class General {
   @Command()
   fun test(evt: MessageReceivedEvent) {
-    evt.channel.sendMessage("Hello World!").complete()
+    evt.channel.sendMessage("Hello World!").queue()
   }
 }
