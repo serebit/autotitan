@@ -35,9 +35,9 @@ class MessageListener(val commandPrefix: String) : ListenerAdapter() {
     val message = evt.message
     if (!author.isBot) {
       if (message.content.startsWith(commandPrefix)) {
-        val commandKey = content.split(" ")[0].substring(commandPrefix.length)
+        val commandKey = message.content.split(" ")[0].substring(commandPrefix.length)
         if (commandKey in commands) {
-          val command = commands[key]
+          val command = commands[commandKey]
           command?.invoke(command.declaringClass.newInstance(), evt)
         }
       }
