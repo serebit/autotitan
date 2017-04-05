@@ -37,33 +37,31 @@ class MessageListener(val commandPrefix: String) : ListenerAdapter() {
     if (!author.isBot) {
       if (message.content.startsWith(commandPrefix)) {
         val commandKey = message.content.split(" ")[0].substring(commandPrefix.length)
-        if (commandKey in commands) {
-          val command = commands[commandKey]
-          if (command != null) {
-            val method = command.method
-            val argsList = getArgs(message, command)
-            method.invoke(command.instance, evt, *argsList.toTypedArray())
-          }
+        if (commandKey in commands && commands[commandKey] != null) {
+          val method = commands[commandKey].method
+          val parameters = getParameters(message, method)
+          method.invoke(command.instance, evt, *parameters.toTypedArray())
         }
       }
     }
   }
 
-  fun getArgs(message: Message, command: CommandData): MutableList<Any> {
+  fun getParameters(evt: MessageReceivedEvent, method: Method): MutableList<Any> {
     val delimitFinalParameter = method.getAnnotation(Command::class.java).delimitFinalParameter
-    val numArgs = command.method.parameterCount
-    val splitArgs = message.content.split(" ").toMutableList<Any>()
-    splitArgs.removeAt(0)
+    val parameterTypes = method.parameterTypes.toMutableList<Any>()
+    val parameterCount = method.parameterCount
+    val splitParameters = evt.message.content.split(" ").toMutableList<Any>()
+    splitParameters.removeAt(0)
     if (delimitFinalParameter) {
-      return splitArgs
+      return splitParameters
     } else {
-      val args = mutableListOf<Any>()
-      for (i in (0..numArgs - 3)) {
-        args.add(splitArgs[i])
-        splitArgs.removeAt(0)
+      val parameters = mutableListOf<Any>()
+      for (i in (0..parameterCount - 3)) {
+        parameters.add(splitParameters[i])
+        splitParameters.removeAt(0)
       }
-      args.add(splitArgs.joinToString(" "))
-      return args
+      parameters.add(splitParameters.joinToString(" "))
+      return parameters
     }
   }
 }
