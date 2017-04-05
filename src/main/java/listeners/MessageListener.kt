@@ -50,16 +50,16 @@ class MessageListener(val commandPrefix: String) : ListenerAdapter() {
   }
 
   fun getArgs(message: Message, command: CommandData): MutableList<Any> {
-    val method = command.method
-    val annotation = method.getAnnotation(Command::class.java)
+    val delimitFinalParameter = method.getAnnotation(Command::class.java).delimitFinalParameter
+    val numArgs = command.method.parameterCount
     val splitArgs = message.content.split(" ").toMutableList<Any>()
     splitArgs.removeAt(0)
-    if (annotation.delimitFinalParameter) {
+    if (delimitFinalParameter) {
       return splitArgs
     } else {
       val args = mutableListOf<Any>()
-      for (i in (0..method.parameterCount - 2)) {
-        args.add(splitArgs[i] as String)
+      for (i in (0..numArgs - 3)) {
+        args.add(splitArgs[i])
         splitArgs.removeAt(0)
       }
       args.add(splitArgs.joinToString(" "))
