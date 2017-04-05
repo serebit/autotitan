@@ -58,15 +58,15 @@ class MessageListener(val commandPrefix: String) : ListenerAdapter() {
     for (i in (0..methodParameters.size - 1)) {
       val methodParameter = methodParameters[i]
       val parameterString = parameterStrings[i]
-      when(methodParameter.getType()) {
-        Int::class.java -> matchesCommand = (string.toIntOrNull() != null)
-        Long::class.java -> matchesCommand = (string.toLongOrNull() != null)
-        Double::class.java -> matchesCommand = (string.toDoubleOrNull() != null)
-        Float::class.java -> matchesCommand = (string.toFloatOrNull() != null)
-        User::class.java -> matchesCommand = (evt.jda.getUserById(string) != null)
-        Member::class.java -> matchesCommand = (evt.guild.getMemberById(string) != null)
-        String::class.java -> matchesCommand = true
-        else -> matchesCommand = false
+      matchesCommand = when(methodParameter.getType()) {
+        Int::class.java -> (string.toIntOrNull() != null)
+        Long::class.java -> (string.toLongOrNull() != null)
+        Double::class.java -> (string.toDoubleOrNull() != null)
+        Float::class.java -> (string.toFloatOrNull() != null)
+        User::class.java -> (evt.jda.getUserById(string) != null)
+        Member::class.java -> (evt.guild.getMemberById(string) != null)
+        String::class.java -> true
+        else -> false
       }
       if (!matchesCommand) break
     }
