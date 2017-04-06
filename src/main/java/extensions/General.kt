@@ -15,10 +15,17 @@ class General {
   fun memberInfo(evt: MessageReceivedEvent, member: Member) {
     val user = member.user
     val embedBuilder = EmbedBuilder()
-    var title = "User info for " + user.name + user.discriminator
-    if (member.nickname != null) title += " (also known as " + member.nickname + ")"
+    var title = user.name + "#" + user.discriminator
+    if (member.nickname != null) {
+      title += "also known as " + member.nickname
+    }
     embedBuilder.setTitle(title, null)
+    embedBuilder.setDescription("User ID: " + user.id)
     embedBuilder.setColor(member.color)
     embedBuilder.setThumbnail(user.effectiveAvatarUrl)
+    embedBuilder.addField(
+      name = "Joined Discord on",
+      value = user.creationTime.format(DateTimeFormatter.ofPattern("MMMM d, yyyy"))
+    )
   }
 }
