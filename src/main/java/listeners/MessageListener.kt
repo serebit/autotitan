@@ -20,6 +20,7 @@ class MessageListener(val commandPrefix: String) : ListenerAdapter() {
           val instance = extension.newInstance()
           extension.methods
               .filter { it.isAnnotationPresent(Command::class.java) }
+              .filter { it.parameterTypes[0] == MessageReceivedEvent::class.java }
               .forEach {
                 val annotation = it.getAnnotation(Command::class.java)
                 val commandName = when (annotation.name) {
