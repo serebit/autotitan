@@ -17,6 +17,7 @@ class Paste {
     )
     val url = host + "/" + response.jsonObject["key"]
     val message = "<@" + evt.author.id + ">'s paste: " + url
+    evt.channel.deleteMessageById(evt.message.id).queue()
     evt.channel.sendMessage(message).queue()
   }
 }
