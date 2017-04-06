@@ -1,6 +1,6 @@
-# titan-bot
+# AutoTitan
 A simple [Discord](https://discordapp.com) bot built with Kotlin and the 
-[Java Discord API](https://github.com/DV8FromTheWorld/JDA).
+[Java Discord API](https://github.com/DV8FromTheWorld/JDA). The mission directive of this bot is to provide a simple, intuitive, and extensible platform for bot creators to use for their own purposes.
 
 ## Current Features
 - Zero-argument commands. At the moment, `ping` is the only working command.
