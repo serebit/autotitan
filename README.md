@@ -1,4 +1,6 @@
 # AutoTitan
+[<img src="https://discordapp.com/api/guilds/279777865434660865/widget.png?style=shield">](https://discord.gg/pEDxhQm)
+
 A simple [Discord](https://discordapp.com) bot built with Kotlin and the 
 [Java Discord API](https://github.com/DV8FromTheWorld/JDA). The mission directive of this bot is to provide a simple, intuitive, and extensible platform for bot creators to use for their own purposes.
 
