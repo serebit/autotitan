@@ -9,7 +9,10 @@ class Paste {
   val host = "https://hastebin.com"
   val path = "/documents"
 
-  @Command(delimitFinalParameter = false)
+  @Command(
+      description = "Creates a paste in Hastebin with the given content and returns the URL.",
+      delimitFinalParameter = false
+  )
   fun paste(evt: MessageReceivedEvent, code: String) {
     val response = post(
         url = host + path,
