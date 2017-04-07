@@ -18,8 +18,16 @@ class Paste {
         data = code
     )
     val url = host + "/" + response.jsonObject["key"]
-    val message = "<@" + evt.author.id + ">'s paste: " + url
+    val message = evt.member.mention + "'s paste: " + url
     evt.channel.deleteMessageById(evt.message.id).queue()
     evt.channel.sendMessage(message).queue()
+  }
+  
+  @Listener(
+      description = "Automatically creates a paste in Hastebin if a user sends a message with a code block longer than a certain length.",
+      serverOnly = true
+  )
+  fun autopaste(evt: MessageReceivedEvent) {
+    // Does nothing at the moment
   }
 }
