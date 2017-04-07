@@ -1,8 +1,7 @@
 package extensions
 
-import annotation.Command
+import annotations.Command
 import khttp.post
-import net.dv8tion.jda.core.entities.Message
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 
 class Paste {
