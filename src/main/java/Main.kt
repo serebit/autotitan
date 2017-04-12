@@ -8,8 +8,7 @@ import java.util.*
 
 fun main(args: Array<String>) {
   val useExistingSettings = !(args.contains("-r") || args.contains("--reset"))
-  val classpathFolder = File(ClassLoader.getSystemResource("").toURI()).parentFile
-  val dataFile = File(classpathFolder.path + "/data/data.json")
+  val dataFile = File(Singleton.getParentDirectory().parent + "/data/data.json")
   val botData: BotData
   if (useExistingSettings && dataFile.exists()) {
     botData = Gson().fromJson(dataFile.readText(), BotData::class.java)
@@ -35,4 +34,8 @@ fun getNewToken(): String {
 fun getNewPrefix(): String {
   print("Enter new prefix:\n>")
   return Scanner(System.`in`).nextLine()
+}
+
+object Singleton {
+  fun getParentDirectory(): File = File(this::class.java.protectionDomain.codeSource.location.toURI())
 }
