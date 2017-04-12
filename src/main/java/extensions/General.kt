@@ -10,7 +10,7 @@ import java.time.format.DateTimeFormatter
 class General {
   @Command(description = "Pings the bot.")
   fun ping(evt: MessageReceivedEvent) {
-    evt.channel.sendMessage("Pong.").queue()
+    evt.channel.sendMessage("Pong. The current ping is ${evt.jda.ping}ms.").queue()
   }
 
   @Command(description = "Gets information about the server.", serverOnly = true)
@@ -62,11 +62,6 @@ class General {
     evt.channel.sendMessage(embedBuilder.build()).queue()
   }
 
-  @Command(description = "Gets information about the member who called the command.", serverOnly = true)
-  fun memberInfo(evt: MessageReceivedEvent) {
-
-  }
-
   @Command(description = "Gets information about a specific server member.", serverOnly = true)
   fun memberInfo(evt: MessageReceivedEvent, member: Member) {
     val user = member.user
@@ -87,7 +82,7 @@ class General {
     embedBuilder.addField(
         "Joined this server on",
         member.joinDate.format(DateTimeFormatter.ofPattern("MMMM d, yyyy")),
-        true
+        false
     )
     embedBuilder.addField(
         "Roles",
