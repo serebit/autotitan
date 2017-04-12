@@ -82,7 +82,7 @@ class General {
     embedBuilder.addField(
         "Joined this server on",
         member.joinDate.format(DateTimeFormatter.ofPattern("MMMM d, yyyy")),
-        false
+        true
     )
     embedBuilder.addField(
         "Roles",

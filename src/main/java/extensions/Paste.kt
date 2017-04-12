@@ -1,6 +1,7 @@
 package extensions
 
 import annotations.Command
+import annotations.Listener
 import khttp.post
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 
@@ -18,7 +19,7 @@ class Paste {
         data = code
     )
     val url = host + "/" + response.jsonObject["key"]
-    val message = evt.member.mention + "'s paste: " + url
+    val message = evt.member.asMention + "'s paste: " + url
     evt.channel.deleteMessageById(evt.message.id).queue()
     evt.channel.sendMessage(message).queue()
   }
