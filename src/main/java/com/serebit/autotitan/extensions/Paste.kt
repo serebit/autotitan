@@ -27,7 +27,6 @@ class Paste {
   @ListenerFunction(
       description = "Automatically creates a paste in Hastebin if a user sends a" +
           " message with a code block longer than a certain length.",
-      eventType = MessageReceivedEvent::class,
       serverOnly = true
   )
   fun autopaste(evt: MessageReceivedEvent) {

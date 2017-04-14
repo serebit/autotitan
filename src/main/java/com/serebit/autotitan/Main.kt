@@ -1,13 +1,16 @@
 package com.serebit.autotitan
 
-import com.serebit.autotitan.annotations.CommandFunction
 import com.google.common.reflect.ClassPath
 import com.google.gson.Gson
+import com.serebit.autotitan.annotations.CommandFunction
+import com.serebit.autotitan.annotations.ListenerFunction
 import com.serebit.autotitan.config.Configuration
 import com.serebit.autotitan.data.Command
+import com.serebit.autotitan.data.Listener
 import com.serebit.autotitan.listeners.MessageListener
 import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDABuilder
+import net.dv8tion.jda.core.events.Event
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import java.io.File
 import java.util.*
@@ -29,7 +32,16 @@ fun main(args: Array<String>) {
   val jda = JDABuilder(AccountType.BOT)
       .setToken(config.token)
       .buildBlocking()
-  jda.addEventListener(MessageListener(config.prefix, loadCommands(getExtensions())))
+  val extensions = getExtensions()
+  jda.addEventListener(
+      MessageListener(
+          config.prefix,
+          loadCommands(extensions),
+          loadListeners(extensions)
+              .filter { MessageListener.validEventTypes.contains(it.eventType) }
+              .toMutableList()
+      )
+  )
 }
 
 fun getNewToken(): String {
@@ -55,9 +67,25 @@ fun loadCommands(classes: MutableList<Class<*>>): MutableList<Command> {
     extension.methods
         .filter { it.isAnnotationPresent(CommandFunction::class.java) }
         .filter { it.parameterTypes[0] == MessageReceivedEvent::class.java }
-        .forEach { commands.add(Command(extension.newInstance(), it, it.getAnnotation(CommandFunction::class.java))) }
+        .forEach {
+          commands.add(Command(extension.newInstance(), it, it.getAnnotation(CommandFunction::class.java)))
+        }
   }
   return commands
+}
+
+fun loadListeners(classes: MutableList<Class<*>>): MutableList<Listener> {
+  val listeners = mutableListOf<Listener>()
+  classes.map { extension ->
+    extension.methods
+        .filter { it.isAnnotationPresent(ListenerFunction::class.java) }
+        .filter { it.parameterCount == 1 }
+        .filter { it.parameterTypes[0].superclass == Event::class.java }
+        .forEach {
+          listeners.add(Listener(extension.newInstance(), it, it.getAnnotation(ListenerFunction::class.java)))
+        }
+  }
+  return listeners
 }
 
 object Singleton {

@@ -1,34 +1,42 @@
 package com.serebit.autotitan.listeners
 
 import com.serebit.autotitan.data.Command
+import com.serebit.autotitan.data.Listener
 import net.dv8tion.jda.core.entities.Channel
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.entities.User
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent
+import net.dv8tion.jda.core.events.message.*
+import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent
+import net.dv8tion.jda.core.events.message.react.MessageReactionRemoveAllEvent
+import net.dv8tion.jda.core.events.message.react.MessageReactionRemoveEvent
 import net.dv8tion.jda.core.hooks.ListenerAdapter
 
 class MessageListener(
     val commandPrefix: String,
-    val commands: MutableList<Command>
+    val commands: MutableList<Command>,
+    val listeners: MutableList<Listener>
 ) : ListenerAdapter() {
   override fun onMessageReceived(evt: MessageReceivedEvent) {
     var messageContent = evt.message.rawContent
-    if (!evt.author.isBot && messageContent.startsWith(commandPrefix)) {
-      messageContent = messageContent.removePrefix(">")
-      val command = commands.filter {
-        messageContent.startsWith(it.name + " ") || messageContent == it.name
-      }.sortedBy { it.name.length }.lastOrNull()
-      if (command != null) {
-        if (matchesCommand(evt, command)) {
-          val parameters = getCastParameters(evt, command)
-          command.method.invoke(command.instance, evt, *parameters.toTypedArray())
-        } else {
-          val helpMessage = "```\n$commandPrefix${command.name} " +
-              command.parameterTypes
-                  .map(Class<*>::getSimpleName)
-                  .joinToString(" ") +
-              "\n\n${command.description}```"
-          evt.channel.sendMessage(helpMessage).queue()
+    if (!evt.author.isBot) {
+      listeners.forEach { it.method.invoke(it.instance, evt) }
+      if (messageContent.startsWith(commandPrefix)) {
+        messageContent = messageContent.removePrefix(">")
+        val command = commands.filter {
+          messageContent.startsWith(it.name + " ") || messageContent == it.name
+        }.sortedBy { it.name.length }.lastOrNull()
+        if (command != null) {
+          if (matchesCommand(evt, command)) {
+            val parameters = getCastParameters(evt, command)
+            command.method.invoke(command.instance, evt, *parameters.toTypedArray())
+          } else {
+            val helpMessage = "```\n$commandPrefix${command.name} " +
+                command.parameterTypes
+                    .map(Class<*>::getSimpleName)
+                    .joinToString(" ") +
+                "\n\n${command.description}```"
+            evt.channel.sendMessage(helpMessage).queue()
+          }
         }
       }
     }
@@ -106,5 +114,19 @@ class MessageListener(
       }
       return parameters
     }
+  }
+
+  companion object {
+    val validEventTypes = mutableSetOf(
+        MessageReceivedEvent::class.java,
+        MessageDeleteEvent::class.java,
+        MessageEmbedEvent::class.java,
+        MessageUpdateEvent::class.java,
+        MessageBulkDeleteEvent::class.java,
+        MessageReactionAddEvent::class.java,
+        MessageReactionRemoveEvent::class.java,
+        MessageReactionRemoveAllEvent::class.java,
+        GenericMessageEvent::class.java
+    )
   }
 }
