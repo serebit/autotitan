@@ -1,61 +1,50 @@
 package listeners
 
-import annotations.Command
-import com.google.common.reflect.ClassPath
-import data.BotCommand
+import data.Command
 import net.dv8tion.jda.core.entities.Channel
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import net.dv8tion.jda.core.hooks.ListenerAdapter
-import java.io.File
-import java.lang.reflect.Method
 
-class MessageListener(val commandPrefix: String) : ListenerAdapter() {
-  val commands = mutableMapOf<String, BotCommand>()
-
-  init {
-    loadExtensions()
-  }
+class MessageListener(val commandPrefix: String, val commands: MutableList<Command>) : ListenerAdapter() {
 
   override fun onMessageReceived(evt: MessageReceivedEvent) {
-    val author = evt.author
-    val message = evt.message
-    if (!author.isBot) {
-      if (message.content.startsWith(commandPrefix)) {
-        val commandKey = message.content.split(" ")[0].substring(commandPrefix.length).toLowerCase()
-        if (commandKey in commands) {
-          val command = commands[commandKey]
-          if (command != null) {
-            val instance = command.instance
-            val method = command.method
-            val annotation = method.getAnnotation(Command::class.java)
-            if (matchesCommand(evt, method)) {
-              val parameters = getParameters(evt, method)
-              method.invoke(instance, evt, *parameters.toTypedArray())
-            } else {
-              val helpMessage = "```\n$commandPrefix$commandKey " +
-                  getMethodParameterTypes(command.method)
-                      .map(Class<*>::getSimpleName)
-                      .joinToString(" ") +
-                  "\n\n```"
-              evt.channel.sendMessage(helpMessage).queue()
-            }
-          }
+    var messageContent = evt.message.rawContent
+    if (!evt.author.isBot && messageContent.startsWith(commandPrefix)) {
+      messageContent = messageContent.removePrefix(">")
+      val command = commands.filter {
+        messageContent.startsWith(it.name + " ") || messageContent == it.name
+      }.sortedBy { it.name.length }.lastOrNull()
+      if (command != null) {
+        if (matchesCommand(evt, command)) {
+          val parameters = getCastParameters(evt, command)
+          command.method.invoke(command.instance, evt, *parameters.toTypedArray())
+        } else {
+          val helpMessage = "```\n$commandPrefix${command.name} " +
+              command.parameterTypes
+                  .map(Class<*>::getSimpleName)
+                  .joinToString(" ") +
+              "\n\n${command.description}```"
+          evt.channel.sendMessage(helpMessage).queue()
         }
       }
     }
   }
 
-  fun matchesCommand(evt: MessageReceivedEvent, method: Method): Boolean {
-    val types = getMethodParameterTypes(method)
-    val strings = getMessageParameters(evt, method)
-    if (types.size != strings.size) return false
-    return types.zip(strings).all {
-      (type, string) ->
-      validateParameter(evt, type, string)
+  fun matchesCommand(evt: MessageReceivedEvent, command: Command): Boolean {
+    val types = command.parameterTypes
+    if (evt.message.rawContent.startsWith(commandPrefix + command.name)) {
+      val messageContent = evt.message.rawContent.removePrefix(commandPrefix + command.name).trim()
+      val strings = getMessageParameters(messageContent, command)
+      if (types.size != strings.size) return false
+      return types.zip(strings).all {
+        (type, string) ->
+        validateParameter(evt, type, string)
+      }
+    } else {
+      return false
     }
-
   }
 
   fun validateParameter(evt: MessageReceivedEvent, type: Class<*>, string: String): Boolean {
@@ -88,26 +77,26 @@ class MessageListener(val commandPrefix: String) : ListenerAdapter() {
     }
   }
 
-  fun getParameters(evt: MessageReceivedEvent, method: Method): MutableList<Any> {
-    val strings = getMessageParameters(evt, method)
-    val types = getMethodParameterTypes(method)
-    return types.zip(strings).map {
+  fun getCastParameters(evt: MessageReceivedEvent, command: Command): MutableList<Any> {
+    val messageContent = evt.message.rawContent.removePrefix(commandPrefix + command.name)
+    val strings = getMessageParameters(messageContent, command)
+    return command.parameterTypes.zip(strings).map {
       (type, string) ->
       castParameter(evt, type, string)
     }.toMutableList()
   }
 
-  fun getMessageParameters(evt: MessageReceivedEvent, method: Method): MutableList<String> {
-    val delimitFinalParameter = method.getAnnotation(Command::class.java).delimitFinalParameter
-    val parameterCount = getMethodParameterTypes(method).size
-    val splitParameters = evt.message.rawContent.split(" ").toMutableList()
+  fun getMessageParameters(messageContent: String, command: Command): MutableList<String> {
+    val delimitFinalParameter = command.delimitFinalParameter
+    val parameterCount = command.parameterTypes.size
+    val splitParameters = messageContent.split(" ").toMutableList()
     splitParameters.removeAt(0) // Remove the command call
     if (delimitFinalParameter) {
       return splitParameters
     } else {
       val parameters = mutableListOf<String>()
-      for (i in (0..parameterCount - 2)) {
-        parameters.add(splitParameters[i])
+      (0..parameterCount - 2).forEach {
+        parameters.add(splitParameters[it])
         splitParameters.removeAt(0)
       }
       if (splitParameters.size > 0) {
@@ -115,32 +104,5 @@ class MessageListener(val commandPrefix: String) : ListenerAdapter() {
       }
       return parameters
     }
-  }
-
-  fun getMethodParameterTypes(method: Method): MutableList<Class<*>> {
-    val types = method.parameterTypes.toMutableList()
-    types.removeAt(0) // Get rid of MessageReceivedEvent parameter
-    return types
-  }
-
-  fun loadExtensions() {
-    val cp = ClassPath.from(Thread.currentThread().contextClassLoader)
-    cp.getTopLevelClassesRecursive("extensions")
-        .forEach { extensionClass ->
-          run {
-            val extension = extensionClass.load()
-            extension.methods
-                .filter { it.isAnnotationPresent(Command::class.java) }
-                .filter { it.parameterTypes[0] == MessageReceivedEvent::class.java }
-                .forEach {
-                  val annotation = it.getAnnotation(Command::class.java)
-                  val commandName = when (annotation.name) {
-                    "" -> it.name
-                    else -> annotation.name
-                  }
-                  commands.put(commandName.toLowerCase(), BotCommand(extension.newInstance(), it))
-                }
-          }
-        }
   }
 }

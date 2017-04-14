@@ -1,6 +1,6 @@
-package data
+package config
 
-data class BotData(
+data class Configuration(
     val token: String,
     val prefix: String
 )

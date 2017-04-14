@@ -1,19 +1,20 @@
 package extensions
 
-import annotations.Command
+import annotations.CommandFunction
 import net.dv8tion.jda.core.EmbedBuilder
 import net.dv8tion.jda.core.OnlineStatus
 import net.dv8tion.jda.core.entities.Member
+import net.dv8tion.jda.core.entities.Role
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import java.time.format.DateTimeFormatter
 
 class General {
-  @Command(description = "Pings the bot.")
+  @CommandFunction(description = "Pings the bot.")
   fun ping(evt: MessageReceivedEvent) {
     evt.channel.sendMessage("Pong. The current ping is ${evt.jda.ping}ms.").queue()
   }
 
-  @Command(description = "Gets information about the server.", serverOnly = true)
+  @CommandFunction(description = "Gets information about the server.", serverOnly = true)
   fun serverInfo(evt: MessageReceivedEvent) {
     val server = evt.guild
     val embedBuilder = EmbedBuilder()
@@ -55,6 +56,14 @@ class General {
         server.voiceChannels.size.toString(),
         true
     )
+    embedBuilder.addField(
+        "Roles",
+        server.roles
+            .filter { it.name != "@everyone" }
+            .map { it.name }
+            .joinToString(", "),
+        false
+    )
     embedBuilder.setFooter(
         "Server ID: " + server.id,
         null
@@ -62,7 +71,7 @@ class General {
     evt.channel.sendMessage(embedBuilder.build()).queue()
   }
 
-  @Command(description = "Gets information about a specific server member.", serverOnly = true)
+  @CommandFunction(description = "Gets information about a specific server member.", serverOnly = true)
   fun memberInfo(evt: MessageReceivedEvent, member: Member) {
     val user = member.user
     val embedBuilder = EmbedBuilder()

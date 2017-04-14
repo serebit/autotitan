@@ -1,19 +1,23 @@
+import annotations.CommandFunction
+import com.google.common.reflect.ClassPath
 import com.google.gson.Gson
-import data.BotData
+import config.Configuration
+import data.Command
 import listeners.MessageListener
 import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDABuilder
+import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import java.io.File
 import java.util.*
 
 fun main(args: Array<String>) {
   val useExistingSettings = !(args.contains("-r") || args.contains("--reset"))
   val dataFile = File(Singleton.getParentDirectory().parent + "/data/data.json")
-  val botData: BotData
+  val botData: Configuration
   if (useExistingSettings && dataFile.exists()) {
-    botData = Gson().fromJson(dataFile.readText(), BotData::class.java)
+    botData = Gson().fromJson(dataFile.readText(), Configuration::class.java)
   } else {
-    botData = BotData(
+    botData = Configuration(
         getNewToken(),
         getNewPrefix()
     )
@@ -21,7 +25,7 @@ fun main(args: Array<String>) {
   val jda = JDABuilder(AccountType.BOT)
       .setToken(botData.token)
       .buildBlocking()
-  jda.addEventListener(MessageListener(botData.prefix))
+  jda.addEventListener(MessageListener(botData.prefix, loadCommands(getExtensions())))
   dataFile.parentFile.mkdirs()
   dataFile.writeText(Gson().toJson(botData))
 }
@@ -34,6 +38,24 @@ fun getNewToken(): String {
 fun getNewPrefix(): String {
   print("Enter new prefix:\n>")
   return Scanner(System.`in`).nextLine()
+}
+
+fun getExtensions(): MutableList<Class<*>> {
+  val cp = ClassPath.from(Thread.currentThread().contextClassLoader)
+  return cp.getTopLevelClassesRecursive("extensions")
+      .map { it.load() }
+      .toMutableList()
+}
+
+fun loadCommands(classes: MutableList<Class<*>>): MutableList<Command> {
+  val commands = mutableListOf<Command>()
+  classes.map { extension ->
+    extension.methods
+        .filter { it.isAnnotationPresent(CommandFunction::class.java) }
+        .filter { it.parameterTypes[0] == MessageReceivedEvent::class.java }
+        .forEach { commands.add(Command(extension.newInstance(), it, it.getAnnotation(CommandFunction::class.java))) }
+  }
+  return commands
 }
 
 object Singleton {
