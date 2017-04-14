@@ -1,6 +1,6 @@
-package data
+package com.serebit.autotitan.data
 
-import annotations.CommandFunction
+import com.serebit.autotitan.annotations.CommandFunction
 import java.lang.reflect.Method
 
 class Command(val instance: Any, val method: Method, info: CommandFunction) {

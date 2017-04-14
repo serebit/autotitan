@@ -1,6 +1,6 @@
-package listeners
+package com.serebit.autotitan.listeners
 
-import data.Command
+import com.serebit.autotitan.data.Command
 import net.dv8tion.jda.core.entities.Channel
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.entities.User

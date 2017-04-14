@@ -1,4 +1,4 @@
-package annotations
+package com.serebit.autotitan.annotations
 
 @Target(AnnotationTarget.FUNCTION)
 annotation class CommandFunction(

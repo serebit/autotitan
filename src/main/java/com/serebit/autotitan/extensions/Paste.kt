@@ -1,7 +1,7 @@
-package extensions
+package com.serebit.autotitan.extensions
 
-import annotations.CommandFunction
-import annotations.ListenerFunction
+import com.serebit.autotitan.annotations.CommandFunction
+import com.serebit.autotitan.annotations.ListenerFunction
 import khttp.post
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 
@@ -23,9 +23,10 @@ class Paste {
     evt.channel.deleteMessageById(evt.message.id).queue()
     evt.channel.sendMessage(message).queue()
   }
-  
+
   @ListenerFunction(
-      description = "Automatically creates a paste in Hastebin if a user sends a message with a code block longer than a certain length.",
+      description = "Automatically creates a paste in Hastebin if a user sends a" +
+          " message with a code block longer than a certain length.",
       eventType = MessageReceivedEvent::class,
       serverOnly = true
   )

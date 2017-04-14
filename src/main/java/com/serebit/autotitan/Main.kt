@@ -1,9 +1,11 @@
-import annotations.CommandFunction
+package com.serebit.autotitan
+
+import com.serebit.autotitan.annotations.CommandFunction
 import com.google.common.reflect.ClassPath
 import com.google.gson.Gson
-import config.Configuration
-import data.Command
-import listeners.MessageListener
+import com.serebit.autotitan.config.Configuration
+import com.serebit.autotitan.data.Command
+import com.serebit.autotitan.listeners.MessageListener
 import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDABuilder
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
@@ -12,7 +14,7 @@ import java.util.*
 
 fun main(args: Array<String>) {
   val useExistingSettings = !(args.contains("-r") || args.contains("--reset"))
-  val dataFile = File(Singleton.getParentDirectory().parent + "/data/data.json")
+  val dataFile = File(Singleton.getParentDirectory().parent + "/com/serebit/autotitan/data/com.serebit.autotitan.data.json")
   val botData: Configuration
   if (useExistingSettings && dataFile.exists()) {
     botData = Gson().fromJson(dataFile.readText(), Configuration::class.java)
@@ -42,7 +44,7 @@ fun getNewPrefix(): String {
 
 fun getExtensions(): MutableList<Class<*>> {
   val cp = ClassPath.from(Thread.currentThread().contextClassLoader)
-  return cp.getTopLevelClassesRecursive("extensions")
+  return cp.getTopLevelClassesRecursive("com/serebit/autotitan/extensions")
       .map { it.load() }
       .toMutableList()
 }

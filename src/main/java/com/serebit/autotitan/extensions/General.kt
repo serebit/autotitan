@@ -1,6 +1,6 @@
-package extensions
+package com.serebit.autotitan.extensions
 
-import annotations.CommandFunction
+import com.serebit.autotitan.annotations.CommandFunction
 import net.dv8tion.jda.core.EmbedBuilder
 import net.dv8tion.jda.core.OnlineStatus
 import net.dv8tion.jda.core.entities.Member

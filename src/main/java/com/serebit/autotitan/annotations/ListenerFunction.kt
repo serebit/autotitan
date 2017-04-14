@@ -1,4 +1,4 @@
-package annotations
+package com.serebit.autotitan.annotations
 
 import net.dv8tion.jda.core.events.Event
 import kotlin.reflect.KClass
