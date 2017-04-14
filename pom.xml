@@ -85,12 +85,13 @@
         <configuration>
           <archive>
             <manifest>
-              <mainClass>MainKt</mainClass>
+              <mainClass>com.serebit.autotitan.MainKt</mainClass>
             </manifest>
           </archive>
           <descriptorRefs>
             <descriptorRef>jar-with-dependencies</descriptorRef>
           </descriptorRefs>
+          <appendAssemblyId>false</appendAssemblyId>
         </configuration>
       </plugin>
     </plugins>

@@ -7,8 +7,10 @@ import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import net.dv8tion.jda.core.hooks.ListenerAdapter
 
-class MessageListener(val commandPrefix: String, val commands: MutableList<Command>) : ListenerAdapter() {
-
+class MessageListener(
+    val commandPrefix: String,
+    val commands: MutableList<Command>
+) : ListenerAdapter() {
   override fun onMessageReceived(evt: MessageReceivedEvent) {
     var messageContent = evt.message.rawContent
     if (!evt.author.isBot && messageContent.startsWith(commandPrefix)) {

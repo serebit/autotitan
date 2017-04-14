@@ -14,22 +14,22 @@ import java.util.*
 
 fun main(args: Array<String>) {
   val useExistingSettings = !(args.contains("-r") || args.contains("--reset"))
-  val dataFile = File(Singleton.getParentDirectory().parent + "/com/serebit/autotitan/data/com.serebit.autotitan.data.json")
-  val botData: Configuration
-  if (useExistingSettings && dataFile.exists()) {
-    botData = Gson().fromJson(dataFile.readText(), Configuration::class.java)
+  val configFile = File(Singleton.getParentDirectory().parent + "/data/config.json")
+  val config: Configuration
+  if (useExistingSettings && configFile.exists()) {
+    config = Gson().fromJson(configFile.readText(), Configuration::class.java)
   } else {
-    botData = Configuration(
+    config = Configuration(
         getNewToken(),
         getNewPrefix()
     )
+    configFile.parentFile.mkdirs()
+    configFile.writeText(Gson().toJson(config))
   }
   val jda = JDABuilder(AccountType.BOT)
-      .setToken(botData.token)
+      .setToken(config.token)
       .buildBlocking()
-  jda.addEventListener(MessageListener(botData.prefix, loadCommands(getExtensions())))
-  dataFile.parentFile.mkdirs()
-  dataFile.writeText(Gson().toJson(botData))
+  jda.addEventListener(MessageListener(config.prefix, loadCommands(getExtensions())))
 }
 
 fun getNewToken(): String {
@@ -44,7 +44,7 @@ fun getNewPrefix(): String {
 
 fun getExtensions(): MutableList<Class<*>> {
   val cp = ClassPath.from(Thread.currentThread().contextClassLoader)
-  return cp.getTopLevelClassesRecursive("com/serebit/autotitan/extensions")
+  return cp.getTopLevelClassesRecursive("com.serebit.autotitan.extensions")
       .map { it.load() }
       .toMutableList()
 }
