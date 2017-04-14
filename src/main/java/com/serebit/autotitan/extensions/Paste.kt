@@ -30,6 +30,28 @@ class Paste {
       serverOnly = true
   )
   fun autopaste(evt: MessageReceivedEvent) {
-    // Does nothing at the moment
+    val messageContent = evt.message.rawContent
+    val codeBlockRegex = "`{3}.*\n((?:.*\n)*?)`{3}".toRegex()
+    if (codeBlockRegex.matches(messageContent)) {
+      val matches = codeBlockRegex.findAll(messageContent)
+      val groups: MutableList<MatchGroup> = matches
+          .map { it.groups[0] }
+          .filterNotNull()
+          .toMutableList()
+      val codeBlocks = groups
+          .map { it.value }
+          .filter { it.exceedsLengthLimit() }
+          .filterNotNull()
+      if (codeBlocks.isNotEmpty()) {
+        codeBlocks.forEach { paste(evt, it) }
+        evt.message.delete().queue()
+      }
+    }
+  }
+
+  fun String.exceedsLengthLimit(): Boolean {
+    val lineCount = this.count { it == '\n' }
+    val characterCount = this.count()
+    return (lineCount > 10 || characterCount > 512)
   }
 }
