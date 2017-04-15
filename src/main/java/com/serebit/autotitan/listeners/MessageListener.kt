@@ -29,7 +29,7 @@ class MessageListener(
         if (command != null) {
           if (matchesCommand(evt, command)) {
             val parameters = getCastParameters(evt, command)
-            command.method.invoke(command.instance, evt, *parameters.toTypedArray())
+            command.method(command.instance, evt, *parameters.toTypedArray())
           } else {
             val helpMessage = "```\n$commandPrefix${command.name} " +
                 command.parameterTypes
@@ -45,8 +45,9 @@ class MessageListener(
 
   fun runListeners(evt: Event) {
     listeners
+        .filter { it.eventType in validEventTypes }
         .filter { it.eventType == evt::class.java }
-        .forEach { it.method.invoke(it.instance, evt) }
+        .forEach { it.method(it.instance, evt) }
   }
 
   fun matchesCommand(evt: MessageReceivedEvent, command: Command): Boolean {
