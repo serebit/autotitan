@@ -42,6 +42,7 @@ fun main(args: Array<String>) {
               .toMutableList()
       )
   )
+  println("Invite link: ${jda.asBot().getInviteUrl()}")
 }
 
 fun getNewToken(): String {
