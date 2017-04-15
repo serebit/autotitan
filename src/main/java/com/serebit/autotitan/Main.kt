@@ -42,6 +42,7 @@ fun main(args: Array<String>) {
               .toMutableList()
       )
   )
+  println()
   println("Username:    ${jda.selfUser.name}")
   println("Invite link: ${jda.asBot().getInviteUrl()}")
 }
