@@ -14,13 +14,8 @@ class Paste {
       delimitFinalParameter = false
   )
   fun paste(evt: MessageReceivedEvent, code: String) {
-    val response = post(
-        url = host + path,
-        data = code
-    )
-    val url = host + "/" + response.jsonObject["key"]
-    val message = evt.member.asMention + "'s paste: " + url
-    evt.channel.deleteMessageById(evt.message.id).queue()
+    val message = "${evt.author.asMention}'s paste: ${getPasteUrl(code)}"
+    evt.message.delete().queue()
     evt.channel.sendMessage(message).queue()
   }
 
@@ -34,19 +29,27 @@ class Paste {
     val codeBlockRegex = "`{3}.*\n((?:.*\n)*?)`{3}".toRegex()
     if (codeBlockRegex.matches(messageContent)) {
       val matches = codeBlockRegex.findAll(messageContent)
-      val groups: MutableList<MatchGroup> = matches
-          .map { it.groups[0] }
+      val groups = matches
+          .map { it.groups[1] }
           .filterNotNull()
-          .toMutableList()
       val codeBlocks = groups
           .map { it.value }
           .filter { it.exceedsLengthLimit() }
           .filterNotNull()
+          .toMutableList()
       if (codeBlocks.isNotEmpty()) {
         codeBlocks.forEach { paste(evt, it) }
-        evt.message.delete().queue()
       }
     }
+  }
+
+  fun getPasteUrl(code: String): String {
+    val response = post(
+        url = host + path,
+        data = code
+    )
+    val url = host + "/" + response.jsonObject["key"]
+    return url
   }
 
   fun String.exceedsLengthLimit(): Boolean {
