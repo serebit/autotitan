@@ -5,6 +5,7 @@ import com.serebit.autotitan.data.Listener
 import net.dv8tion.jda.core.entities.Channel
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.entities.User
+import net.dv8tion.jda.core.events.Event
 import net.dv8tion.jda.core.events.message.*
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent
 import net.dv8tion.jda.core.events.message.react.MessageReactionRemoveAllEvent
@@ -17,9 +18,9 @@ class MessageListener(
     val listeners: MutableList<Listener>
 ) : ListenerAdapter() {
   override fun onMessageReceived(evt: MessageReceivedEvent) {
-    var messageContent = evt.message.rawContent
     if (!evt.author.isBot) {
-      listeners.forEach { it.method.invoke(it.instance, evt) }
+      runListeners(evt)
+      var messageContent = evt.message.rawContent
       if (messageContent.startsWith(commandPrefix)) {
         messageContent = messageContent.removePrefix(">")
         val command = commands.filter {
@@ -40,6 +41,12 @@ class MessageListener(
         }
       }
     }
+  }
+
+  fun runListeners(evt: Event) {
+    listeners
+        .filter { it.eventType == evt::class.java }
+        .forEach { it.method.invoke(it.instance, evt) }
   }
 
   fun matchesCommand(evt: MessageReceivedEvent, command: Command): Boolean {
