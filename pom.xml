@@ -24,6 +24,11 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.jetbrains.kotlinx</groupId>
+      <artifactId>kotlinx-coroutines-core</artifactId>
+      <version>0.14</version>
+    </dependency>
+    <dependency>
       <groupId>net.dv8tion</groupId>
       <artifactId>JDA</artifactId>
       <version>3.0.0_170</version>

@@ -2,6 +2,8 @@ package com.serebit.autotitan.listeners
 
 import com.serebit.autotitan.data.Command
 import com.serebit.autotitan.data.Listener
+import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.launch
 import net.dv8tion.jda.core.entities.Channel
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.entities.User
@@ -18,10 +20,12 @@ class MessageListener(
     val listeners: MutableList<Listener>
 ) : ListenerAdapter(), EventListener {
   override fun runListeners(evt: Event) {
-    listeners
-        .filter { it.eventType in validEventTypes }
-        .filter { it.eventType == evt::class.java }
-        .forEach { it.method(it.instance, evt) }
+    launch(CommonPool) {
+      listeners
+          .filter { it.eventType in validEventTypes }
+          .filter { it.eventType == evt::class.java }
+          .forEach { it.method(it.instance, evt) }
+    }
   }
 
   override fun onMessageReceived(evt: MessageReceivedEvent) {
@@ -30,6 +34,9 @@ class MessageListener(
       var messageContent = evt.message.rawContent
       if (messageContent.startsWith(commandPrefix)) {
         messageContent = messageContent.removePrefix(">")
+        if (messageContent == "help") {
+          sendCommandList(evt)
+        }
         val command = commands.filter {
           messageContent.startsWith(it.name + " ") || messageContent == it.name
         }.sortedBy { it.name.length }.lastOrNull()
@@ -80,6 +87,19 @@ class MessageListener(
 
   override fun onGenericMessage(evt: GenericMessageEvent) {
     runListeners(evt)
+  }
+
+  fun sendCommandList(evt: MessageReceivedEvent) {
+    val list = "```\nCommand List\n\n" +
+        commands
+            .sortedBy { it.method.declaringClass.simpleName }
+            .map {
+          "${it.name} " + it.parameterTypes
+            .map { "<" + it.simpleName + ">" }
+            .joinToString(" ")
+        }.joinToString("\n") +
+        "\n```"
+    evt.channel.sendMessage(list).queue()
   }
 
   fun matchesCommand(evt: MessageReceivedEvent, command: Command): Boolean {
