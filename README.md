@@ -6,12 +6,13 @@ A simple [Discord](https://discordapp.com) bot built with Kotlin and the
 
 ## Current Features
 - Zero-argument commands.
-- Commands with multiple arguments of String type.
+- Commands with multiple arguments of some types.
 - Commands with a final argument of variable length.
 - Reflection-based extension loading.
+- JDA, user and message event listeners.
 
 ## Features In Development
-- Arguments of types other than String.
+- All other types of event listeners.
 
 ## Planned Features
 - The ability to add custom modules and commands.
