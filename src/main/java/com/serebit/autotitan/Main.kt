@@ -7,7 +7,9 @@ import com.serebit.autotitan.annotations.ListenerFunction
 import com.serebit.autotitan.config.Configuration
 import com.serebit.autotitan.data.Command
 import com.serebit.autotitan.data.Listener
+import com.serebit.autotitan.listeners.JdaListener
 import com.serebit.autotitan.listeners.MessageListener
+import com.serebit.autotitan.listeners.UserListener
 import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDABuilder
 import net.dv8tion.jda.core.events.Event
@@ -37,10 +39,10 @@ fun main(args: Array<String>) {
       MessageListener(
           config.prefix,
           loadCommands(extensions),
-          loadListeners(extensions)
-              .filter { MessageListener.validEventTypes.contains(it.eventType) }
-              .toMutableList()
-      )
+          loadListeners(extensions, MessageListener.validEventTypes)
+      ),
+      JdaListener(loadListeners(extensions, JdaListener.validEventTypes)),
+      UserListener(loadListeners(extensions, UserListener.validEventTypes))
   )
   println()
   println("Username:    ${jda.selfUser.name}")
@@ -57,14 +59,14 @@ fun getNewPrefix(): String {
   return Scanner(System.`in`).nextLine()
 }
 
-fun getExtensions(): MutableList<Class<*>> {
+fun getExtensions(): MutableSet<Class<*>> {
   val cp = ClassPath.from(Thread.currentThread().contextClassLoader)
   return cp.getTopLevelClassesRecursive("com.serebit.autotitan.extensions")
       .map { it.load() }
-      .toMutableList()
+      .toMutableSet()
 }
 
-fun loadCommands(classes: MutableList<Class<*>>): MutableList<Command> {
+fun loadCommands(classes: MutableSet<Class<*>>): MutableList<Command> {
   val commands = mutableListOf<Command>()
   classes.map { extension ->
     extension.methods
@@ -77,13 +79,13 @@ fun loadCommands(classes: MutableList<Class<*>>): MutableList<Command> {
   return commands
 }
 
-fun loadListeners(classes: MutableList<Class<*>>): MutableList<Listener> {
+fun loadListeners(classes: MutableSet<Class<*>>, validTypes: MutableSet<Class<out Event>>): MutableList<Listener> {
   val listeners = mutableListOf<Listener>()
   classes.map { extension ->
     extension.methods
         .filter { it.isAnnotationPresent(ListenerFunction::class.java) }
         .filter { it.parameterCount == 1 }
-        .filter { it.parameterTypes[0].isSubClassOf(Event::class.java) }
+        .filter { it.parameterTypes[0] in validTypes }
         .forEach {
           listeners.add(Listener(extension.newInstance(), it, it.getAnnotation(ListenerFunction::class.java)))
         }
@@ -93,13 +95,4 @@ fun loadListeners(classes: MutableList<Class<*>>): MutableList<Listener> {
 
 object Singleton {
   fun getParentDirectory(): File = File(this::class.java.protectionDomain.codeSource.location.toURI())
-}
-
-tailrec fun Class<*>.isSubClassOf(clazz: Class<*>): Boolean {
-  if (superclass != null) {
-    if (superclass == clazz) return true
-    else return superclass.isSubClassOf(clazz)
-  } else {
-    return false
-  }
 }

@@ -6,7 +6,14 @@ import net.dv8tion.jda.core.hooks.ListenerAdapter
 
 class JdaListener(
     val listeners: MutableList<Listener>
-) : ListenerAdapter() {
+) : ListenerAdapter(), EventListener {
+  override fun runListeners(evt: Event) {
+    listeners
+        .filter { it.eventType in validEventTypes }
+        .filter { it.eventType == evt::class.java }
+        .forEach { it.method(it.instance, evt) }
+  }
+
   override fun onReady(evt: ReadyEvent) {
     runListeners(evt)
   }
@@ -33,13 +40,6 @@ class JdaListener(
 
   override fun onException(evt: ExceptionEvent) {
     runListeners(evt)
-  }
-
-  fun runListeners(evt: Event) {
-    listeners
-        .filter { it.eventType in validEventTypes }
-        .filter { it.eventType == evt::class.java }
-        .forEach { it.method(it.instance, evt) }
   }
 
   companion object {

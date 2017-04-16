@@ -16,7 +16,14 @@ class MessageListener(
     val commandPrefix: String,
     val commands: MutableList<Command>,
     val listeners: MutableList<Listener>
-) : ListenerAdapter() {
+) : ListenerAdapter(), EventListener {
+  override fun runListeners(evt: Event) {
+    listeners
+        .filter { it.eventType in validEventTypes }
+        .filter { it.eventType == evt::class.java }
+        .forEach { it.method(it.instance, evt) }
+  }
+
   override fun onMessageReceived(evt: MessageReceivedEvent) {
     if (!evt.author.isBot) {
       runListeners(evt)
@@ -73,13 +80,6 @@ class MessageListener(
 
   override fun onGenericMessage(evt: GenericMessageEvent) {
     runListeners(evt)
-  }
-
-  fun runListeners(evt: Event) {
-    listeners
-        .filter { it.eventType in validEventTypes }
-        .filter { it.eventType == evt::class.java }
-        .forEach { it.method(it.instance, evt) }
   }
 
   fun matchesCommand(evt: MessageReceivedEvent, command: Command): Boolean {
@@ -165,8 +165,7 @@ class MessageListener(
         MessageUpdateEvent::class.java,
         MessageReactionAddEvent::class.java,
         MessageReactionRemoveEvent::class.java,
-        MessageReactionRemoveAllEvent::class.java,
-        GenericMessageEvent::class.java
+        MessageReactionRemoveAllEvent::class.java
     )
   }
 }
