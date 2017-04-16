@@ -43,6 +43,38 @@ class MessageListener(
     }
   }
 
+  override fun onMessageDelete(evt: MessageDeleteEvent) {
+    runListeners(evt)
+  }
+
+  override fun onMessageBulkDelete(evt: MessageBulkDeleteEvent) {
+    runListeners(evt)
+  }
+
+  override fun onMessageEmbed(evt: MessageEmbedEvent) {
+    runListeners(evt)
+  }
+
+  override fun onMessageUpdate(evt: MessageUpdateEvent) {
+    runListeners(evt)
+  }
+
+  override fun onMessageReactionAdd(evt: MessageReactionAddEvent) {
+    runListeners(evt)
+  }
+
+  override fun onMessageReactionRemove(evt: MessageReactionRemoveEvent) {
+    runListeners(evt)
+  }
+
+  override fun onMessageReactionRemoveAll(evt: MessageReactionRemoveAllEvent) {
+    runListeners(evt)
+  }
+
+  override fun onGenericMessage(evt: GenericMessageEvent) {
+    runListeners(evt)
+  }
+
   fun runListeners(evt: Event) {
     listeners
         .filter { it.eventType in validEventTypes }
@@ -128,9 +160,9 @@ class MessageListener(
     val validEventTypes = mutableSetOf(
         MessageReceivedEvent::class.java,
         MessageDeleteEvent::class.java,
+        MessageBulkDeleteEvent::class.java,
         MessageEmbedEvent::class.java,
         MessageUpdateEvent::class.java,
-        MessageBulkDeleteEvent::class.java,
         MessageReactionAddEvent::class.java,
         MessageReactionRemoveEvent::class.java,
         MessageReactionRemoveAllEvent::class.java,
