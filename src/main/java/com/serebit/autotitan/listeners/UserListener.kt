@@ -8,7 +8,7 @@ import net.dv8tion.jda.core.events.user.*
 import net.dv8tion.jda.core.hooks.ListenerAdapter
 
 class UserListener(
-    val listeners: MutableList<Listener>
+    override val listeners: MutableList<Listener>
 ) : ListenerAdapter(), EventListener {
   override fun runListeners(evt: Event) {
     launch(CommonPool) {

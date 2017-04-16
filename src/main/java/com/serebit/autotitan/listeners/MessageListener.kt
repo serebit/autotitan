@@ -17,7 +17,7 @@ import net.dv8tion.jda.core.hooks.ListenerAdapter
 class MessageListener(
     val commandPrefix: String,
     val commands: MutableList<Command>,
-    val listeners: MutableList<Listener>
+    override val listeners: MutableList<Listener>
 ) : ListenerAdapter(), EventListener {
   override fun runListeners(evt: Event) {
     launch(CommonPool) {

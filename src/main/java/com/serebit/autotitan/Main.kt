@@ -7,9 +7,7 @@ import com.serebit.autotitan.annotations.ListenerFunction
 import com.serebit.autotitan.config.Configuration
 import com.serebit.autotitan.data.Command
 import com.serebit.autotitan.data.Listener
-import com.serebit.autotitan.listeners.JdaListener
-import com.serebit.autotitan.listeners.MessageListener
-import com.serebit.autotitan.listeners.UserListener
+import com.serebit.autotitan.listeners.*
 import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDABuilder
 import net.dv8tion.jda.core.events.Event
@@ -42,7 +40,9 @@ fun main(args: Array<String>) {
           loadListeners(extensions, MessageListener.validEventTypes)
       ),
       JdaListener(loadListeners(extensions, JdaListener.validEventTypes)),
-      UserListener(loadListeners(extensions, UserListener.validEventTypes))
+      UserListener(loadListeners(extensions, UserListener.validEventTypes)),
+      TextChannelListener(loadListeners(extensions, TextChannelListener.validEventTypes)),
+      VoiceChannelListener(loadListeners(extensions, VoiceChannelListener.validEventTypes))
   )
   println()
   println("Username:    ${jda.selfUser.name}")
