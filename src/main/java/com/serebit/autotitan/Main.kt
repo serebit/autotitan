@@ -83,7 +83,7 @@ fun loadListeners(classes: MutableList<Class<*>>): MutableList<Listener> {
     extension.methods
         .filter { it.isAnnotationPresent(ListenerFunction::class.java) }
         .filter { it.parameterCount == 1 }
-        .filter { it.parameterTypes[0].superclass == Event::class.java }
+        .filter { it.parameterTypes[0].isSubClassOf(Event::class.java) }
         .forEach {
           listeners.add(Listener(extension.newInstance(), it, it.getAnnotation(ListenerFunction::class.java)))
         }
@@ -93,4 +93,13 @@ fun loadListeners(classes: MutableList<Class<*>>): MutableList<Listener> {
 
 object Singleton {
   fun getParentDirectory(): File = File(this::class.java.protectionDomain.codeSource.location.toURI())
+}
+
+tailrec fun Class<*>.isSubClassOf(clazz: Class<*>): Boolean {
+  if (superclass != null) {
+    if (superclass == clazz) return true
+    else return superclass.isSubClassOf(clazz)
+  } else {
+    return false
+  }
 }
