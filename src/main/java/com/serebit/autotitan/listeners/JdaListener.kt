@@ -7,9 +7,9 @@ import net.dv8tion.jda.core.events.*
 import net.dv8tion.jda.core.hooks.ListenerAdapter
 
 class JdaListener(
-    listeners: MutableSet<Listener>
+    allListeners: MutableSet<Listener>
 ) : ListenerAdapter(), EventListener {
-  override val listeners = listeners.filter { it.eventType in validEventTypes }.toMutableSet()
+  override val listeners: MutableSet<Listener>
   override val validEventTypes = mutableSetOf(
       ReadyEvent::class.java,
       ResumedEvent::class.java,
@@ -19,6 +19,10 @@ class JdaListener(
       StatusChangeEvent::class.java,
       ExceptionEvent::class.java
   )
+
+  init {
+    listeners = allListeners.filter { it.eventType in validEventTypes }.toMutableSet()
+  }
 
   override fun runListeners(evt: Event) {
     launch(CommonPool) {

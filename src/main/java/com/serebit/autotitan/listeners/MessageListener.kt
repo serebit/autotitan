@@ -17,9 +17,9 @@ import net.dv8tion.jda.core.hooks.ListenerAdapter
 class MessageListener(
     val commandPrefix: String,
     val commands: MutableSet<Command>,
-    listeners: MutableSet<Listener>
+    allListeners: MutableSet<Listener>
 ) : ListenerAdapter(), EventListener {
-  override val listeners = listeners.filter { it.eventType in validEventTypes }.toMutableSet()
+  override val listeners: MutableSet<Listener>
   override val validEventTypes = mutableSetOf(
       MessageReceivedEvent::class.java,
       MessageDeleteEvent::class.java,
@@ -30,6 +30,10 @@ class MessageListener(
       MessageReactionRemoveEvent::class.java,
       MessageReactionRemoveAllEvent::class.java
   )
+
+  init {
+    listeners = allListeners.filter { it.eventType in validEventTypes }.toMutableSet()
+  }
 
   override fun runListeners(evt: Event) {
     launch(CommonPool) {
@@ -115,34 +119,33 @@ class MessageListener(
 
   fun matchesCommand(evt: MessageReceivedEvent, command: Command): Boolean {
     val types = command.parameterTypes
-    if (evt.message.rawContent.startsWith(commandPrefix + command.name)) {
-      val messageContent = evt.message.rawContent.removePrefix(commandPrefix + command.name).trim()
-      val strings = getMessageParameters(messageContent, command)
-      if (types.size != strings.size) return false
-      return types.zip(strings).all {
-        (type, string) ->
-        validateParameter(evt, type, string)
-      }
-    } else {
-      return false
+    val strings = getMessageParameters(evt.message.rawContent, command)
+    if (types.size != strings.size) return false
+    return types.zip(strings).all {
+      (type, string) ->
+      validateParameter(evt, type, string)
     }
   }
 
   fun validateParameter(evt: MessageReceivedEvent, type: Class<*>, string: String): Boolean {
     return when (type) {
-      Int::class.java -> string.toIntOrNull() as Any
-      Long::class.java -> string.toLongOrNull() as Any
-      Double::class.java -> string.toDoubleOrNull() as Any
-      Float::class.java -> string.toFloatOrNull() as Any
-      User::class.java -> evt.jda.getUserById(string)
-      Member::class.java -> evt.guild.getMemberById(string)
-      Channel::class.java -> evt.guild.getTextChannelById(string)
-      String::class.java -> "This can be anything but null. ¯\\_(ツ)_/¯"
+      Int::class.java -> string.toIntOrNull() != null
+      Long::class.java -> string.toLongOrNull() != null
+      Double::class.java -> string.toDoubleOrNull() != null
+      Float::class.java -> string.toFloatOrNull() != null
+      User::class.java -> {
+        evt.jda.getUserById(string.removePrefix("<@").removeSuffix(">")) != null
+      }
+      Member::class.java -> {
+        evt.guild.getMemberById(string.removePrefix("<@").removeSuffix(">")) != null
+      }
+      Channel::class.java -> evt.guild.getTextChannelById(string) != null
+      String::class.java -> true
       else -> {
         println(type.canonicalName + " is not a valid parameter type.")
-        null
+        false
       }
-    } != null
+    }
   }
 
   fun castParameter(evt: MessageReceivedEvent, type: Class<*>, string: String): Any {
@@ -151,16 +154,19 @@ class MessageListener(
       Long::class.java -> string.toLong()
       Double::class.java -> string.toDouble()
       Float::class.java -> string.toFloat()
-      User::class.java -> evt.jda.getUserById(string)
-      Member::class.java -> evt.guild.getMemberById(string)
+      User::class.java -> {
+        evt.jda.getUserById(string.removePrefix("<@").removeSuffix(">"))
+      }
+      Member::class.java -> {
+        evt.guild.getMemberById(string.removePrefix("<@").removeSuffix(">"))
+      }
       Channel::class.java -> evt.guild.getTextChannelById(string)
       else -> string
     }
   }
 
   fun getCastParameters(evt: MessageReceivedEvent, command: Command): MutableList<Any> {
-    val messageContent = evt.message.rawContent.removePrefix(commandPrefix + command.name)
-    val strings = getMessageParameters(messageContent, command)
+    val strings = getMessageParameters(evt.message.rawContent, command)
     return command.parameterTypes.zip(strings).map {
       (type, string) ->
       castParameter(evt, type, string)
@@ -168,10 +174,10 @@ class MessageListener(
   }
 
   fun getMessageParameters(messageContent: String, command: Command): MutableList<String> {
+    val messageContent = messageContent.removePrefix(commandPrefix + command.name).trim()
     val delimitFinalParameter = command.delimitFinalParameter
     val parameterCount = command.parameterTypes.size
     val splitParameters = messageContent.split(" ").toMutableList()
-    splitParameters.removeAt(0) // Remove the command call
     if (delimitFinalParameter) {
       return splitParameters
     } else {

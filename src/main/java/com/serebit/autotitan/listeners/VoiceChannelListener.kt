@@ -10,9 +10,9 @@ import net.dv8tion.jda.core.events.channel.voice.update.*
 import net.dv8tion.jda.core.hooks.ListenerAdapter
 
 class VoiceChannelListener(
-    listeners: MutableSet<Listener>
+    allListeners: MutableSet<Listener>
 ) : ListenerAdapter(), EventListener {
-  override val listeners = listeners.filter { it.eventType in validEventTypes }.toMutableSet()
+  override val listeners: MutableSet<Listener>
   override val validEventTypes = mutableSetOf<Class<out Event>>(
       VoiceChannelDeleteEvent::class.java,
       VoiceChannelUpdateNameEvent::class.java,
@@ -22,6 +22,10 @@ class VoiceChannelListener(
       VoiceChannelUpdatePermissionsEvent::class.java,
       VoiceChannelCreateEvent::class.java
   )
+
+  init {
+    listeners = allListeners.filter { it.eventType in validEventTypes }.toMutableSet()
+  }
 
   override fun runListeners(evt: Event) {
     launch(CommonPool) {
