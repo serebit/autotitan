@@ -174,10 +174,10 @@ class MessageListener(
   }
 
   fun getMessageParameters(messageContent: String, command: Command): MutableList<String> {
-    val messageContent = messageContent.removePrefix(commandPrefix + command.name).trim()
+    val trimmedMessageContent = messageContent.removePrefix(commandPrefix + command.name).trim()
     val delimitFinalParameter = command.delimitFinalParameter
     val parameterCount = command.parameterTypes.size
-    val splitParameters = messageContent.split(" ").toMutableList()
+    val splitParameters = trimmedMessageContent.split(" ").filter(String::isNotBlank).toMutableList()
     if (delimitFinalParameter) {
       return splitParameters
     } else {
