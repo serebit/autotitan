@@ -48,7 +48,7 @@ class MessageListener(
       runListeners(evt)
       var messageContent = evt.message.rawContent
       if (messageContent.startsWith(commandPrefix)) {
-        messageContent = messageContent.removePrefix(">")
+        messageContent = messageContent.removePrefix(commandPrefix)
         if (messageContent == "help") {
           sendCommandList(evt)
         }
@@ -134,10 +134,12 @@ class MessageListener(
       Double::class.java -> string.toDoubleOrNull() != null
       Float::class.java -> string.toFloatOrNull() != null
       User::class.java -> {
-        evt.jda.getUserById(string.removePrefix("<@").removeSuffix(">")) != null
+        val trimmed = evt.jda.getUserById(string.removePrefix("<@").removePrefix("!").removeSuffix(">"))
+        trimmed != null
       }
       Member::class.java -> {
-        evt.guild.getMemberById(string.removePrefix("<@").removeSuffix(">")) != null
+        val trimmed = evt.guild.getMemberById(string.removePrefix("<@").removePrefix("!").removeSuffix(">"))
+        trimmed != null
       }
       Channel::class.java -> evt.guild.getTextChannelById(string) != null
       String::class.java -> true
@@ -155,10 +157,12 @@ class MessageListener(
       Double::class.java -> string.toDouble()
       Float::class.java -> string.toFloat()
       User::class.java -> {
-        evt.jda.getUserById(string.removePrefix("<@").removeSuffix(">"))
+        val trimmed = evt.jda.getUserById(string.removePrefix("<@").removePrefix("!").removeSuffix(">"))
+        trimmed
       }
       Member::class.java -> {
-        evt.guild.getMemberById(string.removePrefix("<@").removeSuffix(">"))
+        val trimmed = evt.guild.getMemberById(string.removePrefix("<@").removePrefix("!").removeSuffix(">"))
+        trimmed
       }
       Channel::class.java -> evt.guild.getTextChannelById(string)
       else -> string
