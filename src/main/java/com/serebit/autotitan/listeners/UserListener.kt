@@ -8,12 +8,20 @@ import net.dv8tion.jda.core.events.user.*
 import net.dv8tion.jda.core.hooks.ListenerAdapter
 
 class UserListener(
-    override val listeners: MutableList<Listener>
+    listeners: MutableSet<Listener>
 ) : ListenerAdapter(), EventListener {
+  override val listeners = listeners.filter { it.eventType in validEventTypes }.toMutableSet()
+  override val validEventTypes = mutableSetOf<Class<out Event>>(
+      UserNameUpdateEvent::class.java,
+      UserAvatarUpdateEvent::class.java,
+      UserOnlineStatusUpdateEvent::class.java,
+      UserGameUpdateEvent::class.java,
+      UserTypingEvent::class.java
+  )
+
   override fun runListeners(evt: Event) {
     launch(CommonPool) {
       listeners
-          .filter { it.eventType in validEventTypes }
           .filter { it.eventType == evt::class.java }
           .forEach { it.method(it.instance, evt) }
     }
@@ -37,15 +45,5 @@ class UserListener(
 
   override fun onUserTyping(evt: UserTypingEvent) {
     runListeners(evt)
-  }
-
-  companion object {
-    val validEventTypes = mutableSetOf<Class<out Event>>(
-        UserNameUpdateEvent::class.java,
-        UserAvatarUpdateEvent::class.java,
-        UserOnlineStatusUpdateEvent::class.java,
-        UserGameUpdateEvent::class.java,
-        UserTypingEvent::class.java
-    )
   }
 }

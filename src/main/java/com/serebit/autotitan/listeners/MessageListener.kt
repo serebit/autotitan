@@ -16,13 +16,24 @@ import net.dv8tion.jda.core.hooks.ListenerAdapter
 
 class MessageListener(
     val commandPrefix: String,
-    val commands: MutableList<Command>,
-    override val listeners: MutableList<Listener>
+    val commands: MutableSet<Command>,
+    listeners: MutableSet<Listener>
 ) : ListenerAdapter(), EventListener {
+  override val listeners = listeners.filter { it.eventType in validEventTypes }.toMutableSet()
+  override val validEventTypes = mutableSetOf(
+      MessageReceivedEvent::class.java,
+      MessageDeleteEvent::class.java,
+      MessageBulkDeleteEvent::class.java,
+      MessageEmbedEvent::class.java,
+      MessageUpdateEvent::class.java,
+      MessageReactionAddEvent::class.java,
+      MessageReactionRemoveEvent::class.java,
+      MessageReactionRemoveAllEvent::class.java
+  )
+
   override fun runListeners(evt: Event) {
     launch(CommonPool) {
       listeners
-          .filter { it.eventType in validEventTypes }
           .filter { it.eventType == evt::class.java }
           .forEach { it.method(it.instance, evt) }
     }
@@ -94,10 +105,10 @@ class MessageListener(
         commands
             .sortedBy { it.method.declaringClass.simpleName }
             .map {
-          "${it.name} " + it.parameterTypes
-            .map { "<" + it.simpleName + ">" }
-            .joinToString(" ")
-        }.joinToString("\n") +
+              "${it.name} " + it.parameterTypes
+                  .map { "<" + it.simpleName + ">" }
+                  .joinToString(" ")
+            }.joinToString("\n") +
         "\n```"
     evt.channel.sendMessage(list).queue()
   }
@@ -174,18 +185,5 @@ class MessageListener(
       }
       return parameters
     }
-  }
-
-  companion object {
-    val validEventTypes = mutableSetOf(
-        MessageReceivedEvent::class.java,
-        MessageDeleteEvent::class.java,
-        MessageBulkDeleteEvent::class.java,
-        MessageEmbedEvent::class.java,
-        MessageUpdateEvent::class.java,
-        MessageReactionAddEvent::class.java,
-        MessageReactionRemoveEvent::class.java,
-        MessageReactionRemoveAllEvent::class.java
-    )
   }
 }

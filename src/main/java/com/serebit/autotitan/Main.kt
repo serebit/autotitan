@@ -10,14 +10,13 @@ import com.serebit.autotitan.data.Listener
 import com.serebit.autotitan.listeners.*
 import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDABuilder
-import net.dv8tion.jda.core.events.Event
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import java.io.File
 import java.util.*
 
 fun main(args: Array<String>) {
   val useExistingSettings = !(args.contains("-r") || args.contains("--reset"))
-  val configFile = File(Singleton.getParentDirectory().parent + "/data/config.json")
+  val configFile = File("${Singleton.parentDirectory.parent}/data/config.json")
   val config: Configuration
   if (useExistingSettings && configFile.exists()) {
     config = Gson().fromJson(configFile.readText(), Configuration::class.java)
@@ -33,19 +32,21 @@ fun main(args: Array<String>) {
       .setToken(config.token)
       .buildBlocking()
   val extensions = getExtensions()
+  val listeners = loadListeners(extensions)
   jda.addEventListener(
       MessageListener(
           config.prefix,
           loadCommands(extensions),
-          loadListeners(extensions, MessageListener.validEventTypes)
+          listeners
       ),
-      JdaListener(loadListeners(extensions, JdaListener.validEventTypes)),
-      UserListener(loadListeners(extensions, UserListener.validEventTypes)),
-      TextChannelListener(loadListeners(extensions, TextChannelListener.validEventTypes)),
-      VoiceChannelListener(loadListeners(extensions, VoiceChannelListener.validEventTypes))
+      JdaListener(listeners),
+      UserListener(listeners),
+      TextChannelListener(listeners),
+      VoiceChannelListener(listeners)
   )
   println()
   println("Username:    ${jda.selfUser.name}")
+  println("Ping:        ${jda.ping}ms")
   println("Invite link: ${jda.asBot().getInviteUrl()}")
 }
 
@@ -66,8 +67,8 @@ fun getExtensions(): MutableSet<Class<*>> {
       .toMutableSet()
 }
 
-fun loadCommands(classes: MutableSet<Class<*>>): MutableList<Command> {
-  val commands = mutableListOf<Command>()
+fun loadCommands(classes: MutableSet<Class<*>>): MutableSet<Command> {
+  val commands = mutableSetOf<Command>()
   classes.map { extension ->
     extension.methods
         .filter { it.isAnnotationPresent(CommandFunction::class.java) }
@@ -79,13 +80,12 @@ fun loadCommands(classes: MutableSet<Class<*>>): MutableList<Command> {
   return commands
 }
 
-fun loadListeners(classes: MutableSet<Class<*>>, validTypes: MutableSet<Class<out Event>>): MutableList<Listener> {
-  val listeners = mutableListOf<Listener>()
+fun loadListeners(classes: MutableSet<Class<*>>): MutableSet<Listener> {
+  val listeners = mutableSetOf<Listener>()
   classes.map { extension ->
     extension.methods
         .filter { it.isAnnotationPresent(ListenerFunction::class.java) }
         .filter { it.parameterCount == 1 }
-        .filter { it.parameterTypes[0] in validTypes }
         .forEach {
           listeners.add(Listener(extension.newInstance(), it, it.getAnnotation(ListenerFunction::class.java)))
         }
@@ -94,5 +94,5 @@ fun loadListeners(classes: MutableSet<Class<*>>, validTypes: MutableSet<Class<ou
 }
 
 object Singleton {
-  fun getParentDirectory(): File = File(this::class.java.protectionDomain.codeSource.location.toURI())
+  val parentDirectory = File(this::class.java.protectionDomain.codeSource.location.toURI())
 }

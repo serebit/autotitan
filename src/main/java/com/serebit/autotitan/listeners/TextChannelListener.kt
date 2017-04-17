@@ -13,12 +13,21 @@ import net.dv8tion.jda.core.events.channel.text.update.TextChannelUpdateTopicEve
 import net.dv8tion.jda.core.hooks.ListenerAdapter
 
 class TextChannelListener(
-    override val listeners: MutableList<Listener>
+    listeners: MutableSet<Listener>
 ) : ListenerAdapter(), EventListener {
+  override val listeners = listeners.filter { it.eventType in validEventTypes }.toMutableSet()
+  override val validEventTypes = mutableSetOf<Class<out Event>>(
+      TextChannelDeleteEvent::class.java,
+      TextChannelUpdateNameEvent::class.java,
+      TextChannelUpdateTopicEvent::class.java,
+      TextChannelUpdatePositionEvent::class.java,
+      TextChannelUpdatePermissionsEvent::class.java,
+      TextChannelCreateEvent::class.java
+  )
+
   override fun runListeners(evt: Event) {
     launch(CommonPool) {
       listeners
-          .filter { it.eventType in validEventTypes }
           .filter { it.eventType == evt::class.java }
           .forEach { it.method(it.instance, evt) }
     }
@@ -46,16 +55,5 @@ class TextChannelListener(
 
   override fun onTextChannelCreate(evt: TextChannelCreateEvent) {
     runListeners(evt)
-  }
-
-  companion object {
-    val validEventTypes = mutableSetOf<Class<out Event>>(
-        TextChannelDeleteEvent::class.java,
-        TextChannelUpdateNameEvent::class.java,
-        TextChannelUpdateTopicEvent::class.java,
-        TextChannelUpdatePositionEvent::class.java,
-        TextChannelUpdatePermissionsEvent::class.java,
-        TextChannelCreateEvent::class.java
-    )
   }
 }
