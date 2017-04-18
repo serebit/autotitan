@@ -10,5 +10,4 @@ class Listener(val instance: Any, val method: Method, info: ListenerFunction) {
   }
   val description = info.description
   val eventType: Class<*> = method.parameterTypes[0]
-  val serverOnly = info.serverOnly
 }

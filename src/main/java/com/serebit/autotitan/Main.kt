@@ -2,15 +2,14 @@ package com.serebit.autotitan
 
 import com.google.common.reflect.ClassPath
 import com.google.gson.Gson
-import com.serebit.autotitan.annotations.CommandFunction
 import com.serebit.autotitan.annotations.ListenerFunction
 import com.serebit.autotitan.config.Configuration
 import com.serebit.autotitan.data.Command
+import com.serebit.autotitan.data.GuildCommand
 import com.serebit.autotitan.data.Listener
 import com.serebit.autotitan.listeners.*
 import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDABuilder
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import java.io.File
 import java.util.*
 
@@ -33,10 +32,15 @@ fun main(args: Array<String>) {
       .buildBlocking()
   val extensions = getExtensions()
   val listeners = loadListeners(extensions)
+  Command.prefix = config.prefix
+  GuildCommand.prefix = config.prefix
   jda.addEventListener(
       MessageListener(
-          config.prefix,
           loadCommands(extensions),
+          listeners
+      ),
+      GuildMessageListener(
+          loadGuildCommands(extensions),
           listeners
       ),
       JdaListener(listeners),
@@ -70,12 +74,21 @@ fun getExtensions(): MutableSet<Class<*>> {
 fun loadCommands(classes: MutableSet<Class<*>>): MutableSet<Command> {
   val commands = mutableSetOf<Command>()
   classes.map { extension ->
+    val instance = extension.newInstance()
     extension.methods
-        .filter { it.isAnnotationPresent(CommandFunction::class.java) }
-        .filter { it.parameterTypes[0] == MessageReceivedEvent::class.java }
-        .forEach {
-          commands.add(Command(extension.newInstance(), it, it.getAnnotation(CommandFunction::class.java)))
-        }
+        .filter { Command.isValidCommand(it) }
+        .forEach { commands.add(Command(instance, it)) }
+  }
+  return commands
+}
+
+fun loadGuildCommands(classes: MutableSet<Class<*>>): MutableSet<GuildCommand> {
+  val commands = mutableSetOf<GuildCommand>()
+  classes.map { extension ->
+    val instance = extension.newInstance()
+    extension.methods
+        .filter { GuildCommand.isValidCommand(it) }
+        .forEach { commands.add(GuildCommand(instance, it)) }
   }
   return commands
 }

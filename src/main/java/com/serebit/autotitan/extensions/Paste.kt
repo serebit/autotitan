@@ -4,6 +4,7 @@ import com.serebit.autotitan.annotations.CommandFunction
 import com.serebit.autotitan.annotations.ListenerFunction
 import khttp.post
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
+import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent
 
 class Paste {
   val host = "https://hastebin.com"
@@ -21,10 +22,9 @@ class Paste {
 
   @ListenerFunction(
       description = "Automatically creates a paste in Hastebin if a user sends a" +
-          " message with a code block longer than a certain length.",
-      serverOnly = true
+          " message with a code block longer than a certain length."
   )
-  fun autopaste(evt: MessageReceivedEvent) {
+  fun autopaste(evt: GuildMessageReceivedEvent) {
     val messageContent = evt.message.rawContent
     val codeBlockRegex = "`{3}.*\n((?:.*\n)*?)`{3}".toRegex()
     if (codeBlockRegex.matches(messageContent)) {
@@ -38,7 +38,11 @@ class Paste {
           .filterNotNull()
           .toMutableList()
       if (codeBlocks.isNotEmpty()) {
-        codeBlocks.forEach { paste(evt, it) }
+        codeBlocks.forEach {
+          val message = "${evt.author.asMention}'s paste: ${getPasteUrl(it)}"
+          evt.message.delete().queue()
+          evt.channel.sendMessage(message).queue()
+        }
       }
     }
   }

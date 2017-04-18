@@ -1,21 +1,23 @@
 package com.serebit.autotitan.data
 
-import com.serebit.autotitan.annotations.CommandFunction
+import com.serebit.autotitan.annotations.GuildCommandFunction
 import com.sun.javaws.exceptions.InvalidArgumentException
+import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Channel
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.entities.User
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent
+import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent
 import java.lang.reflect.Method
 
-class Command(val instance: Any, val method: Method) {
+class GuildCommand(val instance: Any, val method: Method) {
   val parameterTypes: MutableList<Class<*>>
   val name: String
   val description: String
   val delimitFinalParameter: Boolean
+  val permissions: MutableSet<Permission>
 
   init {
-    val info = method.getAnnotation(CommandFunction::class.java)
+    val info = method.getAnnotation(GuildCommandFunction::class.java)
     val parameterList = method.parameterTypes.toMutableList()
     parameterList.removeAt(0) // Remove event parameter
     parameterTypes = parameterList
@@ -25,32 +27,35 @@ class Command(val instance: Any, val method: Method) {
     }
     description = info.description
     delimitFinalParameter = info.delimitFinalParameter
+    permissions = info.permissions.toMutableSet()
     if (parameterList.any { it !in validParameterTypes })
       throw InvalidArgumentException(arrayOf("Invalid argument type passed to Command constructor."))
   }
 
-  operator fun invoke(evt: MessageReceivedEvent) {
+  operator fun invoke(evt: GuildMessageReceivedEvent) {
     method.invoke(instance, evt, *castParameters(evt).toTypedArray())
   }
 
-  fun matches(evt: MessageReceivedEvent): Boolean {
+  fun matches(evt: GuildMessageReceivedEvent): Boolean {
     if (evt.message.rawContent.startsWith(prefix + name)) {
       val strings = getMessageParameters(evt.message.rawContent)
       if (parameterTypes.size != strings.size) return false
       return parameterTypes.zip(strings).all {
         (type, string) ->
         validateParameter(evt, type, string)
-      }
+      } && evt.guild.getMember(evt.author).hasPermission(permissions)
     } else {
       return false
     }
   }
 
-  fun roughlyMatches(evt: MessageReceivedEvent): Boolean {
-    return evt.message.rawContent.startsWith(prefix + name)
+  fun roughlyMatches(evt: GuildMessageReceivedEvent): Boolean {
+    return run {
+      evt.message.rawContent.startsWith(prefix + name) && evt.guild.getMember(evt.author).hasPermission(permissions)
+    }
   }
 
-  fun sendHelpMessage(evt: MessageReceivedEvent) {
+  fun sendHelpMessage(evt: GuildMessageReceivedEvent) {
     val parameterTypesString = parameterTypes.map(Class<*>::getSimpleName).joinToString(" ")
     val helpMessage = "```\n$prefix$name $parameterTypesString\n\n$description```"
     evt.channel.sendMessage(helpMessage)
@@ -75,7 +80,7 @@ class Command(val instance: Any, val method: Method) {
     }
   }
 
-  private fun validateParameter(evt: MessageReceivedEvent, type: Class<*>, string: String): Boolean {
+  private fun validateParameter(evt: GuildMessageReceivedEvent, type: Class<*>, string: String): Boolean {
     return when (type) {
       Int::class.java -> string.toIntOrNull() != null
       Long::class.java -> string.toLongOrNull() != null
@@ -98,7 +103,7 @@ class Command(val instance: Any, val method: Method) {
     }
   }
 
-  private fun castParameters(evt: MessageReceivedEvent): MutableList<Any> {
+  private fun castParameters(evt: GuildMessageReceivedEvent): MutableList<Any> {
     val strings = getMessageParameters(evt.message.rawContent)
     return parameterTypes.zip(strings).map {
       (type, string) ->
@@ -106,7 +111,7 @@ class Command(val instance: Any, val method: Method) {
     }.toMutableList()
   }
 
-  private fun castParameter(evt: MessageReceivedEvent, type: Class<*>, string: String): Any {
+  private fun castParameter(evt: GuildMessageReceivedEvent, type: Class<*>, string: String): Any {
     return when (type) {
       Int::class.java -> string.toInt()
       Long::class.java -> string.toLong()
@@ -145,10 +150,10 @@ class Command(val instance: Any, val method: Method) {
     )
 
     @JvmStatic fun isValidCommand(method: Method): Boolean {
-      val methodHasAnnotation = method.isAnnotationPresent(CommandFunction::class.java)
+      val methodHasAnnotation = method.isAnnotationPresent(GuildCommandFunction::class.java)
       val methodHasParameters = method.parameterCount > 0
       return run {
-        methodHasAnnotation && methodHasParameters && method.parameterTypes[0] == MessageReceivedEvent::class.java
+        methodHasAnnotation && methodHasParameters && method.parameterTypes[0] == GuildMessageReceivedEvent::class.java
       }
     }
   }

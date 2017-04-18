@@ -4,9 +4,6 @@ import com.serebit.autotitan.data.Command
 import com.serebit.autotitan.data.Listener
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.launch
-import net.dv8tion.jda.core.entities.Channel
-import net.dv8tion.jda.core.entities.Member
-import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.Event
 import net.dv8tion.jda.core.events.message.*
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent
@@ -15,7 +12,6 @@ import net.dv8tion.jda.core.events.message.react.MessageReactionRemoveEvent
 import net.dv8tion.jda.core.hooks.ListenerAdapter
 
 class MessageListener(
-    val commandPrefix: String,
     val commands: MutableSet<Command>,
     allListeners: MutableSet<Listener>
 ) : ListenerAdapter(), EventListener {
@@ -47,27 +43,18 @@ class MessageListener(
     if (!evt.author.isBot) {
       runListeners(evt)
       var messageContent = evt.message.rawContent
-      if (messageContent.startsWith(commandPrefix)) {
-        messageContent = messageContent.removePrefix(commandPrefix)
-        if (messageContent == "help") {
-          sendCommandList(evt)
-        }
-        val command = commands.filter {
-          messageContent.startsWith(it.name + " ") || messageContent == it.name
-        }.sortedBy { it.name.length }.lastOrNull()
-        if (command != null) {
-          if (matchesCommand(evt, command)) {
-            val parameters = getCastParameters(evt, command)
-            command.method(command.instance, evt, *parameters.toTypedArray())
-          } else {
-            val helpMessage = "```\n$commandPrefix${command.name} " +
-                command.parameterTypes
-                    .map(Class<*>::getSimpleName)
-                    .joinToString(" ") +
-                "\n\n${command.description}```"
-            evt.channel.sendMessage(helpMessage).queue()
-          }
-        }
+      if (messageContent == "${Command.prefix}help") sendCommandList(evt)
+      val command = commands
+          .filter { it.matches(evt) }
+          .sortedBy { it.name.length }
+          .lastOrNull()
+      if (command != null) {
+        command(evt)
+      } else {
+        commands
+            .filter { it.roughlyMatches(evt) }
+            .sortedBy { it.name.length }
+            .lastOrNull()?.sendHelpMessage(evt)
       }
     }
   }
@@ -115,85 +102,5 @@ class MessageListener(
             }.joinToString("\n") +
         "\n```"
     evt.channel.sendMessage(list).queue()
-  }
-
-  fun matchesCommand(evt: MessageReceivedEvent, command: Command): Boolean {
-    val types = command.parameterTypes
-    val strings = getMessageParameters(evt.message.rawContent, command)
-    if (types.size != strings.size) return false
-    return types.zip(strings).all {
-      (type, string) ->
-      validateParameter(evt, type, string)
-    }
-  }
-
-  fun validateParameter(evt: MessageReceivedEvent, type: Class<*>, string: String): Boolean {
-    return when (type) {
-      Int::class.java -> string.toIntOrNull() != null
-      Long::class.java -> string.toLongOrNull() != null
-      Double::class.java -> string.toDoubleOrNull() != null
-      Float::class.java -> string.toFloatOrNull() != null
-      User::class.java -> {
-        val trimmed = evt.jda.getUserById(string.removePrefix("<@").removePrefix("!").removeSuffix(">"))
-        trimmed != null
-      }
-      Member::class.java -> {
-        val trimmed = evt.guild.getMemberById(string.removePrefix("<@").removePrefix("!").removeSuffix(">"))
-        trimmed != null
-      }
-      Channel::class.java -> evt.guild.getTextChannelById(string) != null
-      String::class.java -> true
-      else -> {
-        println(type.canonicalName + " is not a valid parameter type.")
-        false
-      }
-    }
-  }
-
-  fun castParameter(evt: MessageReceivedEvent, type: Class<*>, string: String): Any {
-    return when (type) {
-      Int::class.java -> string.toInt()
-      Long::class.java -> string.toLong()
-      Double::class.java -> string.toDouble()
-      Float::class.java -> string.toFloat()
-      User::class.java -> {
-        val trimmed = evt.jda.getUserById(string.removePrefix("<@").removePrefix("!").removeSuffix(">"))
-        trimmed
-      }
-      Member::class.java -> {
-        val trimmed = evt.guild.getMemberById(string.removePrefix("<@").removePrefix("!").removeSuffix(">"))
-        trimmed
-      }
-      Channel::class.java -> evt.guild.getTextChannelById(string)
-      else -> string
-    }
-  }
-
-  fun getCastParameters(evt: MessageReceivedEvent, command: Command): MutableList<Any> {
-    val strings = getMessageParameters(evt.message.rawContent, command)
-    return command.parameterTypes.zip(strings).map {
-      (type, string) ->
-      castParameter(evt, type, string)
-    }.toMutableList()
-  }
-
-  fun getMessageParameters(messageContent: String, command: Command): MutableList<String> {
-    val trimmedMessageContent = messageContent.removePrefix(commandPrefix + command.name).trim()
-    val delimitFinalParameter = command.delimitFinalParameter
-    val parameterCount = command.parameterTypes.size
-    val splitParameters = trimmedMessageContent.split(" ").filter(String::isNotBlank).toMutableList()
-    if (delimitFinalParameter) {
-      return splitParameters
-    } else {
-      val parameters = mutableListOf<String>()
-      (0..parameterCount - 2).forEach {
-        parameters.add(splitParameters[it])
-        splitParameters.removeAt(0)
-      }
-      if (splitParameters.size > 0) {
-        parameters.add(splitParameters.joinToString(" "))
-      }
-      return parameters
-    }
   }
 }

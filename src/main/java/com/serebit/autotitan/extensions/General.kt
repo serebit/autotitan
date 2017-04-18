@@ -1,10 +1,12 @@
 package com.serebit.autotitan.extensions
 
 import com.serebit.autotitan.annotations.CommandFunction
+import com.serebit.autotitan.annotations.GuildCommandFunction
 import net.dv8tion.jda.core.EmbedBuilder
 import net.dv8tion.jda.core.OnlineStatus
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
+import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent
 import java.time.format.DateTimeFormatter
 
 class General {
@@ -13,13 +15,18 @@ class General {
     evt.channel.sendMessage("Pong. The current ping is ${evt.jda.ping}ms.").queue()
   }
 
-  @CommandFunction(description = "Gets information about the server.", serverOnly = true)
-  fun serverInfo(evt: MessageReceivedEvent) {
+  @GuildCommandFunction(description = "Gets information about the server.")
+  fun serverInfo(evt: GuildMessageReceivedEvent) {
     val server = evt.guild
     val embedBuilder = EmbedBuilder()
-    embedBuilder.setTitle(server.name, null)
+    val permanentInvites = server.invites.complete(true).filter { !it.isTemporary }
+    var invite: String? = null
+    if (permanentInvites.isNotEmpty()) {
+      invite = "https://discord.gg/${permanentInvites.first().code}"
+    }
+    embedBuilder.setTitle(server.name, invite)
     embedBuilder.setDescription(
-        "Created on " + server.creationTime.format(DateTimeFormatter.ofPattern("MMMM d, yyyy"))
+        "Created on ${server.creationTime.format(DateTimeFormatter.ofPattern("MMMM d, yyyy"))}"
     )
     if (server.iconUrl != null) {
       embedBuilder.setThumbnail(server.iconUrl)
@@ -64,39 +71,45 @@ class General {
         false
     )
     embedBuilder.setFooter(
-        "Server ID: " + server.id,
+        "Server ID: ${server.id}",
         null
     )
     evt.channel.sendMessage(embedBuilder.build()).queue()
   }
 
-  @CommandFunction(description = "Gets information about a specific server member.", serverOnly = true)
-  fun memberInfo(evt: MessageReceivedEvent, member: Member) {
+  @GuildCommandFunction(description = "Gets information about a specific server member.")
+  fun memberInfo(evt: GuildMessageReceivedEvent, member: Member) {
     val user = member.user
     val embedBuilder = EmbedBuilder()
     var title = user.name + "#" + user.discriminator
     if (member.nickname != null) {
-      title += "(also known as " + member.nickname + ")"
+      title += " - ${member.nickname}"
     }
+    var onlineStatus = member.onlineStatus.name.toLowerCase().split("_").map(String::capitalize).joinToString(" ")
+    var description = "$onlineStatus"
+    if (member.game != null) {
+      description += " - Playing ${member.game.name}"
+    }
+    embedBuilder.setDescription(description)
     embedBuilder.setTitle(title, null)
-    embedBuilder.setDescription("User ID: " + user.id)
     embedBuilder.setColor(member.color)
     embedBuilder.setThumbnail(user.effectiveAvatarUrl)
     embedBuilder.addField(
-        "Joined Discord on",
-        user.creationTime.format(DateTimeFormatter.ofPattern("MMMM d, yyyy")),
+        "Joined Discord",
+        user.creationTime.format(DateTimeFormatter.ofPattern("h:m a 'on' MMMM d, yyyy")),
         true
     )
     embedBuilder.addField(
-        "Joined this server on",
-        member.joinDate.format(DateTimeFormatter.ofPattern("MMMM d, yyyy")),
+        "Joined this Server",
+        member.joinDate.format(DateTimeFormatter.ofPattern("h:m a 'on' MMMM d, yyyy")),
         true
     )
     embedBuilder.addField(
         "Roles",
-        member.roles.toMutableList().joinToString(", "),
+        member.roles.map { it.name }.joinToString(", "),
         true
     )
+    embedBuilder.setFooter("User ID: " + user.id, null)
     evt.channel.sendMessage(embedBuilder.build()).queue()
   }
 }
