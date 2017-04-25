@@ -8,7 +8,7 @@ import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent
 
 class Moderation {
   @GuildCommandFunction(
-      description = "Kicks a user from the current server.",
+      description = "Kicks a member from the current server.",
       permissions = arrayOf(
           Permission.KICK_MEMBERS
       )
@@ -32,7 +32,7 @@ class Moderation {
   }
   
   @GuildCommandFunction(
-      description = "Bans a user from the current server, and deletes 7 days worth of their messages.",
+      description = "Bans a member from the current server, and deletes 7 days worth of their messages.",
       permissions = arrayOf(
           Permission.BAN_MEMBERS
       )
