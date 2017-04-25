@@ -76,7 +76,7 @@ class General {
     )
     val roles = member.roles.map { it.name }.joinToString(", ")
     val embedBuilder = EmbedBuilder()
-        .setTitle(member.asMention(), null)
+        .setTitle(member.asMention, null)
         .setDescription(description)
         .setColor(member.color)
         .setThumbnail(user.effectiveAvatarUrl)
