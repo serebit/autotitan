@@ -15,7 +15,7 @@ import java.util.*
 
 fun main(args: Array<String>) {
   val useExistingSettings = !(args.contains("-r") || args.contains("--reset"))
-  val configFile = File("${Singleton.parentDirectory.parent}/data/config.json")
+  val configFile = File("${Singleton.location.parent}/data/config.json")
   val config: Configuration
   if (useExistingSettings && configFile.exists()) {
     config = Gson().fromJson(configFile.readText(), Configuration::class.java)
@@ -82,17 +82,6 @@ fun loadCommands(classes: MutableSet<Class<*>>): MutableSet<Command> {
   return commands
 }
 
-fun loadGuildCommands(classes: MutableSet<Class<*>>): MutableSet<GuildCommand> {
-  val commands = mutableSetOf<GuildCommand>()
-  classes.map { extension ->
-    val instance = extension.newInstance()
-    extension.methods
-        .filter { GuildCommand.isValidCommand(it) }
-        .forEach { commands.add(GuildCommand(instance, it)) }
-  }
-  return commands
-}
-
 fun loadListeners(classes: MutableSet<Class<*>>): MutableSet<Listener> {
   val listeners = mutableSetOf<Listener>()
   classes.map { extension ->
@@ -107,5 +96,5 @@ fun loadListeners(classes: MutableSet<Class<*>>): MutableSet<Listener> {
 }
 
 object Singleton {
-  val parentDirectory = File(this::class.java.protectionDomain.codeSource.location.toURI())
+  val location = File(this::class.java.protectionDomain.codeSource.location.toURI())
 }

@@ -1,5 +1,6 @@
 package com.serebit.autotitan.extensions
 
+import com.serebit.autotitan.Access
 import com.serebit.autotitan.annotations.CommandFunction
 import com.serebit.autotitan.annotations.GuildCommandFunction
 import net.dv8tion.jda.core.EmbedBuilder
@@ -15,7 +16,7 @@ class General {
     evt.channel.sendMessage("Pong. The current ping is ${evt.jda.ping}ms.").queue()
   }
 
-  @GuildCommandFunction(description = "Gets information about the server.")
+  @CommandFunction(description = "Gets information about the server.", access = Access.GUILD_ONLY)
   fun serverInfo(evt: GuildMessageReceivedEvent) {
     val server = evt.guild
     val embedBuilder = EmbedBuilder()
