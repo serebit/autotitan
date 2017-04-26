@@ -18,11 +18,7 @@ class General {
   @GuildCommandFunction(description = "Gets information about the server.")
   fun serverInfo(evt: GuildMessageReceivedEvent) {
     val server = evt.guild
-    val permanentInvites = server.invites.complete(true).filter { !it.isTemporary }
-    val invite = when (permanentInvites.isNotEmpty()) {
-      true -> "https://discord.gg/${permanentInvites.first().code}"
-      false -> null
-    }
+    val canGetInvite = server.selfMember.hasPermission(Permission.MANAGE_SERVER)
     val creationDate = server.creationTime.format(DateTimeFormatter.ofPattern("MMMM d, yyyy"))
     val onlineMemberCount = server.members
         .filter { it.onlineStatus == OnlineStatus.ONLINE }
@@ -32,8 +28,8 @@ class General {
     val textChannelCount = server.textChannels.size.toString()
     val voiceChannelCount = server.voiceChannels.size.toString()
     val guildRoles = server.roles
-        .filter { it.name != "@everyone" }
         .map { it.name }
+        .filter { it != "@everyone" }
         .joinToString(", ")
     val embedBuilder = EmbedBuilder()
         .setTitle(server.name, invite)
@@ -47,7 +43,14 @@ class General {
         .addField("Text Channels", textChannelCount, true)
         .addField("Voice Channels", voiceChannelCount, true)
         .addField("Roles", guildRoles, true)
-        .setFooter("Server ID: ${server.id}", null)
+        .setFooter("Server ID: ${server.id}", "")
+    if (canGetInvite) {
+      val permanentInvites = server.invites.complete(true).filter { !it.isTemporary }
+      if (permanentInvites.isNotEmpty()) {
+        val inviteUrl = "https://discord.gg/${permanentInvites.first().code}"
+        embedBuilder.addField("Invite Link", inviteUrl, false)
+      }
+    }
     evt.channel.sendMessage(embedBuilder.build()).queue()
   }
 
@@ -60,11 +63,7 @@ class General {
         .split("_")
         .map(String::capitalize)
         .joinToString(" ")
-    val gameName = when(member.game != null) {
-      true -> member.game.name
-      false -> ""
-    }
-    val description = onlineStatus + when(gameName != "") {
+    val description = onlineStatus + when(member.game != null) {
       true -> " - Playing $gameName"
       false -> ""
     }
@@ -76,7 +75,7 @@ class General {
     )
     val roles = member.roles.map { it.name }.joinToString(", ")
     val embedBuilder = EmbedBuilder()
-        .setTitle(member.asMention, null)
+        .setTitle(member.effectiveName, null)
         .setDescription(description)
         .setColor(member.color)
         .setThumbnail(user.effectiveAvatarUrl)

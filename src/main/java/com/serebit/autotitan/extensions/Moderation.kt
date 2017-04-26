@@ -46,4 +46,23 @@ class Moderation {
       evt.channel.sendMessage("Unbanned.").queue()
     })
   }
+  
+  @GuildCommandFunction(
+      description = "Deletes the last N messages in the channel. N can only be up to 100.",
+      permissions = arrayOf(Permission.MANAGE_MESSAGES)
+  )
+  fun cleanUp(evt: GuildMessageReceivedEvent, number: Int) {
+    val channel = evt.textChannel
+    val channelMessages = channel.history.retrievedHistory
+    if (channelMessages.isNotEmpty()) {
+      when(number > 1) {
+        true -> {
+          val messagesToDelete = channelMessages.takeLast(number)
+          channel.deleteMessages(messagesToDelete).queue()
+        }
+        false -> channelMessages.last().delete().queue()
+      }
+    }
+    
+  }
 }
