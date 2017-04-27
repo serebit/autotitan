@@ -1,6 +1,6 @@
 package com.serebit.autotitan.data
 
-import com.serebit.autotitan.Access
+import com.serebit.autotitan.Locale
 import com.serebit.autotitan.annotations.CommandFunction
 import com.sun.javaws.exceptions.InvalidArgumentException
 import net.dv8tion.jda.core.entities.Channel
@@ -14,7 +14,7 @@ class Command(val instance: Any, val method: Method) {
   val name: String
   val description: String
   val delimitFinalParameter: Boolean
-  val access: Access
+  val locale: Locale
 
   init {
     val info = method.getAnnotation(CommandFunction::class.java)
@@ -27,7 +27,7 @@ class Command(val instance: Any, val method: Method) {
     }
     description = info.description
     delimitFinalParameter = info.delimitFinalParameter
-    access = info.access
+    locale = info.locale
     if (parameterList.any { it !in validParameterTypes })
       throw InvalidArgumentException(arrayOf("Invalid argument type passed to Command constructor."))
   }

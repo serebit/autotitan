@@ -1,6 +1,6 @@
 package com.serebit.autotitan.extensions
 
-import com.serebit.autotitan.annotations.GuildCommandFunction
+import com.serebit.autotitan.annotations.CommandFunction
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.entities.User
@@ -27,7 +27,7 @@ class Moderation {
     })
   }
   
-  @GuildCommandFunction(
+  @CommandFunction(
       description = "Bans a member from the current server, and deletes 7 days worth of their messages.",
       permissions = arrayOf(Permission.BAN_MEMBERS)
   )
@@ -37,7 +37,7 @@ class Moderation {
     })
   }
   
-  @GuildCommandFunction(
+  @CommandFunction(
       description = "Unbans a banned user from the current server.",
       permissions = arrayOf(Permission.BAN_MEMBERS)
   )

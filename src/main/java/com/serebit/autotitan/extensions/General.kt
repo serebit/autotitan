@@ -1,8 +1,7 @@
 package com.serebit.autotitan.extensions
 
-import com.serebit.autotitan.Access
+import com.serebit.autotitan.Locale
 import com.serebit.autotitan.annotations.CommandFunction
-import com.serebit.autotitan.annotations.GuildCommandFunction
 import net.dv8tion.jda.core.EmbedBuilder
 import net.dv8tion.jda.core.OnlineStatus
 import net.dv8tion.jda.core.entities.Member
@@ -16,7 +15,7 @@ class General {
     evt.channel.sendMessage("Pong. The last ping was ${evt.jda.ping}ms.").queue()
   }
 
-  @CommandFunction(description = "Gets information about the server.", access = Access.GUILD_ONLY)
+  @CommandFunction(description = "Gets information about the server.", locale = Locale.GUILD)
   fun serverInfo(evt: GuildMessageReceivedEvent) {
     val server = evt.guild
     val permanentInvites = server.invites.complete(true).filter { !it.isTemporary }
