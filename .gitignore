@@ -11,7 +11,7 @@
 gradle/
 .gradle/
 
-# Compilation output
+# Compilation Output
 bin/
 target/
 build/

@@ -50,7 +50,6 @@ class Command(val instance: Any, val method: Method) {
   }
 
   fun roughlyMatches(evt: MessageReceivedEvent): Boolean {
-
     return evt.message.rawContent.startsWith(prefix + name)
   }
 

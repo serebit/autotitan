@@ -16,7 +16,8 @@ class Paste {
   )
   fun paste(evt: MessageReceivedEvent, code: String) {
     val message = "${evt.author.asMention}'s paste: ${getPasteUrl(code)}"
-    evt.message.delete().queue()
+    if (evt.guild != null)
+      evt.message.delete().queue()
     evt.channel.sendMessage(message).queue()
   }
 
@@ -24,7 +25,7 @@ class Paste {
       description = "Automatically creates a paste in Hastebin if a user sends a" +
           " message with a code block longer than a certain length."
   )
-  fun autopaste(evt: GuildMessageReceivedEvent) {
+  fun autopaste(evt: MessageReceivedEvent) {
     val messageContent = evt.message.rawContent
     val codeBlockRegex = "`{3}.*\n((?:.*\n)*?)`{3}".toRegex()
     if (codeBlockRegex.matches(messageContent)) {
@@ -36,11 +37,11 @@ class Paste {
           .map { it.value }
           .filter { it.exceedsLengthLimit() }
           .filterNotNull()
-          .toMutableList()
       if (codeBlocks.isNotEmpty()) {
         codeBlocks.forEach {
           val message = "${evt.author.asMention}'s paste: ${getPasteUrl(it)}"
-          evt.message.delete().queue()
+          if (evt.guild != null)
+            evt.message.delete().queue()
           evt.channel.sendMessage(message).queue()
         }
       }
