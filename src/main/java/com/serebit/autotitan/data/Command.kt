@@ -37,7 +37,12 @@ class Command(val instance: Any, val method: Method) {
   }
 
   fun matches(evt: MessageReceivedEvent): Boolean {
-    if (evt.message.rawContent.startsWith(prefix + name)) {
+    val correctLocale = when(locale) {
+      Locale.ALL -> true
+      Locale.GUILD -> evt.guild != null
+      Locale.PRIVATE -> evt.guild == null
+    }
+    if (evt.message.rawContent.startsWith(prefix + name) && correctLocale) {
       val strings = getMessageParameters(evt.message.rawContent)
       if (parameterTypes.size != strings.size) return false
       return parameterTypes.zip(strings).all {

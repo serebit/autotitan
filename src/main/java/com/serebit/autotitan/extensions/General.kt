@@ -7,7 +7,6 @@ import net.dv8tion.jda.core.OnlineStatus
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
-import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent
 import java.time.format.DateTimeFormatter
 
 class General {
@@ -33,7 +32,7 @@ class General {
         .filter { it != "@everyone" }
         .joinToString(", ")
     val embedBuilder = EmbedBuilder()
-        .setTitle(server.name, "")
+        .setTitle(server.name, null)
         .setDescription(creationDate)
         .setThumbnail(server.iconUrl)
         .setColor(server.owner.color)
@@ -44,7 +43,7 @@ class General {
         .addField("Text Channels", textChannelCount, true)
         .addField("Voice Channels", voiceChannelCount, true)
         .addField("Roles", guildRoles, true)
-        .setFooter("Server ID: ${server.id}", "")
+        .setFooter("Server ID: ${server.id}", null)
     if (canGetInvite) {
       val permanentInvites = server.invites.complete(true).filter { !it.isTemporary }
       if (permanentInvites.isNotEmpty()) {

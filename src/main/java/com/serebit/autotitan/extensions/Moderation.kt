@@ -1,11 +1,11 @@
 package com.serebit.autotitan.extensions
 
-import com.serebit.autotitan.annotations.CommandFunction
 import com.serebit.autotitan.Locale
+import com.serebit.autotitan.annotations.CommandFunction
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.entities.User
-import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 
 class Moderation {
   @CommandFunction(
@@ -59,8 +59,8 @@ class Moderation {
   )
   fun cleanUp(evt: MessageReceivedEvent, number: Int) {
     if (number in (1..99)) {
-      evt.channel.history.retrievePast(number + 1).queue({
-        evt.channel.deleteMessages(it).queue()
+      evt.textChannel.history.retrievePast(number + 1).queue({
+        evt.textChannel.deleteMessages(it).queue()
       })
     }
   }

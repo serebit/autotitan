@@ -4,7 +4,6 @@ import com.serebit.autotitan.annotations.CommandFunction
 import com.serebit.autotitan.annotations.ListenerFunction
 import khttp.post
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
-import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent
 
 class Paste {
   val host = "https://hastebin.com"
@@ -37,6 +36,7 @@ class Paste {
           .map { it.value }
           .filter { it.exceedsLengthLimit() }
           .filterNotNull()
+          .toMutableList()
       if (codeBlocks.isNotEmpty()) {
         codeBlocks.forEach {
           val message = "${evt.author.asMention}'s paste: ${getPasteUrl(it)}"

@@ -1,6 +1,5 @@
 package com.serebit.autotitan.listeners
 
-import com.serebit.autotitan.data.GuildCommand
 import com.serebit.autotitan.data.Listener
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.launch
@@ -12,7 +11,6 @@ import net.dv8tion.jda.core.events.message.guild.GuildMessageUpdateEvent
 import net.dv8tion.jda.core.hooks.ListenerAdapter
 
 class GuildMessageListener(
-    val commands: MutableSet<GuildCommand>,
     unfilteredListeners: MutableSet<Listener>
 ) : ListenerAdapter(), EventListener {
   override val listeners: MutableSet<Listener>

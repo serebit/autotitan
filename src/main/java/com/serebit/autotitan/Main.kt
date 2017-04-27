@@ -5,7 +5,6 @@ import com.google.gson.Gson
 import com.serebit.autotitan.annotations.ListenerFunction
 import com.serebit.autotitan.config.Configuration
 import com.serebit.autotitan.data.Command
-import com.serebit.autotitan.data.GuildCommand
 import com.serebit.autotitan.data.Listener
 import com.serebit.autotitan.listeners.*
 import net.dv8tion.jda.core.AccountType
@@ -33,14 +32,12 @@ fun main(args: Array<String>) {
   val extensions = getExtensions()
   val listeners = loadListeners(extensions)
   Command.prefix = config.prefix
-  GuildCommand.prefix = config.prefix
   jda.addEventListener(
       MessageListener(
           loadCommands(extensions),
           listeners
       ),
       GuildMessageListener(
-          loadGuildCommands(extensions),
           listeners
       ),
       JdaListener(listeners),
