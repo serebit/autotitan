@@ -38,20 +38,6 @@ class GuildMessageListener(
   override fun onGuildMessageReceived(evt: GuildMessageReceivedEvent) {
     if (!evt.author.isBot) {
       runListeners(evt)
-      var messageContent = evt.message.rawContent
-      if (messageContent == "${GuildCommand.prefix}help") sendCommandList(evt)
-      val command = commands
-          .filter { it.matches(evt) }
-          .sortedBy { it.name.length }
-          .lastOrNull()
-      if (command != null) {
-        command(evt)
-      } else {
-        commands
-            .filter { it.roughlyMatches(evt) }
-            .sortedBy { it.name.length }
-            .lastOrNull()?.sendHelpMessage(evt)
-      }
     }
   }
 
@@ -65,18 +51,5 @@ class GuildMessageListener(
 
   override fun onGuildMessageUpdate(evt: GuildMessageUpdateEvent) {
     runListeners(evt)
-  }
-
-  fun sendCommandList(evt: GuildMessageReceivedEvent) {
-    val list = "```\nCommand List (Server-Only)\n\n" +
-        commands
-            .sortedBy { it.method.declaringClass.simpleName }
-            .map {
-              "${it.name} " + it.parameterTypes
-                  .map { "<" + it.simpleName + ">" }
-                  .joinToString(" ")
-            }.joinToString("\n") +
-        "\n```"
-    evt.channel.sendMessage(list).queue()
   }
 }
