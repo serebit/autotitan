@@ -26,7 +26,7 @@ class Moderation {
       evt.channel.sendMessage("Banned.").queue()
     })
   }
-  
+
   @GuildCommandFunction(
       description = "Bans a member from the current server, and deletes 7 days worth of their messages.",
       permissions = arrayOf(Permission.BAN_MEMBERS)
@@ -36,7 +36,7 @@ class Moderation {
       evt.channel.sendMessage("Banned.").queue()
     })
   }
-  
+
   @GuildCommandFunction(
       description = "Unbans a banned user from the current server.",
       permissions = arrayOf(Permission.BAN_MEMBERS)
@@ -46,23 +46,16 @@ class Moderation {
       evt.channel.sendMessage("Unbanned.").queue()
     })
   }
-  
+
   @GuildCommandFunction(
-      description = "Deletes the last N messages in the channel. N can only be up to 100.",
-      permissions = arrayOf(Permission.MANAGE_MESSAGES)
+      description = "Deletes the last N messages in the channel. N can only be in the range of 1..99.",
+      permissions = arrayOf(Permission.MESSAGE_MANAGE)
   )
   fun cleanUp(evt: GuildMessageReceivedEvent, number: Int) {
-    val channel = evt.textChannel
-    val channelMessages = channel.history.retrievedHistory
-    if (channelMessages.isNotEmpty()) {
-      when(number > 1) {
-        true -> {
-          val messagesToDelete = channelMessages.takeLast(number)
-          channel.deleteMessages(messagesToDelete).queue()
-        }
-        false -> channelMessages.last().delete().queue()
-      }
+    if (number in (1..99)) {
+      evt.channel.history.retrievePast(number + 1).queue({
+        evt.channel.deleteMessages(it).queue()
+      })
     }
-    
   }
 }

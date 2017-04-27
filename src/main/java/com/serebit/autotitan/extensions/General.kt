@@ -4,6 +4,7 @@ import com.serebit.autotitan.annotations.CommandFunction
 import com.serebit.autotitan.annotations.GuildCommandFunction
 import net.dv8tion.jda.core.EmbedBuilder
 import net.dv8tion.jda.core.OnlineStatus
+import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent
@@ -32,7 +33,7 @@ class General {
         .filter { it != "@everyone" }
         .joinToString(", ")
     val embedBuilder = EmbedBuilder()
-        .setTitle(server.name, invite)
+        .setTitle(server.name, "")
         .setDescription(creationDate)
         .setThumbnail(server.iconUrl)
         .setColor(server.owner.color)
@@ -64,14 +65,14 @@ class General {
         .map(String::capitalize)
         .joinToString(" ")
     val description = onlineStatus + when(member.game != null) {
-      true -> " - Playing $gameName"
+      true -> " - Playing ${member.game}"
       false -> ""
     }
     val discordJoinDate = user.creationTime.format(
-        DateTimeFormatter.ofPattern("h:m a 'on' MMMM d, yyyy")
+        DateTimeFormatter.ofPattern("h:mm a 'on' MMMM d, yyyy")
     )
     val serverJoinDate = member.joinDate.format(
-        DateTimeFormatter.ofPattern("h:m a 'on' MMMM d, yyyy")
+        DateTimeFormatter.ofPattern("h:mm a 'on' MMMM d, yyyy")
     )
     val roles = member.roles.map { it.name }.joinToString(", ")
     val embedBuilder = EmbedBuilder()
