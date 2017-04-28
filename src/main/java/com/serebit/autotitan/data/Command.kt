@@ -47,15 +47,16 @@ class Command(val instance: Any, val method: Method) {
     // TODO Fix logic here so it doesn't block other threads.
     val correctAccess = when(access) {
       Access.ALL -> true
-      Access.GUILD_OWNER -> evt.member? == evt.guild?.owner
-      Access.BOT_OWNER -> evt.author == evt.jda.asBot().getApplicationInfo().complete().owner
+      Access.GUILD_OWNER -> evt.member == evt.guild?.owner
+      Access.BOT_OWNER -> evt.author == evt.jda.asBot().applicationInfo.complete().owner
     }
     val correctLocale = when(locale) {
       Locale.ALL -> true
       Locale.GUILD -> evt.guild != null
       Locale.PRIVATE -> evt.guild == null
     }
-    if (correctInvocation && correctAccess && correctLocale) {
+    val hasPermissions = evt.member.hasPermission(permissions)
+    if (correctInvocation && correctAccess && correctLocale && hasPermissions) {
       val strings = getMessageParameters(evt.message.rawContent)
       if (parameterTypes.size != strings.size) return false
       return parameterTypes.zip(strings).all {
