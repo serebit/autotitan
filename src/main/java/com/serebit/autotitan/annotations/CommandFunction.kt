@@ -1,5 +1,6 @@
 package com.serebit.autotitan.annotations
 
+import com.serebit.autotitan.Access
 import com.serebit.autotitan.Locale
 import net.dv8tion.jda.core.Permission
 
@@ -9,5 +10,6 @@ annotation class CommandFunction(
     val description: String = "",
     val delimitFinalParameter: Boolean = true,
     val locale: Locale = Locale.ALL,
+    val access: Access = Access.ALL,
     val permissions: Array<Permission> = arrayOf()
 )

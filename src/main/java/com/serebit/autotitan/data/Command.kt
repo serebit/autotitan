@@ -1,8 +1,10 @@
 package com.serebit.autotitan.data
 
+import com.serebit.autotitan.Access
 import com.serebit.autotitan.Locale
 import com.serebit.autotitan.annotations.CommandFunction
 import com.sun.javaws.exceptions.InvalidArgumentException
+import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Channel
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.entities.User
@@ -14,7 +16,9 @@ class Command(val instance: Any, val method: Method) {
   val name: String
   val description: String
   val delimitFinalParameter: Boolean
+  val access: Access
   val locale: Locale
+  val permissions: MutableSet<Permission>
 
   init {
     val info = method.getAnnotation(CommandFunction::class.java)
@@ -27,7 +31,9 @@ class Command(val instance: Any, val method: Method) {
     }
     description = info.description
     delimitFinalParameter = info.delimitFinalParameter
+    access = info.access
     locale = info.locale
+    permissions = info.permissions.toMutableSet()
     if (parameterList.any { it !in validParameterTypes })
       throw InvalidArgumentException(arrayOf("Invalid argument type passed to Command constructor."))
   }
@@ -37,12 +43,19 @@ class Command(val instance: Any, val method: Method) {
   }
 
   fun matches(evt: MessageReceivedEvent): Boolean {
+    val correctInvocation = evt.message.rawContent.startsWith(prefix + name)
+    // TODO Fix logic here so it doesn't block other threads.
+    val correctAccess = when(access) {
+      Access.ALL -> true
+      Access.GUILD_OWNER -> evt.member? == evt.guild?.owner
+      Access.BOT_OWNER -> evt.author == evt.jda.asBot().getApplicationInfo().complete().owner
+    }
     val correctLocale = when(locale) {
       Locale.ALL -> true
       Locale.GUILD -> evt.guild != null
       Locale.PRIVATE -> evt.guild == null
     }
-    if (evt.message.rawContent.startsWith(prefix + name) && correctLocale) {
+    if (correctInvocation && correctAccess && correctLocale) {
       val strings = getMessageParameters(evt.message.rawContent)
       if (parameterTypes.size != strings.size) return false
       return parameterTypes.zip(strings).all {
