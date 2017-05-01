@@ -15,9 +15,10 @@ class Command(val instance: Any, val method: Method) {
   val parameterTypes: MutableList<Class<*>>
   val name: String
   val description: String
-  val delimitFinalParameter: Boolean
   val access: Access
   val locale: Locale
+  val delimitFinalParameter: Boolean
+  val hidden: Boolean
   val permissions: MutableSet<Permission>
 
   init {
@@ -30,9 +31,10 @@ class Command(val instance: Any, val method: Method) {
       else -> info.name
     }
     description = info.description
-    delimitFinalParameter = info.delimitFinalParameter
     access = info.access
     locale = info.locale
+    delimitFinalParameter = info.delimitFinalParameter
+    hidden = info.hidden
     permissions = info.permissions.toMutableSet()
     if (parameterList.any { it !in validParameterTypes })
       throw InvalidArgumentException(arrayOf("Invalid argument type passed to Command constructor."))
