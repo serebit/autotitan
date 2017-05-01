@@ -58,7 +58,7 @@ class Paste {
   }
 
   fun String.exceedsLengthLimit(): Boolean {
-    val lineCount = this.count { it == '\n' }
+    val lineCount = this.lines().size
     val characterCount = this.count()
     return (lineCount > 10 || characterCount > 512)
   }
