@@ -92,15 +92,15 @@ class MessageListener(
   }
 
   fun sendCommandList(evt: MessageReceivedEvent) {
-    val list = "```\nCommand List\n\n" +
-        commands
-            .sortedBy { it.method.declaringClass.simpleName }
-            .map {
-              "${it.name} " + it.parameterTypes
-                  .map { "<" + it.simpleName + ">" }
-                  .joinToString(" ")
-            }.joinToString("\n") +
-        "\n```"
+    var list = "```markdown\n# Command List\n"
+    val commandMap = commands
+        .sortedBy { it.method.declaringClass.simpleName }
+        .groupBy({ it.method.declaringClass })
+    commandMap.forEach {
+      list += "\n${it.key.simpleName}\n  "
+      list += "${it.value.map { it.name }.joinToString("\n  ")}"
+    }
+    list += "\n```"
     evt.channel.sendMessage(list).queue()
   }
 }

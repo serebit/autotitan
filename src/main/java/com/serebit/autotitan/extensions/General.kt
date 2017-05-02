@@ -28,8 +28,8 @@ class General {
     val textChannelCount = server.textChannels.size.toString()
     val voiceChannelCount = server.voiceChannels.size.toString()
     val guildRoles = server.roles
+        .filter { it.name != "@everyone" && it.isHoisted }
         .map { it.name }
-        .filter { it != "@everyone" && it.isHoisted }
         .joinToString(", ")
     val embedBuilder = EmbedBuilder()
         .setTitle(server.name, null)
