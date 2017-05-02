@@ -33,7 +33,7 @@ class General {
         .joinToString(", ")
     val embedBuilder = EmbedBuilder()
         .setTitle(server.name, null)
-        .setDescription(creationDate)
+        .setDescription("Created on $creationDate")
         .setThumbnail(server.iconUrl)
         .setColor(server.owner.color)
         .addField("Owner", server.owner.asMention, true)
@@ -45,7 +45,9 @@ class General {
         .addField("Roles", guildRoles, true)
         .setFooter("Server ID: ${server.id}", null)
     if (canGetInvite) {
-      val permanentInvites = server.invites.complete(true).filter { !it.isTemporary }
+      val permanentInvites = server.invites
+          .complete()
+          .filter { !it.isTemporary }
       if (permanentInvites.isNotEmpty()) {
         val inviteUrl = "https://discord.gg/${permanentInvites.first().code}"
         embedBuilder.addField("Invite Link", inviteUrl, false)
@@ -56,17 +58,16 @@ class General {
 
   @CommandFunction(
       description = "Gets information about a specific server member.",
-      locale = Locale.GUILD    
+      locale = Locale.GUILD
   )
   fun memberInfo(evt: MessageReceivedEvent, member: Member) {
     val user = member.user
     val onlineStatus = member.onlineStatus
         .name
         .toLowerCase()
-        .split("_")
-        .map(String::capitalize)
-        .joinToString(" ")
-    val description = onlineStatus + when(member.game != null) {
+        .replace("_", " ")
+        .capitalize()
+    val description = onlineStatus + when (member.game != null) {
       true -> " - Playing ${member.game}"
       false -> ""
     }
@@ -76,7 +77,10 @@ class General {
     val serverJoinDate = member.joinDate.format(
         DateTimeFormatter.ofPattern("h:mm a 'on' MMMM d, yyyy")
     )
-    val roles = member.roles.map { it.name }.joinToString(", ")
+    val roles = when (member.roles.isNotEmpty()) {
+      true -> member.roles.map { it.name }.joinToString(", ")
+      else -> "None"
+    }
     val embedBuilder = EmbedBuilder()
         .setTitle(member.effectiveName, null)
         .setDescription(description)
