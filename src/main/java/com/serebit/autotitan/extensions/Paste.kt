@@ -27,7 +27,7 @@ class Paste {
   fun autopaste(evt: MessageReceivedEvent) {
     val messageContent = evt.message.rawContent
     val codeBlockRegex = "`{3}.*\n((?:.*\n)*?)`{3}".toRegex()
-    if (codeBlockRegex.matches(messageContent)) {
+    if (codeBlockRegex.containsMatchIn(messageContent)) {
       val matches = codeBlockRegex.findAll(messageContent)
       val groups = matches
           .map { it.groups[1] }
