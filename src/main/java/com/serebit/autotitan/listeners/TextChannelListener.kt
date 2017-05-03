@@ -16,7 +16,7 @@ class TextChannelListener(
     allListeners: MutableSet<Listener>
 ) : ListenerAdapter(), EventListener {
   override val listeners: MutableSet<Listener>
-  override val validEventTypes = mutableSetOf<Class<out Event>>(
+  override val validEventTypes = setOf<Class<out Event>>(
       TextChannelDeleteEvent::class.java,
       TextChannelUpdateNameEvent::class.java,
       TextChannelUpdateTopicEvent::class.java,

@@ -14,7 +14,7 @@ class GuildMessageListener(
     unfilteredListeners: MutableSet<Listener>
 ) : ListenerAdapter(), EventListener {
   override val listeners: MutableSet<Listener>
-  override val validEventTypes = mutableSetOf<Class<out Event>>(
+  override val validEventTypes = setOf<Class<out Event>>(
       GuildMessageReceivedEvent::class.java,
       GuildMessageUpdateEvent::class.java,
       GuildMessageEmbedEvent::class.java,

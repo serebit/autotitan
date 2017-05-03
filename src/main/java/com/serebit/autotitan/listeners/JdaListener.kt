@@ -10,7 +10,7 @@ class JdaListener(
     allListeners: MutableSet<Listener>
 ) : ListenerAdapter(), EventListener {
   override val listeners: MutableSet<Listener>
-  override val validEventTypes = mutableSetOf(
+  override val validEventTypes = setOf(
       ReadyEvent::class.java,
       ResumedEvent::class.java,
       ReconnectedEvent::class.java,

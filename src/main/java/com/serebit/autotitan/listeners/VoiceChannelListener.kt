@@ -13,7 +13,7 @@ class VoiceChannelListener(
     allListeners: MutableSet<Listener>
 ) : ListenerAdapter(), EventListener {
   override val listeners: MutableSet<Listener>
-  override val validEventTypes = mutableSetOf<Class<out Event>>(
+  override val validEventTypes = setOf<Class<out Event>>(
       VoiceChannelDeleteEvent::class.java,
       VoiceChannelUpdateNameEvent::class.java,
       VoiceChannelUpdatePositionEvent::class.java,
