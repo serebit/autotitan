@@ -6,9 +6,6 @@ import khttp.post
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 
 class Paste {
-  val host = "https://hastebin.com"
-  val path = "/documents"
-
   @CommandFunction(
       description = "Creates a paste in Hastebin with the given content and returns the URL.",
       delimitFinalParameter = false
@@ -40,8 +37,9 @@ class Paste {
       if (codeBlocks.isNotEmpty()) {
         codeBlocks.forEach {
           val message = "${evt.author.asMention}'s paste: ${getPasteUrl(it)}"
-          if (evt.guild != null)
+          if (evt.guild != null) {
             evt.message.delete().queue()
+          }
           evt.channel.sendMessage(message).queue()
         }
       }
@@ -61,5 +59,12 @@ class Paste {
     val lineCount = this.lines().size
     val characterCount = this.count()
     return (lineCount > 10 || characterCount > 512)
+  }
+  
+  companion object {
+    const val host = "https://hastebin.com"
+    const val path = "/documents"
+    const val lineLimit = 10
+    const val characterLimit = 512
   }
 }
