@@ -71,10 +71,12 @@ fun getExtensions(): MutableSet<Class<*>> {
 fun loadCommands(classes: MutableSet<Class<*>>): MutableSet<Command> {
   val commands = mutableSetOf<Command>()
   classes.map { extension ->
-    val instance = extension.newInstance()
-    extension.methods
+    val commandMethods = extension.methods
         .filter { Command.isValidCommand(it) }
-        .forEach { commands.add(Command(instance, it)) }
+    if (commandMethods.isNotEmpty()) {
+      val instance = extension.newInstance()
+      commandMethods.forEach { commands.add(Command(instance, it)) }
+    }
   }
   return commands
 }
