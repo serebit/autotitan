@@ -16,7 +16,7 @@ class MessageListener(
     allListeners: MutableSet<Listener>
 ) : ListenerAdapter(), EventListener {
   override val listeners: MutableSet<Listener>
-  override val validEventTypes = mutableSetOf(
+  override val validEventTypes = setOf(
       MessageReceivedEvent::class.java,
       MessageDeleteEvent::class.java,
       MessageBulkDeleteEvent::class.java,
