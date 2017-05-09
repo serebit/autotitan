@@ -1,5 +1,5 @@
 # AutoTitan
-[![Discord Server](https://discordapp.com/api/guilds/279777865434660865/widget.png?style=shield)](https://discord.gg/pEDxhQm) [![Build Status](https://travis-ci.org/serebit/autotitan.svg?branch=master)](https://travis-ci.org/serebit/autotitan) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://paypal.me/gdeadshot)
+[![Discord Server](https://discordapp.com/api/guilds/279777865434660865/widget.png?style=shield)](https://goo.gl/RGvvbM) [![Build Status](https://travis-ci.org/serebit/autotitan.svg?branch=master)](https://goo.gl/0Gm2gy) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://goo.gl/OWpJxJ)
 
 AutoTitan is a modular, self-hosted [Discord](https://discordapp.com) bot built in Kotlin using the 
 [Java Discord API](https://github.com/DV8FromTheWorld/JDA). Auto comes standard with several basic commands, with the ability for users to install third-party extensions, or create their own.
