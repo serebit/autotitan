@@ -1,4 +1,4 @@
-package com.serebit.autotitan.extensions
+package com.serebit.autotitan.extensions.audio
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 import com.sedmelluq.discord.lavaplayer.track.playback.AudioFrame
@@ -11,7 +11,6 @@ class AudioPlayerSendHandler(private val audioPlayer: AudioPlayer) : AudioSendHa
     if (lastFrame == null) {
       lastFrame = audioPlayer.provide()
     }
-
     return lastFrame != null
   }
 

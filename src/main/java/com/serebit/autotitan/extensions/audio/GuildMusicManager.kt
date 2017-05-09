@@ -1,4 +1,4 @@
-package com.serebit.autotitan.extensions
+package com.serebit.autotitan.extensions.audio
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager
