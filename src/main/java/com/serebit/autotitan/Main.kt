@@ -43,7 +43,8 @@ fun main(args: Array<String>) {
       JdaListener(listeners),
       UserListener(listeners),
       TextChannelListener(listeners),
-      VoiceChannelListener(listeners)
+      VoiceChannelListener(listeners),
+      GuildVoiceListener(listeners)
   )
   println()
   println("Username:    ${jda.selfUser.name}")
