@@ -45,8 +45,10 @@ class Audio {
   fun play(evt: MessageReceivedEvent, linkOrSearchTerms: String) {
     if (evt.guild.audioManager.isConnected) {
       val audioManager = getGuildAudioPlayer(evt.guild)
-      if (!urlValidator.isValid(linkOrSearchTerms)) {
-        linkOrSearchTerms = "ytsearch:$linkOrSearchTerms"
+      var formattedLinkOrSearchTerms = if (urlValidator.isValid(linkOrSearchTerms)) {
+        linkOrSearchTerms
+      } else {
+        "ytsearch:$linkOrSearchTerms"
       }
       playerManager.loadItemOrdered(audioManager, linkOrSearchTerms, object : AudioLoadResultHandler {
         override fun trackLoaded(track: AudioTrack) {
