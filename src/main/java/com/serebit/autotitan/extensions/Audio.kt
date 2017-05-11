@@ -48,7 +48,7 @@ class Audio {
       if (!urlValidator.isValid(linkOrSearchTerms)) {
         linkOrSearchTerms = "ytsearch:$linkOrSearchTerms"
       }
-      playerManager.loadItemOrdered(audioManager, link, object : AudioLoadResultHandler {
+      playerManager.loadItemOrdered(audioManager, linkOrSearchTerms, object : AudioLoadResultHandler {
         override fun trackLoaded(track: AudioTrack) {
           evt.channel.sendMessage("Playing ${track.info.title}.").queue()
           audioManager.scheduler.queue(track)
