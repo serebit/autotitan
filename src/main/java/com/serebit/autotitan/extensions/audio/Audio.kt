@@ -6,6 +6,7 @@ import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
+import org.apache.commons.validator.routines.UrlValidator
 import com.serebit.autotitan.Locale
 import com.serebit.autotitan.annotations.CommandFunction
 import net.dv8tion.jda.core.entities.Guild
@@ -14,6 +15,7 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import net.dv8tion.jda.core.managers.AudioManager
 
 class Audio {
+  private val urlValidator = UrlValidator(arrayOf("http", "https"))
   private val playerManager = DefaultAudioPlayerManager()
   private val audioManagers = mutableMapOf<Long, GuildMusicManager>()
 
@@ -36,13 +38,21 @@ class Audio {
     }
   }
 
-  @CommandFunction(locale = Locale.GUILD)
-  fun play(evt: MessageReceivedEvent, link: String) {
+  @CommandFunction(
+      locale = Locale.GUILD,
+      delimitFinalParameter = false
+  )
+  fun play(evt: MessageReceivedEvent, linkOrSearchTerms: String) {
     if (evt.guild.audioManager.isConnected) {
       val audioManager = getGuildAudioPlayer(evt.guild)
-      playerManager.loadItemOrdered(audioManager, link, object : AudioLoadResultHandler {
+      var formattedLinkOrSearchTerms = if (urlValidator.isValid(linkOrSearchTerms)) {
+        linkOrSearchTerms
+      } else {
+        "ytsearch:$linkOrSearchTerms"
+      }
+      playerManager.loadItemOrdered(audioManager, linkOrSearchTerms, object : AudioLoadResultHandler {
         override fun trackLoaded(track: AudioTrack) {
-          evt.channel.sendMessage("Adding ${track.info.title} to queue.").queue()
+          evt.channel.sendMessage("Playing ${track.info.title}.").queue()
           audioManager.scheduler.queue(track)
         }
 
@@ -55,7 +65,7 @@ class Audio {
         }
 
         override fun noMatches() {
-          evt.channel.sendMessage("Nothing found at $link.").queue()
+          evt.channel.sendMessage("Nothing found.").queue()
         }
 
         override fun loadFailed(exception: FriendlyException) {

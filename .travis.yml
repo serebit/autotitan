@@ -1,5 +1,7 @@
 language: java
-jdk: oraclejdk8
+dist: trusty
+jdk:
+  - oraclejdk8
 script: gradle shadowJar
 notifications:
   webhooks: https://discordapp.com/api/webhooks/309346635400478720/YivaaAYBaRj2U3QWu-Iqyvj60ib0a4Xk0EpRC-ulvc4OM4QfVMCt1gma4lVtrnxmJg_X
