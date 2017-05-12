@@ -3,5 +3,13 @@ dist: trusty
 jdk:
   - oraclejdk8
 script: gradle shadowJar
+before_cache:
+  - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+  
+cache:
+  directories:
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
 notifications:
   webhooks: https://discordapp.com/api/webhooks/309346635400478720/YivaaAYBaRj2U3QWu-Iqyvj60ib0a4Xk0EpRC-ulvc4OM4QfVMCt1gma4lVtrnxmJg_X
