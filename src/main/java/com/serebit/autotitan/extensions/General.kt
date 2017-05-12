@@ -14,6 +14,23 @@ class General {
   fun ping(evt: MessageReceivedEvent) {
     evt.channel.sendMessage("Pong. The last ping was ${evt.jda.ping}ms.").queue()
   }
+  
+  @CommandFunction(description = "Gets information about the bot.")
+  fun info(evt: MessageReceivedEvent) {
+    val self = evt.jda.selfUser
+    val applicationInfo = evt.jda.asBot().getApplicationInfo.complete()
+    val creationDate = self.creationTime.format(DateTimeFormatter.ofPattern("MMMM d, yyyy"))
+    val operatingSystem = System.getProperty("os.name")
+    val javaVersion = System.getProperty("java.version")
+    val embedBuilder = EmbedBuilder()
+        .setTitle(self.name, null)
+        .setDescription(applicationInfo.description)
+        .setThumbnail(self.effectiveAvatarUrl)
+        .addField("Owner", applicationInfo.owner.name, true)
+        .addField("Operating System", operatingSystem, true)
+        .addField("Java Version", javaVersion, true)
+    evt.channel.sendMessage(embedBuilder.build()).queue()
+  }
 
   @CommandFunction(description = "Gets information about the server.", locale = Locale.GUILD)
   fun serverInfo(evt: MessageReceivedEvent) {
