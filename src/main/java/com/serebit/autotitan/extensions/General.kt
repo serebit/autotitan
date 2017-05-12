@@ -10,6 +10,8 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import java.time.format.DateTimeFormatter
 
 class General {
+  private val dateFormat = DateTimeFormatter.ofPattern("MMMM d, yyyy")
+  
   @CommandFunction(description = "Pings the bot.")
   fun ping(evt: MessageReceivedEvent) {
     evt.channel.sendMessage("Pong. The last ping was ${evt.jda.ping}ms.").queue()
@@ -18,8 +20,8 @@ class General {
   @CommandFunction(description = "Gets information about the bot.")
   fun info(evt: MessageReceivedEvent) {
     val self = evt.jda.selfUser
-    val applicationInfo = evt.jda.asBot().getApplicationInfo.complete()
-    val creationDate = self.creationTime.format(DateTimeFormatter.ofPattern("MMMM d, yyyy"))
+    val applicationInfo = evt.jda.asBot().getApplicationInfo().complete()
+    val creationDate = self.creationTime.format(dateFormat)
     val operatingSystem = System.getProperty("os.name")
     val architecture = System.getProperty("os.arch")
     val javaVendor = System.getProperty("java.vendor")
@@ -38,7 +40,7 @@ class General {
   fun serverInfo(evt: MessageReceivedEvent) {
     val server = evt.guild
     val canGetInvite = server.selfMember.hasPermission(Permission.MANAGE_SERVER)
-    val creationDate = server.creationTime.format(DateTimeFormatter.ofPattern("MMMM d, yyyy"))
+    val creationDate = server.creationTime.format(dateFormat)
     val onlineMemberCount = server.members
         .filter { it.onlineStatus == OnlineStatus.ONLINE }
         .size
@@ -87,12 +89,8 @@ class General {
     val description = onlineStatus + if (member.game != null) {
       " - Playing ${member.game}"
     } else ""
-    val discordJoinDate = user.creationTime.format(
-        DateTimeFormatter.ofPattern("h:mm a 'on' MMMM d, yyyy")
-    )
-    val serverJoinDate = member.joinDate.format(
-        DateTimeFormatter.ofPattern("h:mm a 'on' MMMM d, yyyy")
-    )
+    val discordJoinDate = user.creationTime.format(datePattern)
+    val serverJoinDate = member.joinDate.format(datePattern)
     val roles = if (member.roles.isNotEmpty()) {
       member.roles.map { it.name }.joinToString(", ")
     } else "None"
