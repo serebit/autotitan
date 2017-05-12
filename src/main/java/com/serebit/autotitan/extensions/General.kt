@@ -21,14 +21,16 @@ class General {
     val applicationInfo = evt.jda.asBot().getApplicationInfo.complete()
     val creationDate = self.creationTime.format(DateTimeFormatter.ofPattern("MMMM d, yyyy"))
     val operatingSystem = System.getProperty("os.name")
+    val architecture = System.getProperty("os.arch")
+    val javaVendor = System.getProperty("java.vendor")
     val javaVersion = System.getProperty("java.version")
     val embedBuilder = EmbedBuilder()
         .setTitle(self.name, null)
         .setDescription(applicationInfo.description)
         .setThumbnail(self.effectiveAvatarUrl)
         .addField("Owner", applicationInfo.owner.name, true)
-        .addField("Operating System", operatingSystem, true)
-        .addField("Java Version", javaVersion, true)
+        .addField("Operating System", "$operatingSystem $architecture", true)
+        .addField("Java Version", "$javaVendor $javaVersion", true)
     evt.channel.sendMessage(embedBuilder.build()).queue()
   }
 
@@ -62,9 +64,7 @@ class General {
         .addField("Roles", guildRoles, true)
         .setFooter("Server ID: ${server.id}", null)
     if (canGetInvite) {
-      val permanentInvites = server.invites
-          .complete()
-          .filter { !it.isTemporary }
+      val permanentInvites = server.invites.complete().filter { !it.isTemporary }
       if (permanentInvites.isNotEmpty()) {
         val inviteUrl = "https://discord.gg/${permanentInvites.first().code}"
         embedBuilder.addField("Invite Link", inviteUrl, false)
@@ -84,20 +84,18 @@ class General {
         .toLowerCase()
         .replace("_", " ")
         .capitalize()
-    val description = onlineStatus + when (member.game != null) {
-      true -> " - Playing ${member.game}"
-      false -> ""
-    }
+    val description = onlineStatus + if (member.game != null) {
+      " - Playing ${member.game}"
+    } else ""
     val discordJoinDate = user.creationTime.format(
         DateTimeFormatter.ofPattern("h:mm a 'on' MMMM d, yyyy")
     )
     val serverJoinDate = member.joinDate.format(
         DateTimeFormatter.ofPattern("h:mm a 'on' MMMM d, yyyy")
     )
-    val roles = when (member.roles.isNotEmpty()) {
-      true -> member.roles.map { it.name }.joinToString(", ")
-      else -> "None"
-    }
+    val roles = if (member.roles.isNotEmpty()) {
+      member.roles.map { it.name }.joinToString(", ")
+    } else "None"
     val embedBuilder = EmbedBuilder()
         .setTitle(member.effectiveName, null)
         .setDescription(description)
