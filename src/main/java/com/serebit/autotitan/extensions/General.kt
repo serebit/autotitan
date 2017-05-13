@@ -7,7 +7,10 @@ import net.dv8tion.jda.core.OnlineStatus
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
+import java.io.File
 import java.time.format.DateTimeFormatter
+
+
 
 class General {
   private val dateFormat = DateTimeFormatter.ofPattern("MMMM d, yyyy")
@@ -20,19 +23,33 @@ class General {
   @CommandFunction(description = "Gets information about the bot.")
   fun info(evt: MessageReceivedEvent) {
     val self = evt.jda.selfUser
-    val applicationInfo = evt.jda.asBot().getApplicationInfo().complete()
-    val creationDate = self.creationTime.format(dateFormat)
-    val operatingSystem = System.getProperty("os.name")
-    val architecture = System.getProperty("os.arch")
-    val javaVendor = System.getProperty("java.vendor")
-    val javaVersion = System.getProperty("java.version")
+    val applicationInfo = evt.jda.asBot().applicationInfo.complete()
+    val owner = applicationInfo.owner
+    val systemInfo = mapOf(
+        "Disk Size" to "${Math.round(File("/").totalSpace / 1e9)}GB",
+        "Available RAM" to "${Math.round(Runtime.getRuntime().maxMemory() / 1e9)}GB"
+    )
+    val osInfo = mapOf(
+        "Name" to System.getProperty("os.name"),
+        "Architecture" to System.getProperty("os.arch"),
+        "Version" to System.getProperty("os.version")
+    )
+    val javaInfo = mapOf(
+        "Vendor" to System.getProperty("java.vendor"),
+        "Version" to System.getProperty("java.version")
+    )
+    val color = if(evt.guild != null) {
+      evt.guild.getMember(self).color
+    } else null
     val embedBuilder = EmbedBuilder()
         .setTitle(self.name, null)
         .setDescription(applicationInfo.description)
         .setThumbnail(self.effectiveAvatarUrl)
-        .addField("Owner", applicationInfo.owner.name, true)
-        .addField("Operating System", "$operatingSystem $architecture", true)
-        .addField("Java Version", "$javaVendor $javaVersion", true)
+        .setColor(color)
+        .addField("Owner", "${owner.name}#${owner.discriminator}", true)
+        .addField("System Info", systemInfo.map { "${it.key}: *${it.value}*" }.joinToString("\n"), true)
+        .addField("Operating System", osInfo.map { "${it.key}: *${it.value}*" }.joinToString("\n"), true)
+        .addField("JRE", javaInfo.map { "${it.key}: *${it.value}*" }.joinToString("\n"), true)
     evt.channel.sendMessage(embedBuilder.build()).queue()
   }
 
@@ -89,8 +106,8 @@ class General {
     val description = onlineStatus + if (member.game != null) {
       " - Playing ${member.game}"
     } else ""
-    val discordJoinDate = user.creationTime.format(datePattern)
-    val serverJoinDate = member.joinDate.format(datePattern)
+    val discordJoinDate = user.creationTime.format(dateFormat)
+    val serverJoinDate = member.joinDate.format(dateFormat)
     val roles = if (member.roles.isNotEmpty()) {
       member.roles.map { it.name }.joinToString(", ")
     } else "None"
