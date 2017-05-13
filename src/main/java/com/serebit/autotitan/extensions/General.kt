@@ -25,9 +25,15 @@ class General {
     val self = evt.jda.selfUser
     val applicationInfo = evt.jda.asBot().applicationInfo.complete()
     val owner = applicationInfo.owner
+    val availableRam = Runtime.getRuntime().maxMemory() / 1e6
+    val availableRamFormatted = if (availableRam < 1024) {
+      "${Math.round(availableRam)}MB"
+    } else {
+      "${Math.round(availableRam / 1e3)}GB"
+    }
     val systemInfo = mapOf(
         "Disk Size" to "${Math.round(File("/").totalSpace / 1e9)}GB",
-        "Available RAM" to "${Math.round(Runtime.getRuntime().maxMemory() / 1e9)}GB"
+        "Available RAM" to availableRamFormatted
     )
     val osInfo = mapOf(
         "Name" to System.getProperty("os.name"),
