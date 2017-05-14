@@ -50,7 +50,7 @@ class General {
       evt.guild.getMember(self).color
     } else null
     val embedBuilder = EmbedBuilder()
-        .setTitle("System Info, null)
+        .setTitle("System Info", null)
         .setDescription("Note: These measurements reflect what is available to the JVM.")
         .setThumbnail(self.effectiveAvatarUrl)
         .setColor(color)
