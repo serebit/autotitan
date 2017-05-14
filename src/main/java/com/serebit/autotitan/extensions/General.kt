@@ -20,42 +20,43 @@ class General {
     evt.channel.sendMessage("Pong. The last ping was ${evt.jda.ping}ms.").queue()
   }
   
-  @CommandFunction(description = "Gets information about the bot.")
-  fun info(evt: MessageReceivedEvent) {
+  @CommandFunction(
+      description = "Gets information about the system that the bot is running on."
+  )
+  fun systeminfo(evt: MessageReceivedEvent) {
     val self = evt.jda.selfUser
-    val applicationInfo = evt.jda.asBot().applicationInfo.complete()
-    val owner = applicationInfo.owner
-    val availableRam = Runtime.getRuntime().maxMemory() / 1e6
+    val runtime = Runtime.getRuntime()
+    val availableRam = runtime.maxMemory() / 1e6
     val availableRamFormatted = if (availableRam < 1024) {
       "${Math.round(availableRam)}MB"
     } else {
       "${Math.round(availableRam / 1e3)}GB"
     }
     val systemInfo = mapOf(
+        "Cores" to runtime.availableProcessors().toString(),
         "Disk Size" to "${Math.round(File("/").totalSpace / 1e9)}GB",
         "Available RAM" to availableRamFormatted
-    )
+    ).map { "${it.key}: *${it.value}*" }.joinToString("\n")
     val osInfo = mapOf(
         "Name" to System.getProperty("os.name"),
         "Architecture" to System.getProperty("os.arch"),
         "Version" to System.getProperty("os.version")
-    )
+    ).map { "${it.key}: *${it.value}*" }.joinToString("\n")
     val javaInfo = mapOf(
         "Vendor" to System.getProperty("java.vendor"),
         "Version" to System.getProperty("java.version")
-    )
+    ).map { "${it.key}: *${it.value}*" }.joinToString("\n")
     val color = if(evt.guild != null) {
       evt.guild.getMember(self).color
     } else null
     val embedBuilder = EmbedBuilder()
-        .setTitle(self.name, null)
-        .setDescription(applicationInfo.description)
+        .setTitle("System Info, null)
+        .setDescription("Note: These measurements reflect what is available to the JVM.")
         .setThumbnail(self.effectiveAvatarUrl)
         .setColor(color)
-        .addField("Owner", "${owner.name}#${owner.discriminator}", true)
-        .addField("System Info", systemInfo.map { "${it.key}: *${it.value}*" }.joinToString("\n"), true)
-        .addField("Operating System", osInfo.map { "${it.key}: *${it.value}*" }.joinToString("\n"), true)
-        .addField("JRE", javaInfo.map { "${it.key}: *${it.value}*" }.joinToString("\n"), true)
+        .addField("Hardware", systemInfo, true)
+        .addField("Operating System", osInfo, true)
+        .addField("JRE", javaInfo, true)
     evt.channel.sendMessage(embedBuilder.build()).queue()
   }
 
