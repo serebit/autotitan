@@ -45,7 +45,7 @@ class Audio {
 
   @ListenerFunction()
   fun leaveVoiceAutomatically(evt: GuildVoiceLeaveEvent) {
-    if (evt.member == evt.guild.selfMember) return
+    if (evt.guild.audioManager.connectedChannel != evt.channelLeft) return
     val nobodyLeft = evt.guild.audioManager.connectedChannel.members.size == 1
     if (evt.guild.audioManager.isConnected && nobodyLeft) {
       val audioPlayer = evt.guild.getMusicManager()
