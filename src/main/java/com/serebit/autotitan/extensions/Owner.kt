@@ -5,9 +5,6 @@ import com.serebit.autotitan.annotations.CommandFunction
 import com.serebit.autotitan.data.Command
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 
-/**
- * Created by gingerdeadshot on 4/28/17.
- */
 class Owner {
   @CommandFunction(
       description = "Shuts down the bot.",
@@ -40,5 +37,15 @@ class Owner {
   fun setPrefix(evt: MessageReceivedEvent, prefix: String) {
     Command.prefix = prefix
     evt.channel.sendMessage("Set prefix to `${Command.prefix}`.").queue()
+  }
+  
+  @CommandFunction(
+      description = "Sends the bot's invite link to the command invoker.",
+      access = Access.BOT_OWNER
+  )
+  fun getInvite(evt: MessageReceivedEvent) {
+    evt.author.privateChannel.sendMessage(
+        "Invite link: ${evt.jda.asBot().getInviteUrl()}"
+    ).queue()
   }
 }
