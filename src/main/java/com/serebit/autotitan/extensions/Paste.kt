@@ -38,7 +38,7 @@ class Paste {
         codeBlocks.forEach {
           val message = "${evt.author.asMention}'s paste: ${getPasteUrl(it)}"
           if (evt.guild != null) {
-            evt.message.delete().queue()
+//            evt.message.delete().queue()
           }
           evt.channel.sendMessage(message).queue()
         }
