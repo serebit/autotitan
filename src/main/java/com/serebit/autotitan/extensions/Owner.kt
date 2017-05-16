@@ -45,7 +45,7 @@ class Owner {
   )
   fun invite(evt: MessageReceivedEvent) {
     if (!evt.author.hasPrivateChannel) {
-      evt.author.openPrivateChannel.queue({
+      evt.author.openPrivateChannel().queue({
         evt.author.privateChannel.sendMessage(
             "Invite link: ${evt.jda.asBot().getInviteUrl()}"
         ).queue()
