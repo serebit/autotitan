@@ -39,6 +39,8 @@ class Audio {
   @CommandFunction(locale = Locale.GUILD)
   fun leaveVoice(evt: MessageReceivedEvent) {
     if (evt.guild.audioManager.isConnected) {
+      val audioPlayer = evt.guild.getMusicManager()
+      audioPlayer.scheduler.next()
       evt.guild.audioManager.closeAudioConnection()
     }
   }
@@ -49,7 +51,7 @@ class Audio {
     val nobodyLeft = evt.guild.audioManager.connectedChannel.members.size == 1
     if (evt.guild.audioManager.isConnected && nobodyLeft) {
       val audioPlayer = evt.guild.getMusicManager()
-      audioPlayer.scheduler.next()
+      audioPlayer.scheduler.stop()
       evt.guild.audioManager.closeAudioConnection()
     }
   }
@@ -126,7 +128,7 @@ class Audio {
   }
 
   @CommandFunction(locale = Locale.GUILD)
-  fun setVolume(evt: MessageReceivedEvent, volume: Int) {
+  fun volume(evt: MessageReceivedEvent, volume: Int) {
     val newVolume = when {
       volume > 100 -> 100
       volume < 0 -> 0

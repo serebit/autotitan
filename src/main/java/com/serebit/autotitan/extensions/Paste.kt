@@ -38,7 +38,7 @@ class Paste {
         codeBlocks.forEach {
           val message = "${evt.author.asMention}'s paste: ${getPasteUrl(it)}"
           if (evt.guild != null) {
-//            evt.message.delete().queue()
+            evt.message.delete().queue()
           }
           evt.channel.sendMessage(message).queue()
         }
@@ -60,7 +60,7 @@ class Paste {
     val characterCount = this.count()
     return (lineCount > lineLimit || characterCount > characterLimit)
   }
-  
+
   companion object {
     const val host = "https://hastebin.com"
     const val path = "/documents"

@@ -87,10 +87,6 @@ class MessageListener(
     runListeners(evt)
   }
 
-  override fun onGenericMessage(evt: GenericMessageEvent) {
-    runListeners(evt)
-  }
-
   fun sendCommandList(evt: MessageReceivedEvent) {
     var list = "```markdown\n# Command List\n"
     val commandMap = commands

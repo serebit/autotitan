@@ -22,6 +22,11 @@ class TrackScheduler(internal var player: AudioPlayer) : AudioEventAdapter() {
     }
   }
 
+  fun stop() {
+    player.stopTrack()
+    queue.clear()
+  }
+
   override fun onTrackEnd(player: AudioPlayer, track: AudioTrack, endReason: AudioTrackEndReason) {
     if (queue.size >= 1 && endReason == AudioTrackEndReason.FINISHED) {
       next()
