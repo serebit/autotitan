@@ -44,12 +44,11 @@ class Owner {
       access = Access.BOT_OWNER
   )
   fun invite(evt: MessageReceivedEvent) {
-    if (!evt.author.hasPrivateChannel) {
-      evt.author.openPrivateChannel().queue({
-        evt.author.privateChannel.sendMessage(
-            "Invite link: ${evt.jda.asBot().getInviteUrl()}"
-        ).queue()
-      })
+    if (!evt.author.hasPrivateChannel()) {
+      evt.author.openPrivateChannel().complete()
     }
+    evt.author.privateChannel.sendMessage(
+        "Invite link: ${evt.jda.asBot().getInviteUrl()}"
+    ).queue()
   }
 }
