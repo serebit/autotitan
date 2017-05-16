@@ -43,9 +43,13 @@ class Owner {
       description = "Sends the bot's invite link to the command invoker.",
       access = Access.BOT_OWNER
   )
-  fun getInvite(evt: MessageReceivedEvent) {
-    evt.author.privateChannel.sendMessage(
-        "Invite link: ${evt.jda.asBot().getInviteUrl()}"
-    ).queue()
+  fun invite(evt: MessageReceivedEvent) {
+    if (!evt.author.hasPrivateChannel) {
+      evt.author.openPrivateChannel.queue({
+        evt.author.privateChannel.sendMessage(
+            "Invite link: ${evt.jda.asBot().getInviteUrl()}"
+        ).queue()
+      })
+    }
   }
 }
