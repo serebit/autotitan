@@ -18,6 +18,19 @@ class Moderation {
       evt.channel.sendMessage("Kicked.").queue()
     })
   }
+  
+  @CommandFunction(
+      description = "Kicks a member from the server and deletes 1 day's worth of their messages."
+      locale = Locale.GUILD,
+      permissions = arrayOf(Permission.BAN_MEMBERS)
+  )
+  fun softBan(evt: MessageReceivedEvent, member: Member) {
+    evt.guild.controller.ban(member, 1).queue({
+      evt.guild.controller.unban(member.user).queue({
+        evt.channel.sendMessage("Softbanned.").queue()
+      }
+    }
+  }
 
   @CommandFunction(
       description = "Bans a member from the current server.",
