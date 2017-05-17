@@ -28,8 +28,8 @@ class Moderation {
     evt.guild.controller.ban(member, 1).queue({
       evt.guild.controller.unban(member.user).queue({
         evt.channel.sendMessage("Softbanned.").queue()
-      }
-    }
+      })
+    })
   }
 
   @CommandFunction(
