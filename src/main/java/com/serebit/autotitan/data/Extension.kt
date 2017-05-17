@@ -1,11 +1,11 @@
 package com.serebit.autotitan.data
 
 abstract class Extension() {
-  fun writeData(filename: String, object: Any) {
+  fun writeData(fileName: String, data: Any) {
     TODO("Add data write logic.")
   }
   
-  fun readData(filename: String, type: Class<*>) {
+  fun readData(fileName: String, dataType: Class<*>) {
     TODO("Add data read logic.")
   }
 }
