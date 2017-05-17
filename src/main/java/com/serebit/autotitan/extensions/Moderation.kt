@@ -20,7 +20,7 @@ class Moderation {
   }
   
   @CommandFunction(
-      description = "Kicks a member from the server and deletes 1 day's worth of their messages."
+      description = "Kicks a member from the server and deletes 1 day's worth of their messages.",
       locale = Locale.GUILD,
       permissions = arrayOf(Permission.BAN_MEMBERS)
   )
