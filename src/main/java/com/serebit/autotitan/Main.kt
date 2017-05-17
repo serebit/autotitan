@@ -97,4 +97,5 @@ fun loadListeners(classes: MutableSet<Class<*>>): MutableSet<Listener> {
 
 object Singleton {
   val location = File(this::class.java.protectionDomain.codeSource.location.toURI())
+  val dataDirectory = File("${location.parent}/data/")
 }
