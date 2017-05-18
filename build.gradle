@@ -1,10 +1,9 @@
 plugins {
+    id "java"
+    id "maven"
     id "com.github.johnrengelman.shadow" version "1.2.4"
     id "org.jetbrains.kotlin.jvm" version "1.1.2"
 }
-
-apply plugin: "java"
-apply plugin: "maven"
 
 group = "com.serebit"
 version = "1.0.0"
@@ -38,4 +37,8 @@ shadowJar {
     manifest {
         attributes "Main-Class": "com.serebit.autotitan.MainKt"
     }
+}
+
+build {
+    dependsOn shadowJar
 }
