@@ -1,6 +1,8 @@
 plugins {
     id "java"
     id "maven"
+    id "maven-publish"
+    id "com.jfrog.bintray" version "1.7.2"
     id "com.github.johnrengelman.shadow" version "1.2.4"
     id "org.jetbrains.kotlin.jvm" version "1.1.2"
 }
@@ -14,9 +16,9 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 repositories {
-     maven { url "https://jitpack.io" }
-     maven { url "https://jcenter.bintray.com" }
-     maven { url "https://repo.maven.apache.org/maven2" }
+    jcenter()
+    mavenCentral()
+    maven { url "https://jitpack.io" }
 }
 
 dependencies {
@@ -33,6 +35,34 @@ dependencies {
     testCompile group: "org.jetbrains.kotlin", name: "kotlin-test", version:"1.1.2"
 }
 
+publishing {
+    publications {
+        BintrayRelease(MavenPublication) {
+            from components.java
+            groupId group
+            artifactId archivesBaseName
+            version version
+        }
+    }
+}
+
+bintray {   
+    user = bintrayUsername
+    key = bintrayApiKey
+    publications = ["BintrayRelease"]
+    pkg {
+        repo = "Maven"
+        name = "autotitan"
+        licenses = ["Apache-2.0"]
+        vcsUrl = "https://github.com/serebit/autotitan.git"
+        publish = true
+        version {
+            name = project.version
+            released = new Date()
+        }
+    }
+}
+
 shadowJar {
     manifest {
         attributes "Main-Class": "com.serebit.autotitan.MainKt"
@@ -41,4 +71,11 @@ shadowJar {
 
 build {
     dependsOn shadowJar
+}
+
+bintrayUpload {
+    dependsOn build
+    
+    onlyIf { !bintrayUsername.empty }
+    onlyIf { !bintrayApiKey.empty }
 }
