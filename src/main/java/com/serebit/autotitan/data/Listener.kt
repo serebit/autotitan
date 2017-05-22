@@ -1,6 +1,6 @@
 package com.serebit.autotitan.data
 
-import com.serebit.autotitan.annotations.ListenerFunction
+import com.serebit.autotitan.api.annotations.ListenerFunction
 import java.lang.reflect.Method
 
 class Listener(val instance: Any, val method: Method, info: ListenerFunction) {

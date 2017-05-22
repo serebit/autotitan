@@ -1,8 +1,8 @@
 package com.serebit.autotitan.data
 
-import com.serebit.autotitan.Access
-import com.serebit.autotitan.Locale
-import com.serebit.autotitan.annotations.CommandFunction
+import com.serebit.autotitan.api.Access
+import com.serebit.autotitan.api.Locale
+import com.serebit.autotitan.api.annotations.CommandFunction
 import com.sun.javaws.exceptions.InvalidArgumentException
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Channel
