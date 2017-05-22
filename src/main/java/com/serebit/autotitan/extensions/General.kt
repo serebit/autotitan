@@ -1,7 +1,7 @@
 package com.serebit.autotitan.extensions
 
-import com.serebit.autotitan.Locale
-import com.serebit.autotitan.annotations.CommandFunction
+import com.serebit.autotitan.api.Locale
+import com.serebit.autotitan.api.annotations.CommandFunction
 import net.dv8tion.jda.core.EmbedBuilder
 import net.dv8tion.jda.core.OnlineStatus
 import net.dv8tion.jda.core.Permission

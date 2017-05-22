@@ -6,9 +6,9 @@ import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
-import com.serebit.autotitan.Locale
-import com.serebit.autotitan.annotations.CommandFunction
-import com.serebit.autotitan.annotations.ListenerFunction
+import com.serebit.autotitan.api.Locale
+import com.serebit.autotitan.api.annotations.CommandFunction
+import com.serebit.autotitan.api.annotations.ListenerFunction
 import net.dv8tion.jda.core.EmbedBuilder
 import net.dv8tion.jda.core.entities.Guild
 import net.dv8tion.jda.core.entities.VoiceChannel

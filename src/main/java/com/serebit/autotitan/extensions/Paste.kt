@@ -1,7 +1,7 @@
 package com.serebit.autotitan.extensions
 
-import com.serebit.autotitan.annotations.CommandFunction
-import com.serebit.autotitan.annotations.ListenerFunction
+import com.serebit.autotitan.api.annotations.CommandFunction
+import com.serebit.autotitan.api.annotations.ListenerFunction
 import khttp.post
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 

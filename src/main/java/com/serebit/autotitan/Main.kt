@@ -2,7 +2,7 @@ package com.serebit.autotitan
 
 import com.google.common.reflect.ClassPath
 import com.google.gson.Gson
-import com.serebit.autotitan.annotations.ListenerFunction
+import com.serebit.autotitan.api.annotations.ListenerFunction
 import com.serebit.autotitan.config.Configuration
 import com.serebit.autotitan.data.Command
 import com.serebit.autotitan.data.Listener
