@@ -36,6 +36,16 @@ dependencies {
     testCompile group: "org.jetbrains.kotlin", name: "kotlin-test", version:"1.1.2"
 }
 
+shadowJar {
+    manifest {
+        attributes "Main-Class": "com.serebit.autotitan.MainKt"
+    }
+}
+
+build {
+    dependsOn shadowJar
+}
+
 publishing {
     publications {
         BintrayRelease(MavenPublication) {
@@ -47,9 +57,9 @@ publishing {
     }
 }
 
-bintray {   
-    user = bintrayUsername
-    key = bintrayApiKey
+bintray {
+    user = System.getenv("BINTRAY_USER")
+    key = System.getenv("BINTRAY_KEY")
     publications = ["BintrayRelease"]
     pkg {
         repo = "Maven"
@@ -64,19 +74,13 @@ bintray {
     }
 }
 
-shadowJar {
-    manifest {
-        attributes "Main-Class": "com.serebit.autotitan.MainKt"
-    }
-}
-
 build {
     dependsOn shadowJar
 }
 
 bintrayUpload {
     dependsOn build
-    
-    onlyIf { !bintrayUsername.empty }
-    onlyIf { !bintrayApiKey.empty }
+
+    onlyIf { !System.getenv("BINTRAY_USER") != null }
+    onlyIf { !System.getenv("BINTRAY_KEY") != null }
 }
