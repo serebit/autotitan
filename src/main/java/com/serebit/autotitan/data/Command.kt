@@ -51,11 +51,14 @@ class Command(val instance: Any, val method: Method) {
       Access.ALL -> true
       Access.GUILD_OWNER -> evt.member == evt.guild?.owner
       Access.BOT_OWNER -> evt.author == evt.jda.asBot().applicationInfo.complete().owner
+      Access.RANK_ABOVE -> TODO("Not yet implemented.")
+      Access.RANK_SAME -> TODO("Not yet implemented.")
+      Access.RANK_BELOW -> TODO("Not yet implemented.")
     }
     val correctLocale = when (locale) {
       Locale.ALL -> true
       Locale.GUILD -> evt.guild != null
-      Locale.PRIVATE -> evt.guild == null
+      Locale.PRIVATE_CHANNEL -> evt.guild == null
     }
     val hasPermissions = when (evt.guild != null) {
       true -> evt.member.hasPermission(permissions)

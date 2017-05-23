@@ -14,7 +14,7 @@ import java.util.*
 
 fun main(args: Array<String>) {
   val useExistingSettings = !(args.contains("-r") || args.contains("--reset"))
-  val configFile = File("${Singleton.location.parent}/data/config.json")
+  val configFile = File("${Singleton.dataDirectory}/config.json")
   val config: Configuration
   if (useExistingSettings && configFile.exists()) {
     config = Gson().fromJson(configFile.readText(), Configuration::class.java)
