@@ -7,12 +7,13 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 
 class Owner {
   @CommandFunction(
-      description = "Shuts down the bot.",
+      description = "Shuts down the bot with an exit code of 0.",
       access = Access.BOT_OWNER
   )
   fun shutDown(evt: MessageReceivedEvent) {
-    evt.textChannel.sendMessage("Shutting down.").queue {
-      evt.jda.shutdown()
+    with(evt) {
+      channel.sendMessage("Shutting down.").complete()
+      jda.shutdown()
       System.exit(0)
     }
   }
@@ -22,12 +23,11 @@ class Owner {
       delimitFinalParameter = false,
       access = Access.BOT_OWNER
   )
-  fun rename(evt: MessageReceivedEvent, name: String) {
-    evt.jda.selfUser.manager.setName(name).queue({
-      evt.channel.sendMessage("Renamed to $name.").queue()
-    }, {
-      evt.author.privateChannel.sendMessage("```\n${it.message}\n```").queue()
-    })
+  fun setName(evt: MessageReceivedEvent, name: String) {
+    with(evt) {
+      jda.selfUser.manager.setName(name).complete()
+      channel.sendMessage("Renamed to $name.").queue()
+    }
   }
 
   @CommandFunction(
@@ -43,12 +43,22 @@ class Owner {
       description = "Sends the bot's invite link to the command invoker.",
       access = Access.BOT_OWNER
   )
-  fun invite(evt: MessageReceivedEvent) {
-    if (!evt.author.hasPrivateChannel()) {
-      evt.author.openPrivateChannel().complete()
+  fun getInvite(evt: MessageReceivedEvent) {
+    with(evt) {
+      author.openPrivateChannel().complete().sendMessage(
+          "Invite link: ${jda.asBot().getInviteUrl()}"
+      ).queue()
     }
-    evt.author.privateChannel.sendMessage(
-        "Invite link: ${evt.jda.asBot().getInviteUrl()}"
-    ).queue()
+  }
+  
+  @CommandFunction(
+      description = "Leaves the server."
+      access = Access.BOT_OWNER
+  )
+  fun leaveServer(evt: MessageReceivedEvent) {
+    with(evt) {
+      channel.sendMessage("Leaving the server.").complete()
+      guild.leave().complete()
+    }
   }
 }
