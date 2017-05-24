@@ -38,10 +38,9 @@ class MessageListener(
           .forEach { it.method(it.instance, evt) }
     }
   }
-
-  override fun onMessageReceived(evt: MessageReceivedEvent) {
-    if (!evt.author.isBot) {
-      runListeners(evt)
+  
+  fun runCommands(evt: MessageReceivedEvent) {
+    launch(CommonPool) {
       var messageContent = evt.message.rawContent
       if (messageContent == "${Command.prefix}help") sendCommandList(evt)
       val command = commands
@@ -56,6 +55,13 @@ class MessageListener(
             .sortedBy { it.name.length }
             .lastOrNull()?.sendHelpMessage(evt)
       }
+    }
+  }
+
+  override fun onMessageReceived(evt: MessageReceivedEvent) {
+    if (!evt.author.isBot) {
+      runCommands(evt)
+      runListeners(evt)
     }
   }
 
