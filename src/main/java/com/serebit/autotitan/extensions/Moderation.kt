@@ -33,22 +33,22 @@ class Moderation {
   }
 
   @CommandFunction(
-      description = "Bans a member from the current server.",
+      description = "Bans a user from the server.",
       locale = Locale.GUILD,
       permissions = arrayOf(Permission.BAN_MEMBERS)
   )
-  fun ban(evt: MessageReceivedEvent, member: Member) {
-    evt.guild.controller.ban(member, 0).queue({
+  fun ban(evt: MessageReceivedEvent, user: User) {
+    evt.guild.controller.ban(user, 0).queue({
       evt.channel.sendMessage("Banned.").queue()
     })
   }
   
   @CommandFunction(
-      description = "Bans a member from the current server, and deletes 7 days worth of their messages.",
+      description = "Bans a user from the current server, and deletes 7 days worth of their messages.",
       locale = Locale.GUILD,
       permissions = arrayOf(Permission.BAN_MEMBERS)
   )
-  fun hardBan(evt: MessageReceivedEvent, member: Member) {
+  fun hardBan(evt: MessageReceivedEvent, user: User) {
     evt.guild.controller.ban(member, 7).queue({
       evt.channel.sendMessage("Banned.").queue()
     })
