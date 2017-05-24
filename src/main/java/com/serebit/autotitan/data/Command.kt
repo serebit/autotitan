@@ -46,7 +46,6 @@ class Command(val instance: Any, val method: Method) {
 
   fun matches(evt: MessageReceivedEvent): Boolean {
     val correctInvocation = evt.message.rawContent.startsWith(prefix + name)
-    // TODO Fix logic here so it doesn't block other threads.
     val correctAccess = when (access) {
       Access.ALL -> true
       Access.GUILD_OWNER -> evt.member == evt.guild?.owner
