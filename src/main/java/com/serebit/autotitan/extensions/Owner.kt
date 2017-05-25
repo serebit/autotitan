@@ -52,7 +52,7 @@ class Owner {
   }
   
   @CommandFunction(
-      description = "Leaves the server."
+      description = "Leaves the server.",
       access = Access.BOT_OWNER
   )
   fun leaveServer(evt: MessageReceivedEvent) {

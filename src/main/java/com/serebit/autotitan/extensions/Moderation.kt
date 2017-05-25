@@ -49,7 +49,7 @@ class Moderation {
       permissions = arrayOf(Permission.BAN_MEMBERS)
   )
   fun hardBan(evt: MessageReceivedEvent, user: User) {
-    evt.guild.controller.ban(member, 7).queue({
+    evt.guild.controller.ban(user, 7).queue({
       evt.channel.sendMessage("Banned.").queue()
     })
   }
