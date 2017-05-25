@@ -1,4 +1,4 @@
-package com.serebit.autotitan.extensions
+package com.serebit.autotitan.standard.extensions
 
 import com.serebit.autotitan.api.Access
 import com.serebit.autotitan.api.annotations.CommandFunction
