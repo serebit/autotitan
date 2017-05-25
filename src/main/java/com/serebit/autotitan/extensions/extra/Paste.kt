@@ -1,4 +1,4 @@
-package com.serebit.autotitan.standard.extensions
+package com.serebit.autotitan.extensions.extra
 
 import com.serebit.autotitan.api.annotations.CommandFunction
 import com.serebit.autotitan.api.annotations.ListenerFunction
