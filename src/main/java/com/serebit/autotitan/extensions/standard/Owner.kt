@@ -3,6 +3,7 @@ package com.serebit.autotitan.extensions.standard
 import com.serebit.autotitan.api.Access
 import com.serebit.autotitan.api.annotations.CommandFunction
 import com.serebit.autotitan.data.Command
+import net.dv8tion.jda.core.EmbedBuilder
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 
 class Owner {
@@ -56,7 +57,7 @@ class Owner {
       access = Access.BOT_OWNER
   )
   fun serverList(evt: MessageReceivedEvent) {
-    val color = if(guild != null) {
+    val color = if(evt.guild != null) {
       evt.guild.selfMember.color
     } else null
     val embedBuilder = EmbedBuilder()
