@@ -67,7 +67,7 @@ class Owner {
       setThumbnail(evt.jda.selfUser.effectiveAvatarUrl)
       setColor(color)
       evt.jda.guilds.forEach {
-        addField(it.name, "Server ID: ${it.id}")
+        addField(it.name, "Server ID: ${it.id}", false)
       }
     }
     evt.channel.sendMessage(embedBuilder.build()).queue()
