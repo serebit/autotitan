@@ -99,6 +99,22 @@ class Audio {
     audioManager.scheduler.next()
     evt.channel.sendMessage("Skipped to next track.").queue()
   }
+  
+  @CommandFunction(locale = Locale.GUILD)
+  fun pause(evt: MessageReceivedEvent) {
+    val audioManager = evt.guild.getMusicManager()
+    if (audioManager.scheduler.pause()) {
+      evt.channel.sendMessage("Paused.").queue()
+    }
+  }
+  
+  @CommandFunction(locale = Locale.GUILD)
+  fun resume(evt: MessageReceivedEvent) {
+    val audioManager = evt.guild.getMusicManager()
+    if (audioManager.scheduler.resume()) {
+      evt.channel.sendMessage("Resumed.").queue()
+    }
+  }
 
   @CommandFunction(locale = Locale.GUILD)
   fun queue(evt: MessageReceivedEvent) {
