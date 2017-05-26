@@ -23,7 +23,7 @@ class TrackScheduler(internal var player: AudioPlayer) : AudioEventAdapter() {
   }
   
   fun pause(): Boolean {
-    return if (!player.isPaused): Boolean {
+    return if (!player.isPaused) {
       player.setPaused(true)
       true
     } else false
