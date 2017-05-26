@@ -52,6 +52,27 @@ class Owner {
   }
   
   @CommandFunction(
+      description = "Gets the list of servers that the bot is currently in.",
+      access = Access.BOT_OWNER
+  )
+  fun serverList(evt: MessageReceivedEvent) {
+    val color = if(guild != null) {
+      evt.guild.selfMember.color
+    } else null
+    val embedBuilder = EmbedBuilder()
+    with(embedBuilder) {
+      setTitle("Server List", null)
+      setDescription("A complete list of all the servers that I'm in.")
+      setThumbnail(evt.jda.selfUser.effectiveAvatarUrl)
+      setColor(color)
+      evt.jda.guilds.forEach {
+        addField(it.name, "Server ID: ${it.id}")
+      }
+    }
+    evt.channel.sendMessage(embedBuilder.build()).queue()
+  }
+  
+  @CommandFunction(
       description = "Leaves the server.",
       access = Access.BOT_OWNER
   )
