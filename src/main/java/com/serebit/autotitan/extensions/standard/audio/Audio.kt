@@ -144,7 +144,7 @@ class Audio {
   }
 
   @CommandFunction(locale = Locale.GUILD)
-  fun volume(evt: MessageReceivedEvent, volume: Int) {
+  fun setVolume(evt: MessageReceivedEvent, volume: Int) {
     val newVolume = when {
       volume > 100 -> 100
       volume < 0 -> 0
