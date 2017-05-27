@@ -21,14 +21,14 @@ class TrackScheduler(internal var player: AudioPlayer) : AudioEventAdapter() {
       queue.removeAt(0)
     }
   }
-  
+
   fun pause(): Boolean {
     return if (!player.isPaused) {
       player.setPaused(true)
       true
     } else false
   }
-  
+
   fun resume(): Boolean {
     return if (player.isPaused) {
       player.setPaused(false)

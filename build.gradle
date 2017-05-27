@@ -81,6 +81,6 @@ build {
 bintrayUpload {
     dependsOn build
 
-    onlyIf { System.getenv("BINTRAY_USER") != null }
-    onlyIf { System.getenv("BINTRAY_KEY") != null }
+    onlyIf { !System.getenv("BINTRAY_USER").isEmpty() }
+    onlyIf { !System.getenv("BINTRAY_KEY").isEmpty() }
 }

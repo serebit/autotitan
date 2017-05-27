@@ -38,7 +38,7 @@ class MessageListener(
           .forEach { it.method(it.instance, evt) }
     }
   }
-  
+
   fun runCommands(evt: MessageReceivedEvent) {
     launch(CommonPool) {
       var messageContent = evt.message.rawContent

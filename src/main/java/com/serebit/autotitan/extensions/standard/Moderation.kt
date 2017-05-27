@@ -18,7 +18,7 @@ class Moderation {
       evt.channel.sendMessage("Kicked.").queue()
     })
   }
-  
+
   @CommandFunction(
       description = "Kicks a member from the server and deletes 1 day's worth of their messages.",
       locale = Locale.GUILD,
@@ -42,7 +42,7 @@ class Moderation {
       evt.channel.sendMessage("Banned.").queue()
     })
   }
-  
+
   @CommandFunction(
       description = "Bans a user from the current server, and deletes 7 days worth of their messages.",
       locale = Locale.GUILD,
@@ -53,7 +53,7 @@ class Moderation {
       evt.channel.sendMessage("Banned.").queue()
     })
   }
-  
+
   @CommandFunction(
       description = "Unbans a banned user from the current server.",
       locale = Locale.GUILD,

@@ -11,15 +11,14 @@ import java.io.File
 import java.time.format.DateTimeFormatter
 
 
-
 class General {
   private val dateFormat = DateTimeFormatter.ofPattern("MMMM d, yyyy")
-  
+
   @CommandFunction(description = "Pings the bot.")
   fun ping(evt: MessageReceivedEvent) {
     evt.channel.sendMessage("Pong. The last ping was ${evt.jda.ping}ms.").queue()
   }
-  
+
   @CommandFunction(
       description = "Gets information about the system that the bot is running on."
   )
@@ -46,7 +45,7 @@ class General {
         "Vendor" to System.getProperty("java.vendor"),
         "Version" to System.getProperty("java.version")
     ).map { "${it.key}: *${it.value}*" }.joinToString("\n")
-    val color = if(evt.guild != null) {
+    val color = if (evt.guild != null) {
       evt.guild.getMember(self).color
     } else null
     val embedBuilder = EmbedBuilder()

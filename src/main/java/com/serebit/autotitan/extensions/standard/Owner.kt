@@ -39,7 +39,7 @@ class Owner {
     Command.prefix = prefix
     evt.channel.sendMessage("Set prefix to `${Command.prefix}`.").queue()
   }
-  
+
   @CommandFunction(
       description = "Sends the bot's invite link to the command invoker.",
       access = Access.BOT_OWNER
@@ -51,13 +51,13 @@ class Owner {
       ).queue()
     }
   }
-  
+
   @CommandFunction(
       description = "Gets the list of servers that the bot is currently in.",
       access = Access.BOT_OWNER
   )
   fun serverList(evt: MessageReceivedEvent) {
-    val color = if(evt.guild != null) {
+    val color = if (evt.guild != null) {
       evt.guild.selfMember.color
     } else null
     val embedBuilder = EmbedBuilder()
@@ -72,7 +72,7 @@ class Owner {
     }
     evt.channel.sendMessage(embedBuilder.build()).queue()
   }
-  
+
   @CommandFunction(
       description = "Leaves the server.",
       access = Access.BOT_OWNER
