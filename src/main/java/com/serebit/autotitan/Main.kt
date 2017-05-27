@@ -7,7 +7,7 @@ import com.serebit.autotitan.api.annotations.ListenerFunction
 import com.serebit.autotitan.config.Configuration
 import com.serebit.autotitan.data.Command
 import com.serebit.autotitan.data.Listener
-import com.serebit.autotitan.listeners.*
+import com.serebit.autotitan.listeners.EventListener
 import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDABuilder
 import java.io.File
@@ -34,18 +34,10 @@ fun main(args: Array<String>) {
   val listeners = loadListeners(extensions)
   Command.prefix = config.prefix
   jda.addEventListener(
-      MessageListener(
+      EventListener(
           loadCommands(extensions),
           listeners
-      ),
-      GuildMessageListener(
-          listeners
-      ),
-      JdaListener(listeners),
-      UserListener(listeners),
-      TextChannelListener(listeners),
-      VoiceChannelListener(listeners),
-      GuildVoiceListener(listeners)
+      )
   )
   println()
   println("Username:    ${jda.selfUser.name}")
