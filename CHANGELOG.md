@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 - All other types of event listeners.
+- `General::info`, a command that gets information about the bot itself.
 - `Audio::pause`, a command that pauses the currently playing track.
 - `Audio::resume`, a command that resumes the currently playing track if it is paused.
 - `General::serverList`, a command that returns an embed with the servers that the bot is connected to.
