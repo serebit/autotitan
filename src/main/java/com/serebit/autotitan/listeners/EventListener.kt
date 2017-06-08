@@ -1,5 +1,6 @@
 package com.serebit.autotitan.listeners
 
+import com.serebit.autotitan.config
 import com.serebit.autotitan.data.Command
 import com.serebit.autotitan.data.Listener
 import kotlinx.coroutines.experimental.CommonPool
@@ -27,8 +28,8 @@ class EventListener(
 
   fun runCommands(evt: MessageReceivedEvent) {
     launch(CommonPool) {
-      var messageContent = evt.message.rawContent
-      if (messageContent == "${Command.prefix}help") sendCommandList(evt)
+      val messageContent = evt.message.rawContent
+      if (messageContent == "${config.prefix}help") sendCommandList(evt)
       val command = commands
           .filter { it.matches(evt) }
           .sortedBy { it.name.length }
@@ -51,7 +52,7 @@ class EventListener(
         .groupBy({ it.method.declaringClass })
     commandMap.forEach {
       list += "\n${it.key.simpleName}\n  "
-      list += "${it.value.map { it.name }.joinToString("\n  ")}"
+      list += it.value.map { it.name }.joinToString("\n  ")
     }
     list += "\n```"
     evt.channel.sendMessage(list).queue()

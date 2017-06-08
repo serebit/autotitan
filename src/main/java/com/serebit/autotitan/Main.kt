@@ -1,6 +1,5 @@
 package com.serebit.autotitan
 
-import Singleton
 import com.google.common.reflect.ClassPath
 import com.google.gson.Gson
 import com.serebit.autotitan.api.annotations.ListenerFunction
@@ -10,33 +9,21 @@ import com.serebit.autotitan.data.Listener
 import com.serebit.autotitan.listeners.EventListener
 import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDABuilder
+import net.dv8tion.jda.core.events.Event
 import java.io.File
 import java.util.*
 
+val config: Configuration = loadOrCreateConfig()
+
 fun main(args: Array<String>) {
-  val useExistingSettings = !(args.contains("-r") || args.contains("--reset"))
-  val configFile = File("${Singleton.location.parent}/data/config.json")
-  val config: Configuration
-  if (useExistingSettings && configFile.exists()) {
-    config = Gson().fromJson(configFile.readText(), Configuration::class.java)
-  } else {
-    config = Configuration(
-        getNewToken(),
-        getNewPrefix()
-    )
-    configFile.parentFile.mkdirs()
-    configFile.writeText(Gson().toJson(config))
-  }
   val jda = JDABuilder(AccountType.BOT)
       .setToken(config.token)
       .buildBlocking()
-  val extensions = getExtensions()
-  val listeners = loadListeners(extensions)
-  Command.prefix = config.prefix
+  val extensions = loadExtensions()
   jda.addEventListener(
       EventListener(
           loadCommands(extensions),
-          listeners
+          loadListeners(extensions)
       )
   )
   println()
@@ -45,17 +32,12 @@ fun main(args: Array<String>) {
   println("Invite link: ${jda.asBot().getInviteUrl()}")
 }
 
-fun getNewToken(): String {
-  print("Enter new token:\n>")
+private fun prompt(prompt: String): String {
+  print("$prompt\n> ")
   return Scanner(System.`in`).nextLine()
 }
 
-fun getNewPrefix(): String {
-  print("Enter new prefix:\n>")
-  return Scanner(System.`in`).nextLine()
-}
-
-fun getExtensions(): MutableSet<Class<*>> {
+fun loadExtensions(): MutableSet<Class<*>> {
   val cp = ClassPath.from(Thread.currentThread().contextClassLoader)
   return cp.getTopLevelClassesRecursive("com.serebit.autotitan.extensions")
       .map { it.load() }
@@ -81,9 +63,32 @@ fun loadListeners(classes: MutableSet<Class<*>>): MutableSet<Listener> {
     extension.methods
         .filter { it.isAnnotationPresent(ListenerFunction::class.java) }
         .filter { it.parameterCount == 1 }
+        .filter { Event::class.java.isAssignableFrom(it.parameterTypes[0]) }
         .forEach {
-          listeners.add(Listener(extension.newInstance(), it, it.getAnnotation(ListenerFunction::class.java)))
+          listeners.add(Listener(
+              extension.newInstance(),
+              it,
+              it.getAnnotation(ListenerFunction::class.java)
+          ))
         }
   }
   return listeners
+}
+
+private fun loadOrCreateConfig(): Configuration {
+  val parentFolder = File(
+      Configuration::class.java.protectionDomain.codeSource.location.toURI()
+  )
+  val configFile = File("$parentFolder/data/config.json")
+  if (configFile.exists()) {
+    return Gson().fromJson(configFile.readText(), Configuration::class.java)
+  } else {
+    val config = Configuration(
+        prompt("Enter new token: "),
+        prompt("Enter new command prefix: ")
+    )
+    configFile.parentFile.mkdirs()
+    configFile.writeText(Gson().toJson(config))
+    return config
+  }
 }
