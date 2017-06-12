@@ -13,7 +13,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `General::serverList`, a command that returns an embed with the servers that the bot is connected to.
 
 ### Changed
+- The `help` command now displays as an embed, with command descriptions included.
 - Most audio commands now require the command invoker to be in the same voice channel as the bot. (Thanks, Emu.)
 - Renamed `Owner::rename` to `Owner::setName`.
 - Renamed `Owner::invite` to `Owner::getInvite`.
 - Renamed `Audio::volume` to `Owner::setVolume`.
+
+### Fixed
+- `Owner::setPrefix` now saves the changed prefix after restart.
+- Each listener now runs in its own coroutine upon invocation.
