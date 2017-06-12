@@ -2,6 +2,7 @@ package com.serebit.autotitan
 
 import com.google.common.reflect.ClassPath
 import com.google.gson.Gson
+import com.serebit.autotitan.api.annotations.CommandFunction
 import com.serebit.autotitan.api.annotations.ListenerFunction
 import com.serebit.autotitan.config.Configuration
 import com.serebit.autotitan.data.Command
@@ -9,11 +10,11 @@ import com.serebit.autotitan.data.Listener
 import com.serebit.autotitan.listeners.EventListener
 import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDABuilder
-import net.dv8tion.jda.core.events.Event
 import java.io.File
 import java.util.*
 
-val config: Configuration = loadOrCreateConfig()
+const val version = "0.0.2"
+val config = Configuration()
 
 fun main(args: Array<String>) {
   val jda = JDABuilder(AccountType.BOT)
@@ -32,63 +33,45 @@ fun main(args: Array<String>) {
   println("Invite link: ${jda.asBot().getInviteUrl()}")
 }
 
-private fun prompt(prompt: String): String {
-  print("$prompt\n> ")
-  return Scanner(System.`in`).nextLine()
-}
-
-fun loadExtensions(): MutableSet<Class<*>> {
+private fun loadExtensions(): Set<Class<*>> {
   val cp = ClassPath.from(Thread.currentThread().contextClassLoader)
   return cp.getTopLevelClassesRecursive("com.serebit.autotitan.extensions")
       .map { it.load() }
-      .toMutableSet()
+      .toSet()
 }
 
-fun loadCommands(classes: MutableSet<Class<*>>): MutableSet<Command> {
+private fun loadCommands(classes: Set<Class<*>>): Set<Command> {
   val commands = mutableSetOf<Command>()
   classes.map { extension ->
-    val commandMethods = extension.methods
-        .filter { Command.isValidCommand(it) }
+    val commandMethods = extension.methods.filter { Command.isValid(it) }
     if (commandMethods.isNotEmpty()) {
       val instance = extension.newInstance()
-      commandMethods.forEach { commands.add(Command(instance, it)) }
+      commands.addAll(commandMethods.map {
+        Command(
+            instance,
+            it,
+            it.getAnnotation(CommandFunction::class.java)
+        )
+      })
     }
   }
   return commands
 }
 
-fun loadListeners(classes: MutableSet<Class<*>>): MutableSet<Listener> {
+private fun loadListeners(classes: Set<Class<*>>): Set<Listener> {
   val listeners = mutableSetOf<Listener>()
   classes.map { extension ->
-    extension.methods
-        .filter { it.isAnnotationPresent(ListenerFunction::class.java) }
-        .filter { it.parameterCount == 1 }
-        .filter { Event::class.java.isAssignableFrom(it.parameterTypes[0]) }
-        .forEach {
-          listeners.add(Listener(
-              extension.newInstance(),
-              it,
-              it.getAnnotation(ListenerFunction::class.java)
-          ))
-        }
+    val extensionListeners = extension.methods.filter { Listener.isValid(it) }
+    if (extensionListeners.isNotEmpty()) {
+      val instance = extension.newInstance()
+      listeners.addAll(extensionListeners.map {
+        Listener(
+            instance,
+            it,
+            it.getAnnotation(ListenerFunction::class.java)
+        )
+      })
+    }
   }
   return listeners
-}
-
-private fun loadOrCreateConfig(): Configuration {
-  val parentFolder = File(
-      Configuration::class.java.protectionDomain.codeSource.location.toURI()
-  )
-  val configFile = File("$parentFolder/data/config.json")
-  if (configFile.exists()) {
-    return Gson().fromJson(configFile.readText(), Configuration::class.java)
-  } else {
-    val config = Configuration(
-        prompt("Enter new token: "),
-        prompt("Enter new command prefix: ")
-    )
-    configFile.parentFile.mkdirs()
-    configFile.writeText(Gson().toJson(config))
-    return config
-  }
 }

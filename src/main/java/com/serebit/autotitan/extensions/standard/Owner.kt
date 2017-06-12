@@ -2,6 +2,7 @@ package com.serebit.autotitan.extensions.standard
 
 import com.serebit.autotitan.api.Access
 import com.serebit.autotitan.api.annotations.CommandFunction
+import com.serebit.autotitan.config
 import com.serebit.autotitan.data.Command
 import net.dv8tion.jda.core.EmbedBuilder
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
@@ -15,6 +16,7 @@ class Owner {
     with(evt) {
       channel.sendMessage("Shutting down.").complete()
       jda.shutdown()
+      config.serialize()
       System.exit(0)
     }
   }
@@ -36,8 +38,8 @@ class Owner {
       access = Access.BOT_OWNER
   )
   fun setPrefix(evt: MessageReceivedEvent, prefix: String) {
-    Command.prefix = prefix
-    evt.channel.sendMessage("Set prefix to `${Command.prefix}`.").queue()
+    config.prefix = prefix
+    evt.channel.sendMessage("Set prefix to `${config.prefix}`.").queue()
   }
 
   @CommandFunction(

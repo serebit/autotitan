@@ -1,6 +1,9 @@
 package com.serebit.autotitan.data
 
+import com.serebit.autotitan.api.annotations.CommandFunction
 import com.serebit.autotitan.api.annotations.ListenerFunction
+import net.dv8tion.jda.core.events.Event
+import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import java.lang.reflect.Method
 
 class Listener(val instance: Any, val method: Method, info: ListenerFunction) {
@@ -10,4 +13,14 @@ class Listener(val instance: Any, val method: Method, info: ListenerFunction) {
   }
   val description = info.description
   val eventType: Class<*> = method.parameterTypes[0]
+
+  companion object {
+    @JvmStatic fun isValid(method: Method): Boolean {
+      return if (method.parameterTypes.isNotEmpty()) {
+        val hasAnnotation = method.isAnnotationPresent(ListenerFunction::class.java)
+        val hasValidParameter = Event::class.java.isAssignableFrom(method.parameterTypes[0])
+        hasAnnotation && hasValidParameter
+      } else false
+    }
+  }
 }

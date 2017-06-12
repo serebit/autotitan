@@ -3,7 +3,7 @@ package com.serebit.autotitan.data
 import com.serebit.autotitan.api.Access
 import com.serebit.autotitan.api.Locale
 import com.serebit.autotitan.api.annotations.CommandFunction
-import com.sun.javaws.exceptions.InvalidArgumentException
+import com.serebit.autotitan.config
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Channel
 import net.dv8tion.jda.core.entities.Member
@@ -11,8 +11,8 @@ import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import java.lang.reflect.Method
 
-class Command(val instance: Any, val method: Method) {
-  val parameterTypes: MutableList<Class<*>>
+class Command(val instance: Any, val method: Method, info: CommandFunction) {
+  val parameterTypes = method.parameterTypes.toMutableList()
   val name: String
   val description: String
   val access: Access
@@ -22,10 +22,7 @@ class Command(val instance: Any, val method: Method) {
   val permissions: MutableSet<Permission>
 
   init {
-    val info = method.getAnnotation(CommandFunction::class.java)
-    val parameterList = method.parameterTypes.toMutableList()
-    parameterList.removeAt(0) // Remove event parameter
-    parameterTypes = parameterList
+    parameterTypes.removeAt(0)
     name = when (info.name) {
       "" -> method.name.toLowerCase()
       else -> info.name
@@ -36,8 +33,8 @@ class Command(val instance: Any, val method: Method) {
     delimitFinalParameter = info.delimitFinalParameter
     hidden = info.hidden
     permissions = info.permissions.toMutableSet()
-    if (parameterList.any { it !in validParameterTypes })
-      throw InvalidArgumentException(arrayOf("Invalid argument type passed to Command constructor."))
+    if (parameterTypes.any { it !in validParameterTypes })
+      throw IllegalArgumentException("Invalid argument type passed to Command constructor.")
   }
 
   operator fun invoke(evt: MessageReceivedEvent) {
@@ -45,7 +42,7 @@ class Command(val instance: Any, val method: Method) {
   }
 
   fun matches(evt: MessageReceivedEvent): Boolean {
-    val correctInvocation = evt.message.rawContent.startsWith(prefix + name)
+    val correctInvocation = evt.message.rawContent.startsWith(config.prefix + name)
     val correctAccess = when (access) {
       Access.ALL -> true
       Access.GUILD_OWNER -> evt.member == evt.guild?.owner
@@ -76,17 +73,17 @@ class Command(val instance: Any, val method: Method) {
   }
 
   fun roughlyMatches(evt: MessageReceivedEvent): Boolean {
-    return evt.message.rawContent.startsWith(prefix + name)
+    return evt.message.rawContent.startsWith(config.prefix + name)
   }
 
   fun sendHelpMessage(evt: MessageReceivedEvent) {
     val parameterTypesString = parameterTypes.map(Class<*>::getSimpleName).joinToString(" ")
-    val helpMessage = "```\n$prefix$name $parameterTypesString\n\n$description```"
+    val helpMessage = "```\n${config.prefix}$name $parameterTypesString\n\n$description```"
     evt.channel.sendMessage(helpMessage)
   }
 
   private fun getMessageParameters(message: String): MutableList<String> {
-    val trimmedMessage = message.removePrefix(prefix + name).trim()
+    val trimmedMessage = message.removePrefix(config.prefix + name).trim()
     val parameterCount = parameterTypes.size
     val splitParameters = trimmedMessage.split(" ").filter(String::isNotBlank).toMutableList()
     if (delimitFinalParameter) {
@@ -155,14 +152,7 @@ class Command(val instance: Any, val method: Method) {
   }
 
   companion object {
-    @JvmStatic var prefix: String = "!"
-      set(value) {
-        field = when {
-          value.length < 4 -> value
-          else -> value.substring(0, 2)
-        }
-      }
-    @JvmStatic val validParameterTypes = mutableSetOf(
+    @JvmStatic internal val validParameterTypes = mutableSetOf(
         Int::class.java,
         Long::class.java,
         Double::class.java,
@@ -173,12 +163,14 @@ class Command(val instance: Any, val method: Method) {
         String::class.java
     )
 
-    @JvmStatic fun isValidCommand(method: Method): Boolean {
-      val methodHasAnnotation = method.isAnnotationPresent(CommandFunction::class.java)
-      val methodHasParameters = method.parameterCount > 0
-      return run {
-        methodHasAnnotation && methodHasParameters && method.parameterTypes[0] == MessageReceivedEvent::class.java
-      }
+    @JvmStatic internal fun isValid(method: Method): Boolean {
+      return if (method.parameterTypes.isNotEmpty()) {
+        val hasAnnotation = method.isAnnotationPresent(CommandFunction::class.java)
+        val hasEventParameter = method.parameterTypes[0] == MessageReceivedEvent::class.java
+        val parameterTypes = method.parameterTypes.toMutableList().apply { removeAt(0) }
+        val hasValidParameterTypes = parameterTypes.all { it in validParameterTypes }
+        hasAnnotation && hasEventParameter && hasValidParameterTypes
+      } else false
     }
   }
 }
