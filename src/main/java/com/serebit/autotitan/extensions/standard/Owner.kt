@@ -3,22 +3,20 @@ package com.serebit.autotitan.extensions.standard
 import com.serebit.autotitan.api.Access
 import com.serebit.autotitan.api.annotations.CommandFunction
 import com.serebit.autotitan.config
-import com.serebit.autotitan.data.Command
 import net.dv8tion.jda.core.EmbedBuilder
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
+import java.time.OffsetDateTime
 
 class Owner {
   @CommandFunction(
       description = "Shuts down the bot with an exit code of 0.",
       access = Access.BOT_OWNER
   )
-  fun shutDown(evt: MessageReceivedEvent) {
-    with(evt) {
-      channel.sendMessage("Shutting down.").complete()
-      jda.shutdown()
-      config.serialize()
-      System.exit(0)
-    }
+  fun shutdown(evt: MessageReceivedEvent) {
+    evt.channel.sendMessage("Shutting down.").complete()
+    evt.jda.shutdown()
+    config.serialize()
+    System.exit(0)
   }
 
   @CommandFunction(
@@ -27,10 +25,8 @@ class Owner {
       access = Access.BOT_OWNER
   )
   fun setName(evt: MessageReceivedEvent, name: String) {
-    with(evt) {
-      jda.selfUser.manager.setName(name).complete()
-      channel.sendMessage("Renamed to $name.").queue()
-    }
+    evt.jda.selfUser.manager.setName(name).complete()
+    evt.channel.sendMessage("Renamed to $name.").queue()
   }
 
   @CommandFunction(
@@ -47,11 +43,9 @@ class Owner {
       access = Access.BOT_OWNER
   )
   fun getInvite(evt: MessageReceivedEvent) {
-    with(evt) {
-      author.openPrivateChannel().complete().sendMessage(
-          "Invite link: ${jda.asBot().getInviteUrl()}"
-      ).queue()
-    }
+    evt.author.openPrivateChannel().complete().sendMessage(
+        "Invite link: ${evt.jda.asBot().getInviteUrl()}"
+    ).queue()
   }
 
   @CommandFunction(
@@ -59,18 +53,14 @@ class Owner {
       access = Access.BOT_OWNER
   )
   fun serverList(evt: MessageReceivedEvent) {
-    val color = if (evt.guild != null) {
-      evt.guild.selfMember.color
-    } else null
+    val color = evt.guild?.selfMember?.color
     val embedBuilder = EmbedBuilder()
-    with(embedBuilder) {
-      setTitle("Server List", null)
-      setDescription("A complete list of all the servers that I'm in.")
-      setThumbnail(evt.jda.selfUser.effectiveAvatarUrl)
+    embedBuilder.apply {
       setColor(color)
       evt.jda.guilds.forEach {
-        addField(it.name, "Server ID: ${it.id}", false)
+        addField(it.name, "Text Channels: ${it.textChannels.size}\nMembers: ${it.members.size}\nID: `${it.id}`", true)
       }
+      setTimestamp(OffsetDateTime.now())
     }
     evt.channel.sendMessage(embedBuilder.build()).queue()
   }
@@ -80,9 +70,7 @@ class Owner {
       access = Access.BOT_OWNER
   )
   fun leaveServer(evt: MessageReceivedEvent) {
-    with(evt) {
-      channel.sendMessage("Leaving the server.").complete()
-      guild.leave().complete()
-    }
+    evt.channel.sendMessage("Leaving the server.").complete()
+    evt.guild.leave().complete()
   }
 }
