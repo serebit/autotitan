@@ -24,9 +24,9 @@ class Command(val instance: Any, val method: Method, info: CommandFunction) {
   init {
     parameterTypes.removeAt(0)
     name = when (info.name) {
-      "" -> method.name.toLowerCase()
+      "" -> method.name
       else -> info.name
-    }
+    }.toLowerCase()
     description = info.description
     access = info.access
     locale = info.locale
@@ -116,6 +116,7 @@ class Command(val instance: Any, val method: Method, info: CommandFunction) {
         trimmed != null
       }
       Channel::class.java -> evt.guild.getTextChannelById(string) != null
+      Char::class.java -> string.length == 1
       String::class.java -> true
       else -> {
         println(type.canonicalName + " is not a valid parameter type.")
@@ -127,8 +128,7 @@ class Command(val instance: Any, val method: Method, info: CommandFunction) {
   private fun castParameters(evt: MessageReceivedEvent): MutableList<Any> {
     val strings = getMessageParameters(evt.message.rawContent)
     return parameterTypes.zip(strings).map {
-      (type, string) ->
-      castParameter(evt, type, string)
+      (type, string) -> castParameter(evt, type, string)
     }.toMutableList()
   }
 
@@ -147,12 +147,13 @@ class Command(val instance: Any, val method: Method, info: CommandFunction) {
         trimmed
       }
       Channel::class.java -> evt.guild.getTextChannelById(string)
+      Char::class.java -> string.toCharArray()[0]
       else -> string
     }
   }
 
   companion object {
-    @JvmStatic internal val validParameterTypes = mutableSetOf(
+    @JvmStatic internal val validParameterTypes = setOf(
         Int::class.java,
         Long::class.java,
         Double::class.java,

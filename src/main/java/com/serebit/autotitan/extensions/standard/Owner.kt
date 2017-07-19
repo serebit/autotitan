@@ -58,7 +58,11 @@ class Owner {
     embedBuilder.apply {
       setColor(color)
       evt.jda.guilds.forEach {
-        addField(it.name, "Text Channels: ${it.textChannels.size}\nMembers: ${it.members.size}\nID: `${it.id}`", true)
+        addField(
+            it.name + "(${it.id})",
+            "**Text Channels**: ${it.textChannels.size}\n**Members**: ${it.members.size}\n",
+            true
+        )
       }
       setTimestamp(OffsetDateTime.now())
     }
