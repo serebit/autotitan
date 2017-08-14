@@ -10,12 +10,9 @@ import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import java.lang.reflect.Method
 
-class Command private constructor(val instance: Any, val method: Method, info: CommandFunction) {
-    val parameterTypes: List<Class<*>> = method.parameterTypes.drop(1)
-    val name: String = when (info.name) {
-        "" -> method.name
-        else -> info.name
-    }.toLowerCase()
+class Command private constructor(private val instance: Any, internal val method: Method, info: CommandFunction) {
+    private val parameterTypes: List<Class<*>> = method.parameterTypes.drop(1)
+    val name: String = (if (info.name.isEmpty()) method.name else info.name).toLowerCase()
     val description = info.description
     val access = info.access
     val locale = info.locale
@@ -36,17 +33,13 @@ class Command private constructor(val instance: Any, val method: Method, info: C
 
     fun castParametersOrNull(evt: MessageReceivedEvent): List<Any>? {
         val correctInvocation = evt.message.rawContent.split(" ")[0] == Configuration.prefix + name
-
         val correctParameters = parameterTypes.size == getMessageParameters(evt.message.rawContent).size
-
         val correctLocale = when (locale) {
             Locale.ALL -> true
             Locale.GUILD -> evt.guild != null
             Locale.PRIVATE_CHANNEL -> evt.guild == null
         }
-
         val hasPermissions = if (evt.guild != null) evt.member.hasPermission(permissions.toMutableList()) else false
-
         val hasAccess = when (access) {
             Access.ALL -> true
             Access.GUILD_OWNER -> evt.member == evt.guild?.owner
@@ -126,8 +119,7 @@ class Command private constructor(val instance: Any, val method: Method, info: C
         )
 
         internal fun generate(instance: Any, method: Method): Command? {
-            if (!Command.isValid(method)) return null
-            return Command(
+            return if (!isValid(method)) null else Command(
                     instance,
                     method,
                     method.getAnnotation(CommandFunction::class.java)

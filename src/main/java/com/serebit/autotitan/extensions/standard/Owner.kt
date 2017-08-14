@@ -7,6 +7,7 @@ import com.serebit.autotitan.config.Configuration
 import net.dv8tion.jda.core.EmbedBuilder
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import java.time.OffsetDateTime
+import kotlin.system.exitProcess
 
 @ExtensionClass
 class Owner {
@@ -18,7 +19,7 @@ class Owner {
         evt.channel.sendMessage("Shutting down.").complete()
         evt.jda.shutdown()
         Configuration.serialize()
-        System.exit(0)
+        exitProcess(0)
     }
 
     @CommandFunction(
@@ -37,6 +38,7 @@ class Owner {
     )
     fun setPrefix(evt: MessageReceivedEvent, prefix: String) {
         Configuration.prefix = prefix
+        Configuration.serialize()
         evt.channel.sendMessage("Set prefix to `${Configuration.prefix}`.").queue()
     }
 

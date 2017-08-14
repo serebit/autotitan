@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "com.serebit"
-version = "0.0.2"
+version = "0.0.3"
 
 description = """"""
 
@@ -78,10 +78,6 @@ bintray {
             released = new Date()
         }
     }
-}
-
-build {
-    dependsOn shadowJar
 }
 
 bintrayUpload {

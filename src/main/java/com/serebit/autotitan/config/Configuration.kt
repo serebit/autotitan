@@ -23,10 +23,8 @@ object Configuration {
                 value.length in 1..3 -> value
                 else -> value.substring(0..3)
             }
-            serialize()
         }
-    var blackList: MutableSet<User> = mutableSetOf()
-        private set
+    val blackList: MutableSet<User>
 
     init {
         if (file.exists()) {
@@ -37,6 +35,7 @@ object Configuration {
         } else {
             token = prompt("Enter new token:")
             prefix = prompt("Enter new command prefix:")
+            blackList = mutableSetOf()
             serialize()
         }
     }

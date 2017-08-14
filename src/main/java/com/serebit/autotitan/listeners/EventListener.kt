@@ -24,7 +24,7 @@ class EventListener(
     fun runListeners(evt: Event) {
         listeners.filter { it.eventType == evt::class.java }.forEach {
             launch(CommonPool) {
-                it.method(it.instance, evt)
+                it(evt)
             }
         }
     }

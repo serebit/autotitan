@@ -2,7 +2,6 @@ package com.serebit.autotitan
 
 import com.google.common.reflect.ClassPath
 import com.serebit.autotitan.api.annotations.ExtensionClass
-import com.serebit.autotitan.api.annotations.ListenerFunction
 import com.serebit.autotitan.config.Configuration
 import com.serebit.autotitan.data.Command
 import com.serebit.autotitan.data.Extension
@@ -11,7 +10,7 @@ import com.serebit.autotitan.listeners.EventListener
 import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDABuilder
 
-const val version = "0.0.2"
+const val version = "0.0.3"
 
 fun main(args: Array<String>) {
     val jda = JDABuilder(AccountType.BOT).apply {
@@ -41,7 +40,7 @@ private fun loadCommands(classes: Set<Class<*>>): Set<Command> {
     classes.filter { it.isAnnotationPresent(ExtensionClass::class.java) }.forEach { clazz ->
         val instance = Extension.generate(clazz)
         if (instance != null) {
-            commands.addAll(clazz.methods.map { Command.generate(instance, it)}.filterNotNull())
+            commands.addAll(clazz.methods.map { Command.generate(instance, it) }.filterNotNull())
         }
     }
     return commands
@@ -49,17 +48,10 @@ private fun loadCommands(classes: Set<Class<*>>): Set<Command> {
 
 private fun loadListeners(classes: Set<Class<*>>): Set<Listener> {
     val listeners = mutableSetOf<Listener>()
-    classes.forEach { extension ->
-        val extensionListeners = extension.methods.filter { Listener.isValid(it) }
-        if (extensionListeners.isNotEmpty()) {
-            val instance = extension.newInstance()
-            listeners.addAll(extensionListeners.map {
-                Listener(
-                        instance,
-                        it,
-                        it.getAnnotation(ListenerFunction::class.java)
-                )
-            })
+    classes.forEach { clazz ->
+        val instance = Extension.generate(clazz)
+        if (instance != null) {
+            listeners.addAll(clazz.methods.map { Listener.generate(instance, it) }.filterNotNull())
         }
     }
     return listeners
