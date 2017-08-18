@@ -12,7 +12,7 @@ import java.lang.reflect.Method
 
 class Command private constructor(private val instance: Any, internal val method: Method, info: CommandFunction) {
     private val parameterTypes: List<Class<*>> = method.parameterTypes.drop(1)
-    val name: String = (if (info.name.isEmpty()) method.name else info.name).toLowerCase()
+    val name = (if (info.name.isEmpty()) method.name else info.name).toLowerCase()
     val description = info.description
     val access = info.access
     val locale = info.locale
@@ -74,8 +74,7 @@ class Command private constructor(private val instance: Any, internal val method
 
     private fun castParameters(evt: MessageReceivedEvent): List<Any?> {
         val strings = getMessageParameters(evt.message.rawContent)
-        return parameterTypes.zip(strings).map {
-            (type, string) ->
+        return parameterTypes.zip(strings).map { (type, string) ->
             castParameter(evt, type, string)
         }.toList()
     }
