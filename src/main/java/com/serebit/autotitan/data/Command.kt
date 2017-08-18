@@ -59,18 +59,16 @@ class Command private constructor(private val instance: Any, internal val method
         val trimmedMessage = message.removePrefix(Configuration.prefix + name).trim()
         val parameterCount = parameterTypes.size
         val splitParameters = trimmedMessage.split(" ").filter(String::isNotBlank).toMutableList()
-        if (delimitFinalParameter) {
-            return splitParameters
+        return if (delimitFinalParameter) {
+            splitParameters
         } else {
             val parameters = mutableListOf<String>()
             (0..parameterCount - 2).forEach {
                 parameters.add(splitParameters[it])
                 splitParameters.removeAt(0)
             }
-            if (splitParameters.size > 0) {
-                parameters.add(splitParameters.joinToString(" "))
-            }
-            return parameters
+            if (splitParameters.size > 0) parameters.add(splitParameters.joinToString(" "))
+            parameters
         }
     }
 
@@ -103,6 +101,7 @@ class Command private constructor(private val instance: Any, internal val method
         }
         Channel::class.java -> evt.guild.getTextChannelById(string)
         Char::class.java -> string.toCharArray()[0]
+        String::class.java -> string
         else -> null
     }
 

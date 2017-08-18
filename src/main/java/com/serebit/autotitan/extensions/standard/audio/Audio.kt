@@ -66,7 +66,7 @@ class Audio {
     fun play(evt: MessageReceivedEvent, linkOrSearchTerms: String) {
         if (!validVoiceStatus(evt)) return
         val audioManager = evt.guild.getMusicManager()
-        var formattedLinkOrSearchTerms = if (urlValidator.isValid(linkOrSearchTerms)) {
+        val formattedLinkOrSearchTerms = if (urlValidator.isValid(linkOrSearchTerms)) {
             linkOrSearchTerms
         } else {
             "ytsearch:$linkOrSearchTerms"
@@ -78,7 +78,7 @@ class Audio {
             }
 
             override fun playlistLoaded(playlist: AudioPlaylist) {
-                var firstTrack = playlist.selectedTrack ?: playlist.tracks[0]
+                val firstTrack = playlist.selectedTrack ?: playlist.tracks[0]
                 evt.channel.sendMessage("Adding ${firstTrack.info.title} to queue.").queue()
                 audioManager.scheduler.queue(firstTrack)
             }
@@ -123,24 +123,18 @@ class Audio {
     fun queue(evt: MessageReceivedEvent) {
         if (evt.guild.getMusicManager().player.playingTrack != null) {
             val audioManager = evt.guild.getMusicManager()
-            val embedBuilder = EmbedBuilder()
-            embedBuilder
-                    .setTitle("Queue", null)
-                    .setColor(evt.guild.getMember(evt.jda.selfUser).color)
-                    .setThumbnail(evt.jda.selfUser.effectiveAvatarUrl)
-                    .addField(
-                            "Now Playing",
-                            audioManager.player.playingTrack.info.title,
-                            false
-                    )
-            if (audioManager.scheduler.queue.isNotEmpty()) {
-                embedBuilder.addField(
+            val embed = EmbedBuilder().apply {
+                setTitle("Queue", null)
+                setColor(evt.guild.getMember(evt.jda.selfUser).color)
+                setThumbnail(evt.jda.selfUser.effectiveAvatarUrl)
+                addField("Now Playing", audioManager.player.playingTrack.info.title, false)
+                if (audioManager.scheduler.queue.isNotEmpty()) addField(
                         "Up Next",
-                        audioManager.scheduler.queue.map { it.info.title }.joinToString("\n"),
+                        audioManager.scheduler.queue.joinToString("\n") { it.info.title },
                         false
                 )
-            }
-            evt.channel.sendMessage(embedBuilder.build()).queue()
+            }.build()
+            evt.channel.sendMessage(embed).queue()
         } else {
             evt.channel.sendMessage("There's nothing queued at the moment.").queue()
         }
@@ -159,7 +153,7 @@ class Audio {
     }
 
     private fun Guild.getMusicManager(): GuildMusicManager {
-        var audioManager = audioManagers.getOrElse(this, {
+        val audioManager = audioManagers.getOrElse(this, {
             val newManager = GuildMusicManager(playerManager)
             audioManagers.put(this, newManager)
             newManager

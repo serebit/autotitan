@@ -40,7 +40,7 @@ private fun loadCommands(classes: Set<Class<*>>): Set<Command> {
     classes.filter { it.isAnnotationPresent(ExtensionClass::class.java) }.forEach { clazz ->
         val instance = Extension.generate(clazz)
         if (instance != null) {
-            commands.addAll(clazz.methods.map { Command.generate(instance, it) }.filterNotNull())
+            commands.addAll(clazz.methods.mapNotNull { Command.generate(instance, it) })
         }
     }
     return commands
@@ -51,7 +51,7 @@ private fun loadListeners(classes: Set<Class<*>>): Set<Listener> {
     classes.forEach { clazz ->
         val instance = Extension.generate(clazz)
         if (instance != null) {
-            listeners.addAll(clazz.methods.map { Listener.generate(instance, it) }.filterNotNull())
+            listeners.addAll(clazz.methods.mapNotNull { Listener.generate(instance, it) })
         }
     }
     return listeners

@@ -12,7 +12,7 @@ private data class ConfigurationData(
 )
 
 object Configuration {
-    internal val parentFolder = File(this::class.java.protectionDomain.codeSource.location.toURI()).parentFile
+    private val parentFolder = File(this::class.java.protectionDomain.codeSource.location.toURI()).parentFile
     private val file = File("$parentFolder/data/config.json")
     var token: String
         internal set

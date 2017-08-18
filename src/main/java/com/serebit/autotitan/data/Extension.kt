@@ -7,7 +7,10 @@ class Extension {
             val containsCommands by lazy {
                 extension.methods.any { Command.isValid(it) }
             }
-            return if (noParameters && containsCommands) extension.newInstance() else null
+            val containsListeners by lazy {
+                extension.methods.any { Listener.isValid(it) }
+            }
+            return if (noParameters && (containsCommands || containsListeners)) extension.newInstance() else null
         }
     }
 }

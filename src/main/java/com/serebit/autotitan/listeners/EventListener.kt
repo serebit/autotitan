@@ -11,8 +11,8 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import net.dv8tion.jda.core.hooks.ListenerAdapter
 
 class EventListener(
-        val commands: Set<Command>,
-        val listeners: Set<Listener>
+        private val commands: Set<Command>,
+        private val listeners: Set<Listener>
 ) : ListenerAdapter() {
     override fun onGenericEvent(evt: Event) {
         if (evt is MessageReceivedEvent && evt.message.rawContent.trim().startsWith(Configuration.prefix)) {
@@ -21,7 +21,7 @@ class EventListener(
         runListeners(evt)
     }
 
-    fun runListeners(evt: Event) {
+    private fun runListeners(evt: Event) {
         listeners.filter { it.eventType == evt::class.java }.forEach {
             launch(CommonPool) {
                 it(evt)
@@ -29,7 +29,7 @@ class EventListener(
         }
     }
 
-    fun runCommands(evt: MessageReceivedEvent) {
+    private fun runCommands(evt: MessageReceivedEvent) {
         launch(CommonPool) {
             val messageContent = evt.message.rawContent.trim()
             if (messageContent == "${Configuration.prefix}help") sendCommandList(evt)
@@ -49,7 +49,7 @@ class EventListener(
         }
     }
 
-    fun sendCommandList(evt: MessageReceivedEvent) {
+    private fun sendCommandList(evt: MessageReceivedEvent) {
         val embedBuilder = EmbedBuilder().apply {
             setColor(evt.guild?.selfMember?.color)
         }
@@ -57,9 +57,9 @@ class EventListener(
                 .groupBy({ it.method.declaringClass })
         commandMap.forEach {
             val title = it.key.simpleName
-            val content = it.value.map {
+            val content = it.value.joinToString("\n") {
                 "`${it.name}`" + if (it.description.isNotEmpty()) " - ${it.description}" else ""
-            }.joinToString("\n")
+            }
             embedBuilder.addField(title, content, false)
         }
         evt.channel.sendMessage(embedBuilder.build()).queue()

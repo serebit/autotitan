@@ -5,7 +5,7 @@ import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
 
-class TrackScheduler(internal var player: AudioPlayer) : AudioEventAdapter() {
+class TrackScheduler(private var player: AudioPlayer) : AudioEventAdapter() {
     val queue = mutableListOf<AudioTrack>()
 
     fun queue(track: AudioTrack) {
@@ -24,14 +24,14 @@ class TrackScheduler(internal var player: AudioPlayer) : AudioEventAdapter() {
 
     fun pause(): Boolean {
         return if (!player.isPaused) {
-            player.setPaused(true)
+            player.isPaused = true
             true
         } else false
     }
 
     fun resume(): Boolean {
         return if (player.isPaused) {
-            player.setPaused(false)
+            player.isPaused = false
             true
         } else false
     }
