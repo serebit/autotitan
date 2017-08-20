@@ -5,8 +5,9 @@ import net.dv8tion.jda.core.entities.User
 import java.io.File
 import java.util.*
 
-class Configuration {
-    private val file: File
+object Configuration {
+    private val parentFolder = File(this::class.java.protectionDomain.codeSource.location.toURI()).parentFile
+    private val file = File("$parentFolder/data/config.json")
     var token: String
         internal set
     var prefix: String = "!"
@@ -24,9 +25,6 @@ class Configuration {
     val oAuthAccessTokenSecret: String
 
     init {
-        val parentFolder = File(this::class.java.protectionDomain.codeSource.location.toURI())
-                .parentFile
-        file = File("$parentFolder/data/config.json")
         if (file.exists()) {
             val configData = Gson().fromJson(file.readText(), ConfigurationData::class.java)
             token = configData.token
@@ -48,26 +46,24 @@ class Configuration {
         }
     }
 
-    internal fun serialize() {
+    private fun serialize() {
         file.parentFile.mkdirs()
-        file.writeText(Gson().toJson(
-                ConfigurationData(
-                        token,
-                        prefix,
-                        blackList,
-                        oAuthConsumerKey,
-                        oAuthConsumerSecret,
-                        oAuthAccessToken,
-                        oAuthAccessTokenSecret
-                )
-        ))
+        file.writeText(Gson().toJson(ConfigurationData(
+                token,
+                prefix,
+                blackList,
+                oAuthConsumerKey,
+                oAuthConsumerSecret,
+                oAuthAccessToken,
+                oAuthAccessTokenSecret
+        )))
     }
 
-    private fun prompt(prompt: String): String {
-        print("$prompt\n> ")
+    private fun prompt(text: String): String {
+        print("$text\n> ")
         val input = Scanner(System.`in`).nextLine().trim()
         return if (input.contains("\n") || input.contains(" ")) {
-            prompt(prompt)
+            prompt(text)
         } else input
     }
 
