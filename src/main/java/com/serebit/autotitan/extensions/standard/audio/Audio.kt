@@ -186,13 +186,8 @@ class Audio {
 
     private fun validVoiceStatus(evt: MessageReceivedEvent): Boolean {
         val isConnected = evt.guild.audioManager.isConnected
-        val sameChannel = evt.member.voiceState.channel == evt.guild.audioManager.connectedChannel
         if (!isConnected) {
             evt.channel.sendMessage("I need to be in a voice channel to do that.").queue()
-            return false
-        }
-        if (!sameChannel) {
-            evt.channel.sendMessage("We need to be in the same voice channel for you to do that.").queue()
             return false
         }
         return true
