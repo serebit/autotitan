@@ -46,7 +46,7 @@ object Configuration {
         }
     }
 
-    private fun serialize() {
+    internal fun serialize() {
         file.parentFile.mkdirs()
         file.writeText(Gson().toJson(ConfigurationData(
                 token,

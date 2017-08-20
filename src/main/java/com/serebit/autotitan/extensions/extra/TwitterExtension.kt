@@ -3,7 +3,7 @@ package com.serebit.autotitan.extensions.extra
 import com.serebit.autotitan.api.Locale
 import com.serebit.autotitan.api.annotations.CommandFunction
 import com.serebit.autotitan.api.annotations.ExtensionClass
-import com.serebit.autotitan.config
+import com.serebit.autotitan.config.Configuration
 import net.dv8tion.jda.core.EmbedBuilder
 import net.dv8tion.jda.core.entities.TextChannel
 import net.dv8tion.jda.core.entities.User
@@ -24,10 +24,10 @@ class TwitterExtension {
     init {
         val cb = ConfigurationBuilder()
         cb.setDebugEnabled(true)
-                .setOAuthConsumerKey(config.oAuthConsumerKey)
-                .setOAuthConsumerSecret(config.oAuthConsumerSecret)
-                .setOAuthAccessToken(config.oAuthAccessToken)
-                .setOAuthAccessTokenSecret(config.oAuthAccessTokenSecret)
+                .setOAuthConsumerKey(Configuration.oAuthConsumerKey)
+                .setOAuthConsumerSecret(Configuration.oAuthConsumerSecret)
+                .setOAuthAccessToken(Configuration.oAuthAccessToken)
+                .setOAuthAccessTokenSecret(Configuration.oAuthAccessTokenSecret)
         twitter = TwitterFactory(cb.build()).instance
         scheduler = timer(daemon = true, period = 60000, initialDelay = 60000) {
             if (tweetQueue.isNotEmpty()) {
