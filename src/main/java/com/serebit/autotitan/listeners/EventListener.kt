@@ -15,53 +15,48 @@ class EventListener(
         private val listeners: Set<Listener>
 ) : ListenerAdapter() {
     override fun onGenericEvent(evt: Event) {
-        if (evt is MessageReceivedEvent && evt.message.rawContent.trim().startsWith(Configuration.prefix)) {
-            runCommands(evt)
+        launch(CommonPool) {
+            if (evt is MessageReceivedEvent && evt.message.rawContent.startsWith(Configuration.prefix)) {
+                runCommands(evt)
+            }
+            runListeners(evt)
         }
-        runListeners(evt)
     }
 
     private fun runListeners(evt: Event) {
         listeners.filter { it.eventType == evt::class.java }.forEach {
-            launch(CommonPool) {
-                it(evt)
-            }
+            it(evt)
         }
     }
 
     private fun runCommands(evt: MessageReceivedEvent) {
-        launch(CommonPool) {
-            val messageContent = evt.message.rawContent.trim()
-            if (messageContent == "${Configuration.prefix}help") sendCommandList(evt)
-            var parameters: List<Any>? = null
-            val command = commands
-                    .sortedBy { it.name.length }
-                    .reversed()
-                    .asSequence()
-                    .filter {
-                        parameters = it.castParametersOrNull(evt)
-                        parameters != null
-                    }
-                    .firstOrNull()
-            if (command != null && parameters != null) {
-                command(evt, parameters as List<Any>)
-            }
+        if (evt.message.rawContent == "${Configuration.prefix}help") sendCommandList(evt)
+        var parameters: List<Any>? = null
+        val command = commands
+                .asSequence()
+                .filter {
+                    it.looselyMatches(evt.message.rawContent)
+                }
+                .filter {
+                    parameters = it.castParametersOrNull(evt)
+                    parameters != null
+                }
+                .firstOrNull()
+        if (command != null && parameters != null) {
+            command(evt, parameters as List<Any>)
         }
     }
 
     private fun sendCommandList(evt: MessageReceivedEvent) {
-        val embedBuilder = EmbedBuilder().apply {
+        val embed = EmbedBuilder().apply {
             setColor(evt.guild?.selfMember?.color)
-        }
-        val commandMap = commands.sortedBy { it.method.declaringClass.simpleName }
-                .groupBy({ it.method.declaringClass })
-        commandMap.forEach {
-            val title = it.key.simpleName
-            val content = it.value.joinToString("\n") {
-                "`${it.name}`" + if (it.description.isNotEmpty()) " - ${it.description}" else ""
+            commands.sortedBy { it.name }.groupBy { it.method.declaringClass }.forEach {
+                addField(it.key.simpleName, it.value.joinToString("\n") {
+                    it.helpMessage
+                }, false)
             }
-            embedBuilder.addField(title, content, false)
-        }
-        evt.channel.sendMessage(embedBuilder.build()).queue()
+        }.build()
+
+        evt.channel.sendMessage(embed).queue()
     }
 }

@@ -15,7 +15,7 @@ class Owner {
             description = "Shuts down the bot with an exit code of 0.",
             access = Access.BOT_OWNER
     )
-    fun shutdown(evt: MessageReceivedEvent) {
+    suspend fun shutdown(evt: MessageReceivedEvent) {
         evt.channel.sendMessage("Shutting down.").complete()
         evt.jda.shutdown()
         Configuration.serialize()

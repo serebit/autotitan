@@ -46,9 +46,7 @@ class General {
                 "Vendor" to System.getProperty("java.vendor"),
                 "Version" to System.getProperty("java.version")
         ).asIterable().joinToString("\n") { "${it.key}: *${it.value}*" }
-        val color = if (evt.guild != null) {
-            evt.guild.getMember(self).color
-        } else null
+        val color = evt.guild?.getMember(self)?.color
         val embed = EmbedBuilder().apply {
             setTitle("System Info", null)
             setDescription("Note: These measurements reflect what is available to the JVM.")

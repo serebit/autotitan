@@ -11,9 +11,11 @@ import com.serebit.autotitan.api.annotations.CommandFunction
 import com.serebit.autotitan.api.annotations.ExtensionClass
 import com.serebit.autotitan.api.annotations.ListenerFunction
 import net.dv8tion.jda.core.EmbedBuilder
+import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Guild
 import net.dv8tion.jda.core.entities.VoiceChannel
 import net.dv8tion.jda.core.events.guild.voice.GuildVoiceLeaveEvent
+import net.dv8tion.jda.core.events.guild.voice.GuildVoiceMoveEvent
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import net.dv8tion.jda.core.managers.AudioManager
 import org.apache.commons.validator.routines.UrlValidator
@@ -48,13 +50,23 @@ class Audio {
         }
     }
 
-    @ListenerFunction()
+    @ListenerFunction
     fun leaveVoiceAutomatically(evt: GuildVoiceLeaveEvent) {
         if (evt.guild.audioManager.connectedChannel != evt.channelLeft) return
         val nobodyLeft = evt.guild.audioManager.connectedChannel.members.size == 1
         if (evt.guild.audioManager.isConnected && nobodyLeft) {
             val audioPlayer = evt.guild.getMusicManager()
             audioPlayer.scheduler.stop()
+            evt.guild.audioManager.closeAudioConnection()
+        }
+    }
+
+    @ListenerFunction
+    fun leaveVoiceAutomatically(evt: GuildVoiceMoveEvent) {
+        if (evt.guild.audioManager.connectedChannel != evt.channelLeft) return
+        val nobodyLeft = evt.guild.audioManager.connectedChannel.members.size == 1
+        if (evt.guild.audioManager.isConnected && nobodyLeft) {
+            evt.guild.getMusicManager().scheduler.stop()
             evt.guild.audioManager.closeAudioConnection()
         }
     }
@@ -101,6 +113,11 @@ class Audio {
         evt.channel.sendMessage("Skipped to next track.").queue()
     }
 
+    @CommandFunction(locale = Locale.GUILD, permissions = arrayOf(Permission.VOICE_MUTE_OTHERS))
+    fun stop(evt: MessageReceivedEvent) {
+        evt.guild.getMusicManager().scheduler.stop()
+    }
+
     @CommandFunction(locale = Locale.GUILD)
     fun pause(evt: MessageReceivedEvent) {
         if (!validVoiceStatus(evt)) return
@@ -113,8 +130,7 @@ class Audio {
     @CommandFunction(locale = Locale.GUILD)
     fun resume(evt: MessageReceivedEvent) {
         if (!validVoiceStatus(evt)) return
-        val audioManager = evt.guild.getMusicManager()
-        if (audioManager.scheduler.resume()) {
+        if (evt.guild.getMusicManager().scheduler.resume()) {
             evt.channel.sendMessage("Resumed.").queue()
         }
     }

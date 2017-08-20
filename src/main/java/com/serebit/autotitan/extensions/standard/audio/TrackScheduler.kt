@@ -9,32 +9,23 @@ class TrackScheduler(private var player: AudioPlayer) : AudioEventAdapter() {
     val queue = mutableListOf<AudioTrack>()
 
     fun queue(track: AudioTrack) {
-        if (!player.startTrack(track, true)) {
-            queue.add(track)
-        }
+        if (!player.startTrack(track, true)) queue.add(track)
     }
 
     fun next() {
         player.stopTrack()
-        if (queue.isNotEmpty()) {
-            player.playTrack(queue[0])
-            queue.removeAt(0)
-        }
+        if (queue.isNotEmpty()) player.playTrack(queue.removeAt(0))
     }
 
-    fun pause(): Boolean {
-        return if (!player.isPaused) {
-            player.isPaused = true
-            true
-        } else false
-    }
+    fun pause() = if (!player.isPaused) {
+        player.isPaused = true
+        true
+    } else false
 
-    fun resume(): Boolean {
-        return if (player.isPaused) {
-            player.isPaused = false
-            true
-        } else false
-    }
+    fun resume() = if (player.isPaused) {
+        player.isPaused = false
+        true
+    } else false
 
     fun stop() {
         player.stopTrack()

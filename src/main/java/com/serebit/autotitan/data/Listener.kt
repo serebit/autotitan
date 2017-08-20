@@ -4,18 +4,13 @@ import com.serebit.autotitan.api.annotations.ListenerFunction
 import net.dv8tion.jda.core.events.Event
 import java.lang.reflect.Method
 
-class Listener private constructor(private val instance: Any, internal val method: Method, info: ListenerFunction) {
-    val name = when (info.name) {
-        "" -> method.name.toLowerCase()
-        else -> info.name
-    }
+class Listener private constructor(private val instance: Any, private val method: Method, info: ListenerFunction) {
+    val name = if (info.name.isEmpty()) method.name.toLowerCase() else info.name
     val description = info.description
     val eventType: Class<*> = method.parameterTypes[0]
 
     operator fun invoke(evt: Event) {
-        if (evt::class.java == eventType) {
-            method.invoke(instance, evt)
-        }
+        if (evt::class.java == eventType) method.invoke(instance, evt)
     }
 
     companion object {
@@ -30,7 +25,9 @@ class Listener private constructor(private val instance: Any, internal val metho
         internal fun isValid(method: Method): Boolean {
             return if (method.parameterCount == 1) {
                 val hasAnnotation = method.isAnnotationPresent(ListenerFunction::class.java)
-                val hasValidParameter = Event::class.java.isAssignableFrom(method.parameterTypes[0])
+                val hasValidParameter by lazy {
+                    Event::class.java.isAssignableFrom(method.parameterTypes[0])
+                }
                 hasAnnotation && hasValidParameter
             } else false
         }

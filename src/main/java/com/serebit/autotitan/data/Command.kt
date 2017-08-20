@@ -12,13 +12,18 @@ import java.lang.reflect.Method
 
 class Command private constructor(private val instance: Any, internal val method: Method, info: CommandFunction) {
     private val parameterTypes: List<Class<*>> = method.parameterTypes.drop(1)
-    val name = (if (info.name.isEmpty()) method.name else info.name).toLowerCase()
-    val description = info.description
+    val name = if (info.name.isNotEmpty()) {
+        info.name
+    } else {
+        method.name
+    }.toLowerCase()
+    val description = if (info.description.isNotBlank()) info.description else "No description provided."
     val access = info.access
     val locale = info.locale
     val delimitFinalParameter = info.delimitFinalParameter
     val hidden = info.hidden
     val permissions = info.permissions
+    val helpMessage = "`$name` - $description"
 
     init {
         if (parameterTypes.any { it !in validParameterTypes }) {
@@ -30,6 +35,8 @@ class Command private constructor(private val instance: Any, internal val method
     operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>) {
         method.invoke(instance, evt, *parameters.toTypedArray())
     }
+
+    fun looselyMatches(rawMessageContent: String) = rawMessageContent.split(" ")[0] == name
 
     fun castParametersOrNull(evt: MessageReceivedEvent): List<Any>? {
         val correctInvocation = evt.message.rawContent.split(" ")[0] == Configuration.prefix + name
@@ -63,8 +70,8 @@ class Command private constructor(private val instance: Any, internal val method
             splitParameters
         } else {
             val parameters = mutableListOf<String>()
-            (0..parameterCount - 2).forEach {
-                parameters.add(splitParameters[it])
+            (0..parameterCount - 2).map {
+                splitParameters[it]
                 splitParameters.removeAt(0)
             }
             if (splitParameters.size > 0) parameters.add(splitParameters.joinToString(" "))
@@ -84,22 +91,27 @@ class Command private constructor(private val instance: Any, internal val method
         Long::class.java -> string.toLongOrNull()
         Double::class.java -> string.toDoubleOrNull()
         Float::class.java -> string.toFloatOrNull()
+        Short::class.java -> string.toShortOrNull()
+        Byte::class.java -> string.toByteOrNull()
+        Boolean::class.java -> {
+            if (string == "true" || string == "false") string.toBoolean() else null
+        }
+        Char::class.java -> if (string.length == 1) string[0] else null
         User::class.java -> {
-            evt.jda.getUserById(string.apply {
-                removePrefix("<@")
-                removePrefix("!")
-                removeSuffix(">")
-            })
+            evt.jda.getUserById(string
+                    .removePrefix("<@")
+                    .removePrefix("!")
+                    .removeSuffix(">")
+            )
         }
         Member::class.java -> {
-            evt.guild.getMemberById(string.apply {
-                removePrefix("<@")
-                removePrefix("!")
-                removeSuffix(">")
-            })
+            evt.guild.getMemberById(string
+                    .removePrefix("<@")
+                    .removePrefix("!")
+                    .removeSuffix(">")
+            )
         }
         Channel::class.java -> evt.guild.getTextChannelById(string)
-        Char::class.java -> string.toCharArray()[0]
         String::class.java -> string
         else -> null
     }
@@ -128,8 +140,11 @@ class Command private constructor(private val instance: Any, internal val method
             return if (method.parameterTypes.isNotEmpty()) {
                 val hasAnnotation = method.isAnnotationPresent(CommandFunction::class.java)
                 val hasEventParameter = method.parameterTypes[0] == MessageReceivedEvent::class.java
-                val parameterTypes = method.parameterTypes.toMutableList().apply { removeAt(0) }
-                val hasValidParameterTypes = parameterTypes.all { it in validParameterTypes }
+                val hasValidParameterTypes by lazy {
+                    method.parameterTypes.toMutableList()
+                            .apply { removeAt(0) }
+                            .all { it in validParameterTypes }
+                }
                 hasAnnotation && hasEventParameter && hasValidParameterTypes
             } else false
         }

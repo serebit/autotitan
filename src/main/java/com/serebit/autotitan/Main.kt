@@ -10,41 +10,30 @@ import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDABuilder
 
 const val version = "0.0.3"
+private val extensions = ClassPath.from(Thread.currentThread().contextClassLoader)
+        .getTopLevelClassesRecursive("com.serebit.autotitan.extensions")
+        .map { it.load() }
 
 fun main(args: Array<String>) {
     val jda = JDABuilder(AccountType.BOT).apply {
+        val commands = extensions.mapNotNull { clazz ->
+            val instance = Extension.generate(clazz)
+            if (instance != null) {
+                clazz.methods.mapNotNull { Command.generate(instance, it) }
+            } else null
+        }.flatten().toSet()
+        val listeners = extensions.mapNotNull { clazz ->
+            val instance = Extension.generate(clazz)
+            if (instance != null) {
+                clazz.methods.mapNotNull { Listener.generate(instance, it) }
+            } else null
+        }.flatten().toSet()
         setToken(Configuration.token)
+        addEventListener(EventListener(commands, listeners))
     }.buildBlocking()
 
-    val extensions = loadExtensions()
-    jda.addEventListener(EventListener(
-            loadCommands(extensions).toSet(),
-            loadListeners(extensions).toSet()
-    ))
     println()
     println("Username:    ${jda.selfUser.name}")
     println("Ping:        ${jda.ping}ms")
     println("Invite link: ${jda.asBot().getInviteUrl()}")
-}
-
-private fun loadExtensions() = ClassPath.from(Thread.currentThread().contextClassLoader)
-        .getTopLevelClassesRecursive("com.serebit.autotitan.extensions")
-        .map { it.load() }
-
-private fun loadCommands(classes: List<Class<*>>): List<Command> {
-    return classes.mapNotNull { clazz ->
-        val instance = Extension.generate(clazz)
-        if (instance != null) {
-            clazz.methods.mapNotNull { Command.generate(instance, it) }
-        } else null
-    }.flatten()
-}
-
-private fun loadListeners(classes: List<Class<*>>): List<Listener> {
-    return classes.mapNotNull { clazz ->
-        val instance = Extension.generate(clazz)
-        if (instance != null) {
-            clazz.methods.mapNotNull { Listener.generate(instance, it) }
-        } else null
-    }.flatten()
 }
