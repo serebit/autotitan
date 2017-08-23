@@ -37,9 +37,13 @@ class Owner {
             access = Access.BOT_OWNER
     )
     fun setPrefix(evt: MessageReceivedEvent, prefix: String) {
-        Configuration.prefix = prefix
-        Configuration.serialize()
-        evt.channel.sendMessage("Set prefix to `${Configuration.prefix}`.").queue()
+        if (prefix.isBlank()) {
+            evt.channel.sendMessage("Invalid prefix. Prefix must not be empty or blank.")
+        } else {
+            Configuration.prefix = if (prefix.length in 1..3) prefix else prefix.substring(0..3)
+            Configuration.serialize()
+            evt.channel.sendMessage("Set prefix to `${Configuration.prefix}`.").queue()
+        }
     }
 
     @CommandFunction(
