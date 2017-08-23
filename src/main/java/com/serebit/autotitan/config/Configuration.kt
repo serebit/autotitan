@@ -13,16 +13,12 @@ private data class ConfigurationData(
 
 object Configuration {
     private val parentFolder = File(this::class.java.protectionDomain.codeSource.location.toURI()).parentFile
-    private val file = File("$parentFolder/data/config.json")
+    private val file = File("$parentFolder/.config")
     var token: String
         internal set
     var prefix: String = "!"
         set(value) {
-            field = when {
-                value.isEmpty() -> "!"
-                value.length in 1..3 -> value
-                else -> value.substring(0..3)
-            }
+            field = if (value.length in 1..3) value else value.substring(0..3)
         }
     val blackList: MutableSet<User>
 
@@ -48,7 +44,7 @@ object Configuration {
     private fun prompt(text: String): String {
         print("$text\n> ")
         val input = Scanner(System.`in`).nextLine().trim()
-        return if (input.contains("\n") || input.contains(" ")) {
+        return if (input.isBlank()) {
             prompt(text)
         } else input
     }

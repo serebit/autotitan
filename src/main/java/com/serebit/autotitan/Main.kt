@@ -9,6 +9,7 @@ import com.serebit.autotitan.listeners.EventListener
 import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDABuilder
 
+const val name = "autotitan"
 const val version = "0.0.3"
 private val extensions = ClassPath.from(Thread.currentThread().contextClassLoader)
         .getTopLevelClassesRecursive("com.serebit.autotitan.extensions")
