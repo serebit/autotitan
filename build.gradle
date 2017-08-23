@@ -46,9 +46,7 @@ dependencies {
 }
 
 kotlin {
-    experimental {
-        coroutines "enable"
-    }
+    experimental.coroutines "enable"
 }
 
 compileKotlin {
@@ -60,9 +58,8 @@ compileTestKotlin {
 }
 
 shadowJar {
-    manifest {
-        attributes "Main-Class": "com.serebit.autotitan.MainKt"
-    }
+    manifest.attributes "Main-Class": "com.serebit.autotitan.MainKt"
+    archiveName = "${baseName}-${version}.${extension}"
 }
 
 build {
