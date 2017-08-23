@@ -15,8 +15,14 @@ class AutoRole {
             delimitFinalParameter = false
     )
     fun setAutoRole(evt: MessageReceivedEvent, roleName: String) {
-        Configuration.autoRoleMap.put(evt.guild, evt.guild.roles.lastOrNull { it.name == roleName })
-        Configuration.serialize()
+        val role = evt.guild.roles.lastOrNull { it.name == roleName }
+        if (role != null) {
+            evt.channel.sendMessage("Set autorole to `$roleName`.").complete()
+            Configuration.autoRoleMap.put(evt.guild, role)
+            Configuration.serialize()
+        } else {
+            evt.channel.sendMessage("`$roleName` does not exist.")
+        }
     }
 
     @ListenerFunction

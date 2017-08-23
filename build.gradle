@@ -12,15 +12,13 @@ buildscript {
 plugins {
     id "java"
     id "maven"
-    id "maven-publish"
-    id "com.jfrog.bintray" version "1.7.2"
     id "com.github.johnrengelman.shadow" version "1.2.4"
 }
 
 apply plugin: "kotlin"
 
 group = "com.serebit"
-version = "0.0.3"
+version = "0.1.0"
 
 description = """"""
 
@@ -66,39 +64,4 @@ shadowJar {
 
 build {
     dependsOn shadowJar
-}
-
-publishing {
-    publications {
-        BintrayRelease(MavenPublication) {
-            from components.java
-            groupId group
-            artifactId archivesBaseName
-            version version
-        }
-    }
-}
-
-bintray {
-    user = System.getenv("BINTRAY_USER")
-    key = System.getenv("BINTRAY_KEY")
-    publications = ["BintrayRelease"]
-    pkg {
-        repo = "Maven"
-        name = "autotitan"
-        licenses = ["Apache-2.0"]
-        vcsUrl = "https://github.com/serebit/autotitan.git"
-        publish = true
-        version {
-            name = project.version
-            released = new Date()
-        }
-    }
-}
-
-bintrayUpload {
-    dependsOn build
-
-    onlyIf { !System.getenv("BINTRAY_USER").isEmpty() }
-    onlyIf { !System.getenv("BINTRAY_KEY").isEmpty() }
 }
