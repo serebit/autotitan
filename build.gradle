@@ -36,7 +36,7 @@ dependencies {
     compile "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlin_coroutines_version"
     compile "com.serebit:autotitan-api:0.1.0"
     compile "commons-validator:commons-validator:1.6"
-    compile "net.dv8tion:JDA:3.0.0_200"
+    compile "net.dv8tion:JDA:3.2.0_248"
     compile "com.google.code.gson:gson:2.8.0"
     compile "khttp:khttp:0.1.0"
     compile "com.google.guava:guava:21.0"
