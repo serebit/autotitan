@@ -16,10 +16,8 @@ object Configuration {
     private val file = File("$parentFolder/.config")
     var token: String
         internal set
-    var prefix: String = "!"
-        set(value) {
-            field = if (value.length in 1..3) value else value.substring(0..3)
-        }
+    var prefix: String
+        internal set
     val blackList: MutableSet<User>
 
     init {

@@ -32,9 +32,8 @@ class Command private constructor(private val instance: Any, internal val method
         }
     }
 
-    operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>) {
+    operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>): Any? =
         method.invoke(instance, evt, *parameters.toTypedArray())
-    }
 
     fun looselyMatches(rawMessageContent: String) = rawMessageContent.split(" ")[0] == Configuration.prefix + name
 
@@ -70,8 +69,7 @@ class Command private constructor(private val instance: Any, internal val method
             splitParameters
         } else {
             val parameters = mutableListOf<String>()
-            (0..parameterCount - 2).map {
-                splitParameters[it]
+            (0..parameterCount - 2).forEach {
                 splitParameters.removeAt(0)
             }
             if (splitParameters.size > 0) parameters.add(splitParameters.joinToString(" "))
