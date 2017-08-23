@@ -11,7 +11,8 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 @ExtensionClass
 class AutoRole {
     @CommandFunction(
-            permissions = arrayOf(Permission.MANAGE_ROLES)
+            permissions = arrayOf(Permission.MANAGE_ROLES),
+            delimitFinalParameter = false
     )
     fun setAutoRole(evt: MessageReceivedEvent, roleName: String) {
         Configuration.autoRoleMap.put(evt.guild, evt.guild.roles.lastOrNull { it.name == roleName })
