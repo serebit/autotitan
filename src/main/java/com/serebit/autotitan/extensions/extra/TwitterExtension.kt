@@ -60,8 +60,7 @@ class TwitterExtension {
     }
 
     @CommandFunction(
-            access = Access.BOT_OWNER,
-            locale = Locale.PRIVATE_CHANNEL
+            access = Access.BOT_OWNER
     )
     fun initTwitter(
             evt: MessageReceivedEvent,
@@ -70,6 +69,7 @@ class TwitterExtension {
             oAuthAccessToken: String,
             oAuthAccessTokenSecret: String
     ) {
+        evt.message.delete().complete()
         init(TwitterConfiguration(
                 oAuthConsumerKey,
                 oAuthConsumerSecret,
