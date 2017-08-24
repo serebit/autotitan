@@ -9,7 +9,7 @@ private val serializer = GsonBuilder().apply {
 }.create()
 
 class DataManager(type: Class<*>) {
-    private val dataFolder = File("$parentFolder/data/${type.name.replace(".", "/")}/")
+    private val dataFolder = File("$parentFolder/data/${type.name.replace(".", "/")}/").apply { mkdirs() }
 
     fun <T> read(fileName: String, objType: Class<T>): T? {
         val file = File("$dataFolder/$fileName")
@@ -17,7 +17,7 @@ class DataManager(type: Class<*>) {
     }
 
     fun write(fileName: String, obj: Any) {
-        val file = File("$dataFolder/$fileName").apply { mkdirs() }
+        val file = File("$dataFolder/$fileName").apply { createNewFile() }
         file.writeText(serializer.toJson(obj))
     }
 }
