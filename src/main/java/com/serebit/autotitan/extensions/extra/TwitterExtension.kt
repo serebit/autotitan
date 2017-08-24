@@ -60,6 +60,7 @@ class TwitterExtension {
     }
 
     @CommandFunction(
+            locale = Locale.PRIVATE_CHANNEL,
             access = Access.BOT_OWNER
     )
     fun initTwitter(
