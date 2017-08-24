@@ -25,27 +25,16 @@ class TwitterExtension {
 
     init {
         val storedConfig = dataManager.read("config.json", TwitterConfiguration::class.java)
-        if (storedConfig != null) {
-
-        }
+        if (storedConfig != null) init(storedConfig)
     }
 
-    @CommandFunction(
-            access = Access.BOT_OWNER,
-            locale = Locale.PRIVATE_CHANNEL
-    )
-    fun initTwitter(
-            oAuthConsumerKey: String,
-            oAuthConsumerSecret: String,
-            oAuthAccessToken: String,
-            oAuthAccessTokenSecret: String
-    ) {
+    private fun init(config: TwitterConfiguration) {
         val cb = ConfigurationBuilder().apply {
             setDebugEnabled(true)
-            setOAuthConsumerKey(oAuthConsumerKey)
-            setOAuthConsumerSecret(oAuthConsumerSecret)
-            setOAuthAccessToken(oAuthAccessToken)
-            setOAuthAccessTokenSecret(oAuthAccessTokenSecret)
+            setOAuthConsumerKey(config.oAuthConsumerKey)
+            setOAuthConsumerSecret(config.oAuthConsumerSecret)
+            setOAuthAccessToken(config.oAuthAccessToken)
+            setOAuthAccessTokenSecret(config.oAuthAccessTokenSecret)
         }
 
         twitter = TwitterFactory(cb.build()).instance
@@ -67,13 +56,27 @@ class TwitterExtension {
                 tweet.channel.sendMessage(builder.build()).queue()
             }
         }
-        val config = TwitterConfiguration(
+        dataManager.write("config.json", config)
+    }
+
+    @CommandFunction(
+            access = Access.BOT_OWNER,
+            locale = Locale.PRIVATE_CHANNEL
+    )
+    fun initTwitter(
+            evt: MessageReceivedEvent,
+            oAuthConsumerKey: String,
+            oAuthConsumerSecret: String,
+            oAuthAccessToken: String,
+            oAuthAccessTokenSecret: String
+    ) {
+        init(TwitterConfiguration(
                 oAuthConsumerKey,
                 oAuthConsumerSecret,
                 oAuthAccessToken,
                 oAuthAccessTokenSecret
-        )
-        dataManager.write("config.json", config)
+        ))
+        evt.channel.sendMessage("Twitter has been initialized.").complete()
     }
 
     @CommandFunction(locale = Locale.GUILD, delimitFinalParameter = false)
@@ -113,8 +116,8 @@ private data class Tweet(
 )
 
 private data class TwitterConfiguration(
-        var oAuthConsumerKey: String,
-        var oAuthConsumerSecret: String,
-        var oAuthAccessToken: String,
-        var oAuthAccessTokenSecret: String
+        val oAuthConsumerKey: String,
+        val oAuthConsumerSecret: String,
+        val oAuthAccessToken: String,
+        val oAuthAccessTokenSecret: String
 )
