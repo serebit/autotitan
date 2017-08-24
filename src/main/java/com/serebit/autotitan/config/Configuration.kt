@@ -6,6 +6,12 @@ import net.dv8tion.jda.core.entities.User
 import java.io.File
 import java.util.*
 
+private data class ConfigurationData(
+        val token: String,
+        val prefix: String,
+        val blackList: BlackList
+)
+
 object Configuration {
     private val parentFolder = File(this::class.java.protectionDomain.codeSource.location.toURI()).parentFile
     private val file = File("$parentFolder/.config").apply { mkdirs() }
@@ -40,12 +46,6 @@ object Configuration {
             prompt(text)
         } else input
     }
-
-    private data class ConfigurationData(
-            val token: String,
-            val prefix: String,
-            val blackList: BlackList
-    )
 }
 
 class BlackList internal constructor() {
