@@ -10,17 +10,12 @@ import java.util.*
 
 object Configuration {
     private val parentFolder = File(this::class.java.protectionDomain.codeSource.location.toURI()).parentFile
-    private val file = File("$parentFolder/.config")
+    private val file = File("$parentFolder/.config").apply { mkdirs() }
     var token: String
         internal set
     var prefix: String
         internal set
     val blackList: BlackList
-    val autoRoleMap: GuildRoleMap
-    val oAuthConsumerKey: String
-    val oAuthConsumerSecret: String
-    val oAuthAccessToken: String
-    val oAuthAccessTokenSecret: String
 
     init {
         if (file.exists()) {
@@ -28,36 +23,16 @@ object Configuration {
             token = configData.token
             prefix = configData.prefix
             blackList = configData.blackList
-            autoRoleMap = configData.autoRoleMap
-            oAuthConsumerKey = configData.oAuthConsumerKey
-            oAuthConsumerSecret = configData.oAuthConsumerSecret
-            oAuthAccessToken = configData.oAuthAccessToken
-            oAuthAccessTokenSecret = configData.oAuthAccessTokenSecret
         } else {
             token = prompt("Enter new token:")
             prefix = prompt("Enter new command prefix:")
             blackList = BlackList()
-            autoRoleMap = GuildRoleMap()
-            oAuthConsumerKey = prompt("Enter Twitter OAuth Consumer Key:")
-            oAuthConsumerSecret = prompt("Enter Twitter OAuth Consumer Secret:")
-            oAuthAccessToken = prompt("Enter Twitter OAuth Access Token:")
-            oAuthAccessTokenSecret = prompt("Enter Twitter OAuth Access Token Secret:")
             serialize()
         }
     }
 
     internal fun serialize() {
-        file.parentFile.mkdirs()
-        file.writeText(Gson().toJson(ConfigurationData(
-                token,
-                prefix,
-                blackList,
-                autoRoleMap,
-                oAuthConsumerKey,
-                oAuthConsumerSecret,
-                oAuthAccessToken,
-                oAuthAccessTokenSecret
-        )))
+        file.writeText(Gson().toJson(ConfigurationData(token, prefix, blackList)))
     }
 
     private fun prompt(text: String): String {
@@ -71,12 +46,7 @@ object Configuration {
     private data class ConfigurationData(
             val token: String,
             val prefix: String,
-            val blackList: BlackList,
-            val autoRoleMap: GuildRoleMap,
-            val oAuthConsumerKey: String,
-            val oAuthConsumerSecret: String,
-            val oAuthAccessToken: String,
-            val oAuthAccessTokenSecret: String
+            val blackList: BlackList
     )
 }
 
