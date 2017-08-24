@@ -1,9 +1,10 @@
 package com.serebit.autotitan.extensions.extra
 
+import com.serebit.autotitan.api.Access
 import com.serebit.autotitan.api.Locale
 import com.serebit.autotitan.api.annotations.CommandFunction
 import com.serebit.autotitan.api.annotations.ExtensionClass
-import com.serebit.autotitan.config.Configuration
+import com.serebit.autotitan.data.DataManager
 import net.dv8tion.jda.core.EmbedBuilder
 import net.dv8tion.jda.core.entities.TextChannel
 import net.dv8tion.jda.core.entities.User
@@ -17,23 +18,43 @@ import kotlin.concurrent.timer
 
 @ExtensionClass
 class TwitterExtension {
-    private val twitter: Twitter
-    private val scheduler: Timer
+    private var twitter: Twitter? = null
+    private var scheduler: Timer? = null
     private val tweetQueue = mutableListOf<Tweet>()
+    private val dataManager = DataManager(TwitterExtension::class.java)
 
     init {
-        val cb = ConfigurationBuilder()
-        cb.setDebugEnabled(true)
-                .setOAuthConsumerKey(Configuration.oAuthConsumerKey)
-                .setOAuthConsumerSecret(Configuration.oAuthConsumerSecret)
-                .setOAuthAccessToken(Configuration.oAuthAccessToken)
-                .setOAuthAccessTokenSecret(Configuration.oAuthAccessTokenSecret)
+        val storedConfig = dataManager.read("config.json", TwitterConfiguration::class.java)
+        if (storedConfig != null) {
+
+        }
+    }
+
+    @CommandFunction(
+            access = Access.BOT_OWNER,
+            locale = Locale.PRIVATE_CHANNEL
+    )
+    fun initTwitter(
+            oAuthConsumerKey: String,
+            oAuthConsumerSecret: String,
+            oAuthAccessToken: String,
+            oAuthAccessTokenSecret: String
+    ) {
+        val cb = ConfigurationBuilder().apply {
+            setDebugEnabled(true)
+            setOAuthConsumerKey(oAuthConsumerKey)
+            setOAuthConsumerSecret(oAuthConsumerSecret)
+            setOAuthAccessToken(oAuthAccessToken)
+            setOAuthAccessTokenSecret(oAuthAccessTokenSecret)
+        }
+
         twitter = TwitterFactory(cb.build()).instance
         scheduler = timer(daemon = true, period = 60000, initialDelay = 60000) {
-            if (tweetQueue.isNotEmpty()) {
+            val immutableTwitter = twitter
+            if (immutableTwitter != null && tweetQueue.isNotEmpty()) {
                 val tweet = tweetQueue.first()
                 tweetQueue.removeAt(0)
-                val status = twitter.updateStatus(tweet.message)
+                val status = immutableTwitter.updateStatus(tweet.message)
                 val url = "https://twitter.com/${status.user.screenName}/status/${status.id}"
                 val builder = EmbedBuilder().apply {
                     setAuthor(
@@ -46,6 +67,13 @@ class TwitterExtension {
                 tweet.channel.sendMessage(builder.build()).queue()
             }
         }
+        val config = TwitterConfiguration(
+                oAuthConsumerKey,
+                oAuthConsumerSecret,
+                oAuthAccessToken,
+                oAuthAccessTokenSecret
+        )
+        dataManager.write("config.json", config)
     }
 
     @CommandFunction(locale = Locale.GUILD, delimitFinalParameter = false)
@@ -76,10 +104,17 @@ class TwitterExtension {
         }
         evt.channel.sendMessage(builder.build()).queue()
     }
-
-    private data class Tweet(
-            val channel: TextChannel,
-            val user: User,
-            val message: String
-    )
 }
+
+private data class Tweet(
+        val channel: TextChannel,
+        val user: User,
+        val message: String
+)
+
+private data class TwitterConfiguration(
+        var oAuthConsumerKey: String,
+        var oAuthConsumerSecret: String,
+        var oAuthAccessToken: String,
+        var oAuthAccessTokenSecret: String
+)
