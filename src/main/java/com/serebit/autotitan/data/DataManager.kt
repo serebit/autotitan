@@ -11,7 +11,10 @@ private val serializer = GsonBuilder().apply {
 class DataManager(type: Class<*>) {
     private val dataFolder = File("$parentFolder/${type.name.replace(".", "/")}/")
 
-    fun <T> read(fileName: String, objType: Class<T>): T? = serializer.fromJson("$dataFolder/$fileName", objType)
+    fun <T> read(fileName: String, objType: Class<T>): T? {
+        val file = File("$dataFolder/$fileName")
+        return if (file.exists()) serializer.fromJson("$dataFolder/$fileName", objType) else null
+    }
 
     fun write(fileName: String, obj: Any) = File("$dataFolder/$fileName").writeText(serializer.toJson(obj))
 }
