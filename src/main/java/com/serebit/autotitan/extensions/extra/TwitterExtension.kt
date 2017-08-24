@@ -70,7 +70,6 @@ class TwitterExtension {
             oAuthAccessToken: String,
             oAuthAccessTokenSecret: String
     ) {
-        evt.message.delete().complete()
         init(TwitterConfiguration(
                 oAuthConsumerKey,
                 oAuthConsumerSecret,
