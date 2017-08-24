@@ -10,7 +10,8 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 class Nickname {
     @CommandFunction(
             locale = Locale.GUILD,
-            permissions = arrayOf(Permission.NICKNAME_MANAGE)
+            permissions = arrayOf(Permission.NICKNAME_MANAGE),
+            delimitFinalParameter = false
     )
     fun massNick(evt: MessageReceivedEvent, nickname: String) {
         val memberTopRoleIndex = evt.guild.roles.indexOf(evt.member.roles.firstOrNull() ?: run {
@@ -48,8 +49,9 @@ class Nickname {
         })
         evt.channel.sendMessage("Resetting nicknames. This may take a while...").complete()
         val validMembers = evt.guild.members.filter {
-            val firstRoleIndex = evt.guild.roles.indexOf(it.roles.firstOrNull())
-            firstRoleIndex < memberTopRoleIndex && firstRoleIndex < selfTopRoleIndex
+            var firstRoleIndex = evt.guild.roles.indexOf(it.roles.firstOrNull())
+            if (firstRoleIndex == -1) firstRoleIndex = evt.guild.roles.size
+            firstRoleIndex > memberTopRoleIndex && firstRoleIndex > selfTopRoleIndex
         }
         validMembers.forEach {
             evt.guild.controller.setNickname(it, it.user.name).complete()
