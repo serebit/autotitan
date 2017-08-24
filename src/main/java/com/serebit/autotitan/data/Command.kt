@@ -45,7 +45,7 @@ class Command private constructor(private val instance: Any, internal val method
             Locale.GUILD -> evt.guild != null
             Locale.PRIVATE_CHANNEL -> evt.guild == null
         }
-        val hasPermissions = if (evt.guild != null) evt.member.hasPermission(permissions.toMutableList()) else false
+        val hasPermissions = if (evt.guild != null) evt.member.hasPermission(permissions.toMutableList()) else true
         val hasAccess = when (access) {
             Access.ALL -> true
             Access.GUILD_OWNER -> evt.member == evt.guild?.owner
