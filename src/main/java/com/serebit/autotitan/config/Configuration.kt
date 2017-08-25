@@ -14,7 +14,7 @@ private data class ConfigurationData(
 
 object Configuration {
     private val parentFolder = File(this::class.java.protectionDomain.codeSource.location.toURI()).parentFile
-    private val file = File("$parentFolder/.config").apply { mkdirs() }
+    private val file = File("$parentFolder/.config")
     var token: String
         internal set
     var prefix: String
@@ -36,7 +36,7 @@ object Configuration {
     }
 
     internal fun serialize() {
-        file.writeText(Gson().toJson(ConfigurationData(token, prefix, blackList)))
+        file.apply { createNewFile() }.writeText(Gson().toJson(ConfigurationData(token, prefix, blackList)))
     }
 
     private fun prompt(text: String): String {
