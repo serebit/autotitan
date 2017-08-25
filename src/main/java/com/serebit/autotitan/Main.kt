@@ -1,89 +1,40 @@
 package com.serebit.autotitan
 
-import Singleton
 import com.google.common.reflect.ClassPath
-import com.google.gson.Gson
-import com.serebit.autotitan.api.annotations.ListenerFunction
 import com.serebit.autotitan.config.Configuration
 import com.serebit.autotitan.data.Command
+import com.serebit.autotitan.data.Extension
 import com.serebit.autotitan.data.Listener
 import com.serebit.autotitan.listeners.EventListener
 import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDABuilder
-import java.io.File
-import java.util.*
+
+const val name = "autotitan"
+const val version = "0.2.0"
+private val extensions = ClassPath.from(Thread.currentThread().contextClassLoader)
+        .getTopLevelClassesRecursive("com.serebit.autotitan.extensions")
+        .map { it.load() }
 
 fun main(args: Array<String>) {
-  val useExistingSettings = !(args.contains("-r") || args.contains("--reset"))
-  val configFile = File("${Singleton.location.parent}/data/config.json")
-  val config: Configuration
-  if (useExistingSettings && configFile.exists()) {
-    config = Gson().fromJson(configFile.readText(), Configuration::class.java)
-  } else {
-    config = Configuration(
-        getNewToken(),
-        getNewPrefix()
-    )
-    configFile.parentFile.mkdirs()
-    configFile.writeText(Gson().toJson(config))
-  }
-  val jda = JDABuilder(AccountType.BOT)
-      .setToken(config.token)
-      .buildBlocking()
-  val extensions = getExtensions()
-  val listeners = loadListeners(extensions)
-  Command.prefix = config.prefix
-  jda.addEventListener(
-      EventListener(
-          loadCommands(extensions),
-          listeners
-      )
-  )
-  println()
-  println("Username:    ${jda.selfUser.name}")
-  println("Ping:        ${jda.ping}ms")
-  println("Invite link: ${jda.asBot().getInviteUrl()}")
-}
+    val jda = JDABuilder(AccountType.BOT).apply {
+        val commands = extensions.mapNotNull { clazz ->
+            val instance = Extension.generate(clazz)
+            if (instance != null) {
+                clazz.methods.mapNotNull { Command.generate(instance, it) }
+            } else null
+        }.flatten().toSet()
+        val listeners = extensions.mapNotNull { clazz ->
+            val instance = Extension.generate(clazz)
+            if (instance != null) {
+                clazz.methods.mapNotNull { Listener.generate(instance, it) }
+            } else null
+        }.flatten().toSet()
+        setToken(Configuration.token)
+        addEventListener(EventListener(commands, listeners))
+    }.buildBlocking()
 
-fun getNewToken(): String {
-  print("Enter new token:\n>")
-  return Scanner(System.`in`).nextLine()
-}
-
-fun getNewPrefix(): String {
-  print("Enter new prefix:\n>")
-  return Scanner(System.`in`).nextLine()
-}
-
-fun getExtensions(): MutableSet<Class<*>> {
-  val cp = ClassPath.from(Thread.currentThread().contextClassLoader)
-  return cp.getTopLevelClassesRecursive("com.serebit.autotitan.extensions")
-      .map { it.load() }
-      .toMutableSet()
-}
-
-fun loadCommands(classes: MutableSet<Class<*>>): MutableSet<Command> {
-  val commands = mutableSetOf<Command>()
-  classes.map { extension ->
-    val commandMethods = extension.methods
-        .filter { Command.isValidCommand(it) }
-    if (commandMethods.isNotEmpty()) {
-      val instance = extension.newInstance()
-      commandMethods.forEach { commands.add(Command(instance, it)) }
-    }
-  }
-  return commands
-}
-
-fun loadListeners(classes: MutableSet<Class<*>>): MutableSet<Listener> {
-  val listeners = mutableSetOf<Listener>()
-  classes.map { extension ->
-    extension.methods
-        .filter { it.isAnnotationPresent(ListenerFunction::class.java) }
-        .filter { it.parameterCount == 1 }
-        .forEach {
-          listeners.add(Listener(extension.newInstance(), it, it.getAnnotation(ListenerFunction::class.java)))
-        }
-  }
-  return listeners
+    println()
+    println("Username:    ${jda.selfUser.name}")
+    println("Ping:        ${jda.ping}ms")
+    println("Invite link: ${jda.asBot().getInviteUrl()}")
 }
