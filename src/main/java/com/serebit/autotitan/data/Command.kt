@@ -33,7 +33,7 @@ class Command private constructor(private val instance: Any, internal val method
     }
 
     operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>): Any? =
-        method.invoke(instance, evt, *parameters.toTypedArray())
+            method.invoke(instance, evt, *parameters.toTypedArray())
 
     fun looselyMatches(rawMessageContent: String) = rawMessageContent.split(" ")[0] == Configuration.prefix + name
 

@@ -29,7 +29,7 @@ class Owner {
     )
     fun setName(evt: MessageReceivedEvent, name: String) {
         evt.jda.selfUser.manager.setName(name).complete()
-        evt.channel.sendMessage("Renamed to $name.").queue()
+        evt.channel.sendMessage("Renamed to $name.").complete()
     }
 
     @CommandFunction(
@@ -42,7 +42,7 @@ class Owner {
         } else {
             Configuration.prefix = if (prefix.length in 1..3) prefix else prefix.substring(0..3)
             Configuration.serialize()
-            evt.channel.sendMessage("Set prefix to `${Configuration.prefix}`.").queue()
+            evt.channel.sendMessage("Set prefix to `${Configuration.prefix}`.").complete()
         }
     }
 
@@ -53,7 +53,7 @@ class Owner {
     fun getInvite(evt: MessageReceivedEvent) {
         evt.author.openPrivateChannel().complete().sendMessage(
                 "Invite link: ${evt.jda.asBot().getInviteUrl()}"
-        ).queue()
+        ).complete()
     }
 
     @CommandFunction(
@@ -74,7 +74,7 @@ class Owner {
             }
             setTimestamp(OffsetDateTime.now())
         }
-        evt.channel.sendMessage(embedBuilder.build()).queue()
+        evt.channel.sendMessage(embedBuilder.build()).complete()
     }
 
     @CommandFunction(

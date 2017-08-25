@@ -20,7 +20,7 @@ plugins {
 apply plugin: "kotlin"
 
 group = "com.serebit"
-version = "0.0.3"
+version = "0.2.0"
 
 description = """"""
 
@@ -31,15 +31,14 @@ repositories {
 }
 
 dependencies {
-    compile "com.sedmelluq:lavaplayer:1.2.36"
+    compile "com.sedmelluq:lavaplayer:1.2.42"
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
     compile "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlin_coroutines_version"
     compile "com.serebit:autotitan-api:0.1.0"
     compile "commons-validator:commons-validator:1.6"
-    compile "net.dv8tion:JDA:3.0.0_200"
-    compile "com.google.code.gson:gson:2.8.0"
-    compile "khttp:khttp:0.1.0"
-    compile "com.google.guava:guava:21.0"
+    compile "net.dv8tion:JDA:3.2.0_250"
+    compile "com.google.code.gson:gson:2.8.1"
+    compile "com.google.guava:guava:23.0"
     compile "org.slf4j:slf4j-simple:1.8.0-alpha2"
     compile "org.apache.logging.log4j:log4j-core:2.8.2"
     testCompile "org.jetbrains.kotlin:kotlin-test:$kotlin_version"

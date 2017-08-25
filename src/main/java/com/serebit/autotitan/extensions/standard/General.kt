@@ -17,7 +17,7 @@ class General {
 
     @CommandFunction(description = "Pings the bot.")
     fun ping(evt: MessageReceivedEvent) {
-        evt.channel.sendMessage("Pong. The last ping was ${evt.jda.ping}ms.").queue()
+        evt.channel.sendMessage("Pong. The last ping was ${evt.jda.ping}ms.").complete()
     }
 
     @CommandFunction(
@@ -57,7 +57,7 @@ class General {
             addField("JRE", javaInfo, true)
         }.build()
 
-        evt.channel.sendMessage(embed).queue()
+        evt.channel.sendMessage(embed).complete()
     }
 
     @CommandFunction(description = "Gets information about the server.", locale = Locale.GUILD)
@@ -98,7 +98,7 @@ class General {
             }
         }.build()
 
-        evt.channel.sendMessage(embedBuilder).queue()
+        evt.channel.sendMessage(embedBuilder).complete()
     }
 
     @CommandFunction(
@@ -126,6 +126,6 @@ class General {
             setFooter("User ID: ${member.user.id}", null)
         }.build()
 
-        evt.channel.sendMessage(embed).queue()
+        evt.channel.sendMessage(embed).complete()
     }
 }
