@@ -53,7 +53,10 @@ shadowJar {
     archiveName = "${baseName}-${version}.${extension}"
 }
 
-build.dependsOn shadowJar
+build {
+    dependsOn shadowJar
+    jar.enabled = false
+}
 
 publishing.publications {
     BintrayRelease(MavenPublication) {
