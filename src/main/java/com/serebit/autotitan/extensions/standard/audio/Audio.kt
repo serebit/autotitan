@@ -31,53 +31,60 @@ class Audio {
         AudioSourceManagers.registerLocalSource(playerManager)
     }
 
-    @CommandFunction(locale = Locale.GUILD)
-    fun joinVoice(evt: MessageReceivedEvent) {
-        if (evt.member.voiceState.inVoiceChannel()) {
-            connectToVoiceChannel(evt.guild.audioManager, evt.member.voiceState.channel)
-            evt.channel.sendMessage("Now connected to ${evt.member.voiceState.channel.name}.")
+    @CommandFunction(
+            description = "Joins the voice channel that the invoker is in.",
+            locale = Locale.GUILD
+    )
+    fun joinVoice(evt: MessageReceivedEvent): Unit = evt.run {
+        if (member.voiceState.inVoiceChannel()) {
+            connectToVoiceChannel(guild.audioManager, member.voiceState.channel)
+            channel.sendMessage("Now connected to ${member.voiceState.channel.name}.")
         } else {
-            evt.channel.sendMessage("You need to be in a voice channel for me to do that.").queue()
-        }
-    }
-
-    @CommandFunction(locale = Locale.GUILD)
-    fun leaveVoice(evt: MessageReceivedEvent) {
-        if (evt.guild.audioManager.isConnected) {
-            val audioPlayer = evt.guild.getMusicManager()
-            audioPlayer.scheduler.next()
-            evt.guild.audioManager.closeAudioConnection()
-        }
-    }
-
-    @ListenerFunction
-    fun leaveVoiceAutomatically(evt: GuildVoiceLeaveEvent) {
-        if (evt.guild.audioManager.connectedChannel != evt.channelLeft) return
-        val nobodyLeft = evt.guild.audioManager.connectedChannel.members.size == 1
-        if (evt.guild.audioManager.isConnected && nobodyLeft) {
-            val audioPlayer = evt.guild.getMusicManager()
-            audioPlayer.scheduler.stop()
-            evt.guild.audioManager.closeAudioConnection()
-        }
-    }
-
-    @ListenerFunction
-    fun leaveVoiceAutomatically(evt: GuildVoiceMoveEvent) {
-        if (evt.guild.audioManager.connectedChannel != evt.channelLeft) return
-        val nobodyLeft = evt.guild.audioManager.connectedChannel.members.size == 1
-        if (evt.guild.audioManager.isConnected && nobodyLeft) {
-            evt.guild.getMusicManager().scheduler.stop()
-            evt.guild.audioManager.closeAudioConnection()
+            channel.sendMessage("You need to be in a voice channel for me to do that.").complete()
         }
     }
 
     @CommandFunction(
+            description = "Leaves the voice channel that the bot is in.",
+            locale = Locale.GUILD
+    )
+    fun leaveVoice(evt: MessageReceivedEvent): Unit = evt.run {
+        if (guild.audioManager.isConnected) {
+            val audioPlayer = guild.getMusicManager()
+            audioPlayer.scheduler.next()
+            guild.audioManager.closeAudioConnection()
+        }
+    }
+
+    @ListenerFunction
+    fun leaveVoiceAutomatically(evt: GuildVoiceLeaveEvent): Unit = evt.run {
+        if (guild.audioManager.connectedChannel != channelLeft) return
+        val nobodyLeft = guild.audioManager.connectedChannel.members.size == 1
+        if (guild.audioManager.isConnected && nobodyLeft) {
+            val audioPlayer = guild.getMusicManager()
+            audioPlayer.scheduler.stop()
+            guild.audioManager.closeAudioConnection()
+        }
+    }
+
+    @ListenerFunction
+    fun leaveVoiceAutomatically(evt: GuildVoiceMoveEvent): Unit = evt.run {
+        if (guild.audioManager.connectedChannel != channelLeft) return
+        val nobodyLeft = guild.audioManager.connectedChannel.members.size == 1
+        if (guild.audioManager.isConnected && nobodyLeft) {
+            guild.getMusicManager().scheduler.stop()
+            guild.audioManager.closeAudioConnection()
+        }
+    }
+
+    @CommandFunction(
+            description = "Plays a URL, or searches YouTube for the given search terms.",
             locale = Locale.GUILD,
             delimitFinalParameter = false
     )
-    fun play(evt: MessageReceivedEvent, linkOrSearchTerms: String) {
+    fun play(evt: MessageReceivedEvent, linkOrSearchTerms: String): Unit = evt.run {
         if (!validVoiceStatus(evt)) return
-        val audioManager = evt.guild.getMusicManager()
+        val audioManager = guild.getMusicManager()
         val formattedLinkOrSearchTerms = if (urlValidator.isValid(linkOrSearchTerms)) {
             linkOrSearchTerms
         } else {
@@ -85,64 +92,80 @@ class Audio {
         }
         playerManager.loadItemOrdered(audioManager, formattedLinkOrSearchTerms, object : AudioLoadResultHandler {
             override fun trackLoaded(track: AudioTrack) {
-                evt.channel.sendMessage("Adding ${track.info.title} to queue.").queue()
+                channel.sendMessage("Adding ${track.info.title} to queue.").complete()
                 audioManager.scheduler.queue(track)
             }
 
             override fun playlistLoaded(playlist: AudioPlaylist) {
                 val firstTrack = playlist.selectedTrack ?: playlist.tracks[0]
-                evt.channel.sendMessage("Adding ${firstTrack.info.title} to queue.").queue()
+                channel.sendMessage("Adding ${firstTrack.info.title} to queue.").complete()
                 audioManager.scheduler.queue(firstTrack)
             }
 
             override fun noMatches() {
-                evt.channel.sendMessage("Nothing found.").queue()
+                channel.sendMessage("Nothing found.").complete()
             }
 
             override fun loadFailed(exception: FriendlyException) {
-                evt.channel.sendMessage("Could not queue: ${exception.message}").queue()
+                channel.sendMessage("Could not queue: ${exception.message}").complete()
             }
         })
     }
 
-    @CommandFunction(locale = Locale.GUILD)
-    fun skip(evt: MessageReceivedEvent) {
+    @CommandFunction(
+            description = "Skips the currently playing song.",
+            locale = Locale.GUILD
+    )
+    fun skip(evt: MessageReceivedEvent): Unit = evt.run {
         if (!validVoiceStatus(evt)) return
-        val audioManager = evt.guild.getMusicManager()
+        val audioManager = guild.getMusicManager()
         audioManager.scheduler.next()
-        evt.channel.sendMessage("Skipped to next track.").queue()
+        channel.sendMessage("Skipped to next track.").complete()
     }
 
-    @CommandFunction(locale = Locale.GUILD, permissions = arrayOf(Permission.VOICE_MUTE_OTHERS))
-    fun stop(evt: MessageReceivedEvent) {
-        evt.guild.getMusicManager().scheduler.stop()
+    @CommandFunction(
+            description = "Stops playing music and clears the queue.",
+            locale = Locale.GUILD,
+            permissions = arrayOf(Permission.VOICE_MUTE_OTHERS)
+    )
+    fun stop(evt: MessageReceivedEvent): Unit = evt.run {
+        guild.getMusicManager().scheduler.stop()
     }
 
-    @CommandFunction(locale = Locale.GUILD)
-    fun pause(evt: MessageReceivedEvent) {
+    @CommandFunction(
+            description = "Pauses the currently playing song.",
+            locale = Locale.GUILD
+    )
+    fun pause(evt: MessageReceivedEvent): Unit = evt.run {
         if (!validVoiceStatus(evt)) return
-        val audioManager = evt.guild.getMusicManager()
+        val audioManager = guild.getMusicManager()
         if (audioManager.scheduler.pause()) {
-            evt.channel.sendMessage("Paused.").queue()
+            channel.sendMessage("Paused.").complete()
         }
     }
 
-    @CommandFunction(locale = Locale.GUILD)
-    fun resume(evt: MessageReceivedEvent) {
+    @CommandFunction(
+            description = "Resumes the currently playing song.",
+            locale = Locale.GUILD
+    )
+    fun resume(evt: MessageReceivedEvent): Unit = evt.run {
         if (!validVoiceStatus(evt)) return
-        if (evt.guild.getMusicManager().scheduler.resume()) {
-            evt.channel.sendMessage("Resumed.").queue()
+        if (guild.getMusicManager().scheduler.resume()) {
+            channel.sendMessage("Resumed.").complete()
         }
     }
 
-    @CommandFunction(locale = Locale.GUILD)
-    fun queue(evt: MessageReceivedEvent) {
-        if (evt.guild.getMusicManager().player.playingTrack != null) {
-            val audioManager = evt.guild.getMusicManager()
+    @CommandFunction(
+            description = "Sends an embed with the list of songs in the queue.",
+            locale = Locale.GUILD
+    )
+    fun queue(evt: MessageReceivedEvent): Unit = evt.run {
+        if (guild.getMusicManager().player.playingTrack != null) {
+            val audioManager = guild.getMusicManager()
             val embed = EmbedBuilder().apply {
                 setTitle("Queue", null)
-                setColor(evt.guild.getMember(evt.jda.selfUser).color)
-                setThumbnail(evt.jda.selfUser.effectiveAvatarUrl)
+                setColor(guild.getMember(jda.selfUser).color)
+                setThumbnail(jda.selfUser.effectiveAvatarUrl)
                 addField("Now Playing", audioManager.player.playingTrack.info.title, false)
                 if (audioManager.scheduler.queue.isNotEmpty()) addField(
                         "Up Next",
@@ -150,23 +173,27 @@ class Audio {
                         false
                 )
             }.build()
-            evt.channel.sendMessage(embed).queue()
+            channel.sendMessage(embed).complete()
         } else {
-            evt.channel.sendMessage("There's nothing queued at the moment.").queue()
+            channel.sendMessage("There's nothing queued at the moment.").complete()
         }
     }
 
-    @CommandFunction(locale = Locale.GUILD)
-    fun setVolume(evt: MessageReceivedEvent, volume: Int) {
+    @CommandFunction(
+            description = "Sets the volume.",
+            locale = Locale.GUILD
+    )
+    fun setVolume(evt: MessageReceivedEvent, volume: Int): Unit = evt.run {
         if (!validVoiceStatus(evt)) return
         val newVolume = when {
             volume > 100 -> 100
             volume < 0 -> 0
             else -> volume
         }
-        evt.guild.getMusicManager().player.volume = newVolume
-        evt.channel.sendMessage("Set volume to $newVolume.").queue()
+        guild.getMusicManager().player.volume = newVolume
+        channel.sendMessage("Set volume to $newVolume.").complete()
     }
+
 
     private fun Guild.getMusicManager(): GuildMusicManager {
         val audioManager = audioManagers.getOrElse(this, {
@@ -184,10 +211,10 @@ class Audio {
         }
     }
 
-    private fun validVoiceStatus(evt: MessageReceivedEvent): Boolean {
+    private fun validVoiceStatus(evt: MessageReceivedEvent): Boolean = evt.run {
         val isConnected = evt.guild.audioManager.isConnected
         if (!isConnected) {
-            evt.channel.sendMessage("I need to be in a voice channel to do that.").queue()
+            channel.sendMessage("I need to be in a voice channel to do that.").complete()
             return false
         }
         return true

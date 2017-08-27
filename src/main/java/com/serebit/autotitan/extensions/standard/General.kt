@@ -8,7 +8,7 @@ import net.dv8tion.jda.core.OnlineStatus
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
-import java.io.File
+import oshi.SystemInfo
 import java.time.format.DateTimeFormatter
 
 @ExtensionClass
@@ -16,98 +16,87 @@ class General {
     private val dateFormat = DateTimeFormatter.ofPattern("MMMM d, yyyy")
 
     @CommandFunction(description = "Pings the bot.")
-    fun ping(evt: MessageReceivedEvent) {
-        evt.channel.sendMessage("Pong. The last ping was ${evt.jda.ping}ms.").queue()
+    fun ping(evt: MessageReceivedEvent): Unit = evt.run {
+        channel.sendMessage("Pong. The last ping was ${jda.ping}ms.").complete()
     }
 
     @CommandFunction(
             description = "Gets information about the system that the bot is running on."
     )
-    fun systemInfo(evt: MessageReceivedEvent) {
-        val self = evt.jda.selfUser
-        val runtime = Runtime.getRuntime()
-        val availableRam = runtime.maxMemory() / 1e6
-        val availableRamFormatted = if (availableRam < 1024) {
-            "${Math.round(availableRam)}MB"
-        } else {
-            "${Math.round(availableRam / 1e3)}GB"
-        }
-        val systemInfo = mapOf(
-                "Cores" to runtime.availableProcessors().toString(),
-                "Disk Size" to "${Math.round(File("/").totalSpace / 1e9)}GB",
-                "Available RAM" to availableRamFormatted
-        ).asIterable().joinToString("\n") { "${it.key}: *${it.value}*" }
+    fun systemInfo(evt: MessageReceivedEvent): Unit = evt.run {
+        val systemInfo = SystemInfo()
+        val hardwareInfo = mapOf(
+                "Processor" to systemInfo.hardware.processor.name
+                        .replace("(R)", ":registered:")
+                        .replace("(TM)", ":tm:"),
+                "Motherboard" to systemInfo.hardware.computerSystem.baseboard.model,
+                "Total Memory" to humanReadableByteCount(systemInfo.hardware.memory.total, true)
+        ).asIterable().joinToString("\n") { "**${it.key}**: ${it.value}" }
         val osInfo = mapOf(
-                "Name" to System.getProperty("os.name"),
-                "Architecture" to System.getProperty("os.arch"),
-                "Version" to System.getProperty("os.version")
-        ).asIterable().joinToString("\n") { "${it.key}: *${it.value}*" }
+                "Name" to systemInfo.operatingSystem.family,
+                "Version" to systemInfo.operatingSystem.version
+        ).asIterable().joinToString("\n") { "**${it.key}**: ${it.value}" }
         val javaInfo = mapOf(
                 "Vendor" to System.getProperty("java.vendor"),
                 "Version" to System.getProperty("java.version")
-        ).asIterable().joinToString("\n") { "${it.key}: *${it.value}*" }
-        val color = evt.guild?.getMember(self)?.color
+        ).asIterable().joinToString("\n") { "**${it.key}**: ${it.value}" }
+
         val embed = EmbedBuilder().apply {
-            setTitle("System Info", null)
-            setDescription("Note: These measurements reflect what is available to the JVM.")
-            setThumbnail(self.effectiveAvatarUrl)
-            setColor(color)
-            addField("Hardware", systemInfo, true)
+            setColor(guild?.getMember(jda.selfUser)?.color)
+            addField("Hardware", hardwareInfo, true)
             addField("Operating System", osInfo, true)
             addField("JRE", javaInfo, true)
         }.build()
 
-        evt.channel.sendMessage(embed).queue()
+        channel.sendMessage(embed).complete()
     }
 
     @CommandFunction(description = "Gets information about the server.", locale = Locale.GUILD)
-    fun serverInfo(evt: MessageReceivedEvent) {
-        val server = evt.guild
-        val canGetInvite = server.selfMember.hasPermission(Permission.MANAGE_SERVER)
-        val creationDate = server.creationTime.format(dateFormat)
-        val onlineMemberCount = server.members
+    fun serverInfo(evt: MessageReceivedEvent): Unit = evt.run {
+        val canGetInvite = guild.selfMember.hasPermission(Permission.MANAGE_SERVER)
+        val creationDate = guild.creationTime.format(dateFormat)
+        val onlineMemberCount = guild.members
                 .filter { it.onlineStatus == OnlineStatus.ONLINE }
                 .size
                 .toString()
-        val totalMemberCount = server.members.size.toString()
-        val textChannelCount = server.textChannels.size.toString()
-        val voiceChannelCount = server.voiceChannels.size.toString()
-        val guildRoles = server.roles
+        val totalMemberCount = guild.members.size.toString()
+        val textChannelCount = guild.textChannels.size.toString()
+        val voiceChannelCount = guild.voiceChannels.size.toString()
+        val hoistedRoles = guild.roles
                 .filter { it.name != "@everyone" && it.isHoisted }
                 .joinToString(", ") { it.name }
         val embedBuilder = EmbedBuilder().apply {
-            setTitle(server.name, null)
+            setTitle(guild.name, null)
             setDescription("Created on $creationDate")
-            setThumbnail(server.iconUrl)
-            setColor(server.owner.color)
-            addField("Owner", server.owner.asMention, true)
-            addField("Region", server.region.toString(), true)
+            setThumbnail(guild.iconUrl)
+            setColor(guild.owner.color)
+            addField("Owner", guild.owner.asMention, true)
+            addField("Region", guild.region.toString(), true)
             addField("Online Members", onlineMemberCount, true)
             addField("Total Members", totalMemberCount, true)
             addField("Text Channels", textChannelCount, true)
             addField("Voice Channels", voiceChannelCount, true)
-            addField("Roles", guildRoles, true)
-            setFooter("Server ID: ${server.id}", null)
+            addField("Hoisted Roles", hoistedRoles, true)
             if (canGetInvite) {
-                val permanentInvites = server.invites.complete().filter { !it.isTemporary }
+                val permanentInvites = guild.invites.complete().filter { !it.isTemporary }
                 if (permanentInvites.isNotEmpty()) addField(
                         "Invite Link",
                         "https://discord.gg/${permanentInvites.first().code}",
                         false
                 )
             }
+            setFooter("Server ID: ${guild.id}", null)
         }.build()
 
-        evt.channel.sendMessage(embedBuilder).queue()
+        channel.sendMessage(embedBuilder).complete()
     }
 
     @CommandFunction(
             description = "Gets information about a specific server member.",
             locale = Locale.GUILD
     )
-    fun memberInfo(evt: MessageReceivedEvent, member: Member) {
-        val onlineStatus = member.onlineStatus
-                .name
+    fun memberInfo(evt: MessageReceivedEvent, member: Member): Unit = evt.run {
+        val onlineStatus = member.onlineStatus.name
                 .toLowerCase()
                 .replace("_", " ")
                 .capitalize()
@@ -126,6 +115,14 @@ class General {
             setFooter("User ID: ${member.user.id}", null)
         }.build()
 
-        evt.channel.sendMessage(embed).queue()
+        channel.sendMessage(embed).complete()
+    }
+
+    fun humanReadableByteCount(bytes: Long, si: Boolean): String {
+        val unit = if (si) 1000 else 1024
+        if (bytes < unit) return bytes.toString() + " B"
+        val exp = (Math.log(bytes.toDouble()) / Math.log(unit.toDouble())).toInt()
+        val pre = (if (si) "kMGTPE" else "KMGTPE")[exp - 1] + if (si) "" else "i"
+        return String.format("%.1f %sB", bytes / Math.pow(unit.toDouble(), exp.toDouble()), pre)
     }
 }
