@@ -53,7 +53,7 @@ class BlackList internal constructor() {
 
     val size get() = set.size
 
-    fun contains(element: User) = element.id in set
+    operator fun contains(element: User) = element.id in set
 
     fun containsAll(elements: Collection<User>) = set.containsAll(elements.map(User::getId))
 

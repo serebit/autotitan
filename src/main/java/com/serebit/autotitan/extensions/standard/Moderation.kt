@@ -15,20 +15,9 @@ class Moderation {
             locale = Locale.GUILD,
             permissions = arrayOf(Permission.KICK_MEMBERS)
     )
-    fun kick(evt: MessageReceivedEvent, member: Member) {
-        evt.guild.controller.kick(member).complete()
-        evt.channel.sendMessage("Kicked ${member.effectiveName}.").complete()
-    }
-
-    @CommandFunction(
-            description = "Kicks a member and deletes 1 day's worth of their messages.",
-            locale = Locale.GUILD,
-            permissions = arrayOf(Permission.BAN_MEMBERS)
-    )
-    fun softBan(evt: MessageReceivedEvent, member: Member) {
-        evt.guild.controller.ban(member, 1).complete()
-        evt.guild.controller.unban(member.user).complete()
-        evt.channel.sendMessage("Softbanned ${member.effectiveName}.").complete()
+    fun kick(evt: MessageReceivedEvent, member: Member): Unit = evt.run {
+        guild.controller.kick(member).complete()
+        channel.sendMessage("Kicked ${member.effectiveName}.").complete()
     }
 
     @CommandFunction(
@@ -36,19 +25,9 @@ class Moderation {
             locale = Locale.GUILD,
             permissions = arrayOf(Permission.BAN_MEMBERS)
     )
-    fun ban(evt: MessageReceivedEvent, user: User) {
-        evt.guild.controller.ban(user, 0).complete()
-        evt.channel.sendMessage("Banned ${user.name}.")
-    }
-
-    @CommandFunction(
-            description = "Bans a user from the current server, and deletes 7 days worth of their messages.",
-            locale = Locale.GUILD,
-            permissions = arrayOf(Permission.BAN_MEMBERS)
-    )
-    fun hardBan(evt: MessageReceivedEvent, user: User) {
-        evt.guild.controller.ban(user, 7).complete()
-        evt.channel.sendMessage("Banned ${user.name}.").queue()
+    fun ban(evt: MessageReceivedEvent, user: User): Unit = evt.run {
+        guild.controller.ban(user, 0).complete()
+        channel.sendMessage("Banned ${user.name}.")
     }
 
     @CommandFunction(
@@ -56,10 +35,9 @@ class Moderation {
             locale = Locale.GUILD,
             permissions = arrayOf(Permission.BAN_MEMBERS)
     )
-    fun unBan(evt: MessageReceivedEvent, user: User) {
-        evt.guild.controller.unban(user).queue {
-            evt.channel.sendMessage("Unbanned ${user.name}.").queue()
-        }
+    fun unBan(evt: MessageReceivedEvent, user: User): Unit = evt.run {
+        guild.controller.unban(user).complete()
+        channel.sendMessage("Unbanned ${user.name}.").complete()
     }
 
     @CommandFunction(
@@ -67,12 +45,12 @@ class Moderation {
             locale = Locale.GUILD,
             permissions = arrayOf(Permission.MESSAGE_MANAGE)
     )
-    fun cleanUp(evt: MessageReceivedEvent, number: Int) {
-        if (number in (1..99)) {
-            val messages = evt.textChannel.history.retrievePast(number + 1).complete()
-            evt.textChannel.deleteMessages(messages).complete()
+    fun cleanUp(evt: MessageReceivedEvent, number: Int): Unit = evt.run {
+        if (number in 1..99) {
+            val messages = textChannel.history.retrievePast(number + 1).complete()
+            textChannel.deleteMessages(messages).complete()
         } else {
-            evt.textChannel.sendMessage("The number has to be in the range of `1..99`.").complete()
+            textChannel.sendMessage("The number has to be in the range of `1..99`.").complete()
         }
     }
 }

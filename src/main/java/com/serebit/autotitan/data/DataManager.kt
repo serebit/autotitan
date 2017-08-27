@@ -17,7 +17,6 @@ class DataManager(type: Class<*>) {
     }
 
     fun write(fileName: String, obj: Any) {
-        val file = File("$dataFolder/$fileName").apply { createNewFile() }
-        file.writeText(serializer.toJson(obj))
+        File("$dataFolder/$fileName").apply { createNewFile() }.writeText(serializer.toJson(obj))
     }
 }

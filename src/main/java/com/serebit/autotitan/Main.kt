@@ -9,25 +9,19 @@ import com.serebit.autotitan.listeners.EventListener
 import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDABuilder
 
-const val name = "autotitan"
+const val name = "AutoTitan"
 const val version = "0.2.1"
-private val extensions = ClassPath.from(Thread.currentThread().contextClassLoader)
-        .getTopLevelClassesRecursive("com.serebit.autotitan.extensions")
-        .map { it.load() }
 
 fun main(args: Array<String>) {
     val jda = JDABuilder(AccountType.BOT).apply {
-        val commands = extensions.mapNotNull { clazz ->
-            val instance = Extension.generate(clazz)
-            if (instance != null) {
-                clazz.methods.mapNotNull { Command.generate(instance, it) }
-            } else null
+        val extensions = ClassPath.from(Thread.currentThread().contextClassLoader)
+                .getTopLevelClassesRecursive("com.serebit.autotitan.extensions")
+                .mapNotNull { Extension.generate(it.load()) }
+        val commands = extensions.map { instance ->
+                instance::class.java.methods.mapNotNull { Command.generate(instance, it) }
         }.flatten().toSet()
-        val listeners = extensions.mapNotNull { clazz ->
-            val instance = Extension.generate(clazz)
-            if (instance != null) {
-                clazz.methods.mapNotNull { Listener.generate(instance, it) }
-            } else null
+        val listeners = extensions.map { instance ->
+                instance::class.java.methods.mapNotNull { Listener.generate(instance, it) }
         }.flatten().toSet()
         setToken(Configuration.token)
         addEventListener(EventListener(commands, listeners))
