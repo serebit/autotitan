@@ -1,6 +1,7 @@
 package com.serebit.autotitan
 
 import com.google.common.reflect.ClassPath
+import com.google.gson.GsonBuilder
 import com.serebit.autotitan.data.Command
 import com.serebit.autotitan.data.Extension
 import com.serebit.autotitan.data.Listener
@@ -10,6 +11,7 @@ import net.dv8tion.jda.core.JDABuilder
 
 const val name = "AutoTitan"
 const val version = "0.2.1"
+val gson = GsonBuilder().apply { serializeNulls() }.create()
 
 fun main(args: Array<String>) {
     val jda = JDABuilder(AccountType.BOT).apply {

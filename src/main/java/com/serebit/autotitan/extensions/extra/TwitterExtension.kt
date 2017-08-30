@@ -6,6 +6,7 @@ import com.serebit.autotitan.api.annotations.CommandFunction
 import com.serebit.autotitan.api.annotations.ExtensionClass
 import com.serebit.autotitan.data.DataManager
 import net.dv8tion.jda.core.EmbedBuilder
+import net.dv8tion.jda.core.entities.MessageEmbed
 import net.dv8tion.jda.core.entities.TextChannel
 import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
@@ -18,17 +19,77 @@ import kotlin.concurrent.timer
 
 @ExtensionClass
 class TwitterExtension {
+    private val twitterManagers = mutableMapOf<Long, TwitterManager>()
+    private val dataManager = DataManager(this::class.java)
+
+    init {
+        val storedConfig = dataManager.read("config.json", TwitterExtensionConfiguration::class.java)
+        if (storedConfig != null) restore(storedConfig)
+    }
+
+    private fun restore(config: TwitterExtensionConfiguration) {
+        config.map.forEach {
+            twitterManagers.put(it.key, TwitterManager(it.value))
+        }
+    }
+
+    @CommandFunction(
+            locale = Locale.GUILD,
+            access = Access.BOT_OWNER
+    )
+    fun initTwitter(
+            evt: MessageReceivedEvent,
+            oAuthConsumerKey: String,
+            oAuthConsumerSecret: String,
+            oAuthAccessToken: String,
+            oAuthAccessTokenSecret: String
+    ) {
+        twitterManagers.put(evt.guild.idLong, TwitterManager(TwitterConfiguration(
+                oAuthConsumerKey,
+                oAuthConsumerSecret,
+                oAuthAccessToken,
+                oAuthAccessTokenSecret
+        )))
+
+        dataManager.write("config.json", TwitterExtensionConfiguration(
+                twitterManagers.map { it.key to it.value.config }.toMap()
+        ))
+
+        evt.message.delete().complete()
+        evt.channel.sendMessage("Twitter has been initialized.").complete()
+    }
+
+    @CommandFunction(locale = Locale.GUILD, delimitFinalParameter = false)
+    fun tweet(evt: MessageReceivedEvent, message: String) {
+        twitterManagers[evt.guild.idLong]?.tweet(evt, message)
+    }
+
+    @CommandFunction(locale = Locale.GUILD)
+    fun tweetQueue(evt: MessageReceivedEvent) {
+        val manager = twitterManagers[evt.guild.idLong]
+        if (manager == null) {
+            evt.channel.sendMessage("Twitter is not initialized for this guild.").complete()
+            return
+        }
+        evt.channel.sendMessage(manager.queue).complete()
+    }
+}
+
+private class TwitterManager(val config: TwitterConfiguration) {
     private var twitter: Twitter? = null
     private var scheduler: Timer? = null
     private val tweetQueue = mutableListOf<Tweet>()
-    private val dataManager = DataManager(TwitterExtension::class.java)
+    val queue: MessageEmbed
+        get() = EmbedBuilder().apply {
+            setTitle("Tweet Queue")
+            var description = ""
+            tweetQueue.forEach {
+                description += "${it.user.asMention}: \"${it.message}\"\n"
+            }
+            setDescription(description)
+        }.build()
 
     init {
-        val storedConfig = dataManager.read("config.json", TwitterConfiguration::class.java)
-        if (storedConfig != null) init(storedConfig)
-    }
-
-    private fun init(config: TwitterConfiguration) {
         val cb = ConfigurationBuilder().apply {
             setDebugEnabled(true)
             setOAuthConsumerKey(config.oAuthConsumerKey)
@@ -41,71 +102,37 @@ class TwitterExtension {
         scheduler = timer(daemon = true, period = 60000, initialDelay = 60000) {
             val immutableTwitter = twitter
             if (immutableTwitter != null && tweetQueue.isNotEmpty()) {
-                val tweet = tweetQueue.first()
-                tweetQueue.removeAt(0)
-                val status = immutableTwitter.updateStatus(tweet.message)
+                val tweetEvent = tweetQueue.removeAt(0)
+                val status = immutableTwitter.updateStatus(tweetEvent.message)
                 val url = "https://twitter.com/${status.user.screenName}/status/${status.id}"
-                val builder = EmbedBuilder().apply {
+
+                val embed = EmbedBuilder().apply {
                     setAuthor(
-                            "Tweet by ${tweet.user.name}#${tweet.user.discriminator}",
+                            "Tweet by ${tweetEvent.user.name}#${tweetEvent.user.discriminator}",
                             url,
-                            tweet.user.effectiveAvatarUrl
+                            tweetEvent.user.effectiveAvatarUrl
                     )
-                    setDescription(tweet.message)
-                }
-                tweet.channel.sendMessage(builder.build()).queue()
+                    setDescription(tweetEvent.message)
+                }.build()
+
+                tweetEvent.channel.sendMessage(embed).queue()
             }
         }
-        dataManager.write("config.json", config)
     }
 
-    @CommandFunction(
-            locale = Locale.PRIVATE_CHANNEL,
-            access = Access.BOT_OWNER
-    )
-    fun initTwitter(
-            evt: MessageReceivedEvent,
-            oAuthConsumerKey: String,
-            oAuthConsumerSecret: String,
-            oAuthAccessToken: String,
-            oAuthAccessTokenSecret: String
-    ) {
-        init(TwitterConfiguration(
-                oAuthConsumerKey,
-                oAuthConsumerSecret,
-                oAuthAccessToken,
-                oAuthAccessTokenSecret
-        ))
-        evt.channel.sendMessage("Twitter has been initialized.").complete()
-    }
-
-    @CommandFunction(locale = Locale.GUILD, delimitFinalParameter = false)
     fun tweet(evt: MessageReceivedEvent, message: String) {
         if (message.length <= 140) {
             val tweet = Tweet(evt.textChannel, evt.author, message)
             tweetQueue.add(tweet)
             evt.channel.sendMessage(
                     """${evt.author.asMention}, your tweet has been queued."""
-            ).queue()
+            ).complete()
         } else {
             evt.channel.sendMessage(
                     """${evt.author.asMention}, your tweet is ${message.length - 140} characters
                     too long!"""
-            ).queue()
+            ).complete()
         }
-    }
-
-    @CommandFunction(locale = Locale.GUILD)
-    fun tweetQueue(evt: MessageReceivedEvent) {
-        val builder = EmbedBuilder().apply {
-            setTitle("Tweet Queue")
-            var description = ""
-            tweetQueue.forEach {
-                description += "${it.user.asMention}: \"${it.message}\"\n"
-            }
-            setDescription(description)
-        }
-        evt.channel.sendMessage(builder.build()).queue()
     }
 }
 
@@ -120,4 +147,8 @@ private data class TwitterConfiguration(
         val oAuthConsumerSecret: String,
         val oAuthAccessToken: String,
         val oAuthAccessTokenSecret: String
+)
+
+private data class TwitterExtensionConfiguration(
+        val map: Map<Long, TwitterConfiguration>
 )
