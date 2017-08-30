@@ -3,7 +3,7 @@ package com.serebit.autotitan.data
 import com.serebit.autotitan.api.Access
 import com.serebit.autotitan.api.Locale
 import com.serebit.autotitan.api.annotations.CommandFunction
-import com.serebit.autotitan.config.Configuration
+import com.serebit.autotitan.config
 import net.dv8tion.jda.core.entities.Channel
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.entities.User
@@ -35,10 +35,10 @@ class Command private constructor(private val instance: Any, internal val method
     operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>): Any? =
             method.invoke(instance, evt, *parameters.toTypedArray())
 
-    fun looselyMatches(rawMessageContent: String) = rawMessageContent.split(" ")[0] == Configuration.prefix + name
+    fun looselyMatches(rawMessageContent: String) = rawMessageContent.split(" ")[0] == config.prefix + name
 
     fun castParametersOrNull(evt: MessageReceivedEvent): List<Any>? {
-        val correctInvocation = evt.message.rawContent.split(" ")[0] == Configuration.prefix + name
+        val correctInvocation = evt.message.rawContent.split(" ")[0] == config.prefix + name
         val correctParameters = parameterTypes.size == getMessageParameters(evt.message.rawContent).size
         val correctLocale = when (locale) {
             Locale.ALL -> true
@@ -62,7 +62,7 @@ class Command private constructor(private val instance: Any, internal val method
     }
 
     private fun getMessageParameters(message: String): MutableList<String> {
-        val trimmedMessage = message.removePrefix(Configuration.prefix + name).trim()
+        val trimmedMessage = message.removePrefix(config.prefix + name).trim()
         val parameterCount = parameterTypes.size
         val splitParameters = trimmedMessage.split(" ").filter(String::isNotBlank).toMutableList()
         return if (delimitFinalParameter) {
