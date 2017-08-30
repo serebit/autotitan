@@ -3,7 +3,7 @@ package com.serebit.autotitan.extensions.standard
 import com.serebit.autotitan.api.Access
 import com.serebit.autotitan.api.annotations.CommandFunction
 import com.serebit.autotitan.api.annotations.ExtensionClass
-import com.serebit.autotitan.config.Configuration
+import com.serebit.autotitan.config
 import net.dv8tion.jda.core.EmbedBuilder
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import java.time.OffsetDateTime
@@ -18,7 +18,7 @@ class Owner {
     suspend fun shutdown(evt: MessageReceivedEvent): Unit = evt.run {
         channel.sendMessage("Shutting down.").complete()
         jda.shutdown()
-        Configuration.serialize()
+        config.serialize()
         exitProcess(0)
     }
 
@@ -40,9 +40,9 @@ class Owner {
         if (prefix.isBlank()) {
             channel.sendMessage("Invalid prefix. Prefix must not be empty or blank.")
         } else {
-            Configuration.prefix = if (prefix.length in 1..3) prefix else prefix.substring(0..3)
-            Configuration.serialize()
-            channel.sendMessage("Set prefix to `${Configuration.prefix}`.").complete()
+            config.prefix = if (prefix.length in 1..3) prefix else prefix.substring(0..3)
+            config.serialize()
+            channel.sendMessage("Set prefix to `${config.prefix}`.").complete()
         }
     }
 

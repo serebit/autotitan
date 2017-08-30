@@ -175,7 +175,9 @@ class Audio {
             }.build()
             channel.sendMessage(embed).complete()
         } else {
-            channel.sendMessage("There's nothing queued at the moment.").complete()
+            channel.sendMessage(
+                    "There's nothing queued at the moment. Queue a song using the `play` command."
+            ).complete()
         }
     }
 

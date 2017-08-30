@@ -1,6 +1,6 @@
 package com.serebit.autotitan.listeners
 
-import com.serebit.autotitan.config.Configuration
+import com.serebit.autotitan.config
 import com.serebit.autotitan.data.Command
 import com.serebit.autotitan.data.Listener
 import kotlinx.coroutines.experimental.CommonPool
@@ -16,7 +16,7 @@ class EventListener(
 ) : ListenerAdapter() {
     override fun onGenericEvent(evt: Event) {
         launch(CommonPool) {
-            if (evt is MessageReceivedEvent && evt.message.rawContent.startsWith(Configuration.prefix)) {
+            if (evt is MessageReceivedEvent && evt.message.rawContent.startsWith(config.prefix)) {
                 runCommands(evt)
             }
             runListeners(evt)
@@ -30,7 +30,7 @@ class EventListener(
     }
 
     private fun runCommands(evt: MessageReceivedEvent) {
-        if (evt.message.rawContent == "${Configuration.prefix}help") sendCommandList(evt)
+        if (evt.message.rawContent == "${config.prefix}help") sendCommandList(evt)
         var parameters: List<Any>? = null
         val command = commands
                 .asSequence()

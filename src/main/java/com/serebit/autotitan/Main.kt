@@ -1,7 +1,6 @@
 package com.serebit.autotitan
 
 import com.google.common.reflect.ClassPath
-import com.serebit.autotitan.config.Configuration
 import com.serebit.autotitan.data.Command
 import com.serebit.autotitan.data.Extension
 import com.serebit.autotitan.data.Listener
@@ -23,7 +22,7 @@ fun main(args: Array<String>) {
         val listeners = extensions.map { instance ->
                 instance::class.java.methods.mapNotNull { Listener.generate(instance, it) }
         }.flatten().toSet()
-        setToken(Configuration.token)
+        setToken(config.token)
         addEventListener(EventListener(commands, listeners))
     }.buildBlocking()
 
