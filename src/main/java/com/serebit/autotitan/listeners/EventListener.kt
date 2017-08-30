@@ -32,8 +32,7 @@ class EventListener(
     private fun runCommands(evt: MessageReceivedEvent) {
         if (evt.message.rawContent == "${config.prefix}help") sendCommandList(evt)
         var parameters: List<Any>? = null
-        val command = commands
-                .asSequence()
+        val command = commands.asSequence()
                 .filter {
                     it.looselyMatches(evt.message.rawContent)
                 }
