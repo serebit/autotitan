@@ -65,13 +65,13 @@ class TwitterExtension {
     }
 
     @CommandFunction(locale = Locale.GUILD)
-    fun tweetQueue(evt: MessageReceivedEvent) {
+    fun tweetQueue(evt: MessageReceivedEvent): Unit = evt.run {
         val manager = twitterManagers[evt.guild.idLong]
         if (manager == null) {
-            evt.channel.sendMessage("Twitter is not initialized for this guild.").complete()
+            channel.sendMessage("Twitter is not initialized for this guild.").complete()
             return
         }
-        evt.channel.sendMessage(manager.queue).complete()
+        channel.sendMessage(manager.queue).complete()
     }
 }
 
