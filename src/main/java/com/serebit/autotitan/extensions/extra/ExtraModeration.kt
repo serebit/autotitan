@@ -12,7 +12,7 @@ import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 
 @ExtensionClass
-class AutoRole {
+class ExtraModeration {
     private val map: GuildRoleMap
     private val dataManager = DataManager(this::class.java)
 
@@ -33,6 +33,26 @@ class AutoRole {
             dataManager.write("rolemap.json", map)
         } else {
             channel.sendMessage("`$roleName` does not exist.").complete()
+        }
+    }
+
+    @CommandFunction(
+            permissions = arrayOf(Permission.MANAGE_SERVER)
+    )
+    fun smartPrune(evt: MessageReceivedEvent): Unit = evt.run {
+        val baseRole = map[jda, guild]
+        if (baseRole != null) {
+            val newRole = guild.controller.createCopyOfRole(baseRole).complete()
+            baseRole.delete().complete()
+            val prunableMemberCount = guild.getPrunableMemberCount(30).complete()
+            guild.controller.prune(30).complete()
+            channel.sendMessage("Pruned $prunableMemberCount members.").complete()
+            val membersWithoutBaseRole = guild.members.filter { it.roles.isEmpty() }
+            membersWithoutBaseRole.forEach { guild.controller.addSingleRoleToMember(it, newRole).queue() }
+        } else {
+            val prunableMemberCount = guild.getPrunableMemberCount(30).complete()
+            guild.controller.prune(30).complete()
+            channel.sendMessage("Pruned $prunableMemberCount members.").complete()
         }
     }
 
