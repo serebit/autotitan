@@ -37,18 +37,29 @@ class ExtraModeration {
     }
 
     @CommandFunction(
+            permissions = arrayOf(Permission.MANAGE_ROLES)
+    )
+    fun getAutoRole(evt: MessageReceivedEvent): Unit = evt.run {
+        val role = map[jda, guild] ?: run {
+            channel.sendMessage("Autorole is not set up for this guild.").complete()
+            return
+        }
+        channel.sendMessage("The autorole for this server is set to `${role.name}`.")
+    }
+
+    @CommandFunction(
             permissions = arrayOf(Permission.MANAGE_SERVER)
     )
     fun smartPrune(evt: MessageReceivedEvent): Unit = evt.run {
         val baseRole = map[jda, guild]
         if (baseRole != null) {
-            val newRole = guild.controller.createCopyOfRole(baseRole).complete()
-            baseRole.delete().complete()
+            val membersWithBaseRole = guild.getMembersWithRoles(baseRole)
+            membersWithBaseRole.forEach { guild.controller.removeSingleRoleFromMember(it, baseRole) }
             val prunableMemberCount = guild.getPrunableMemberCount(30).complete()
             guild.controller.prune(30).complete()
-            channel.sendMessage("Pruned $prunableMemberCount members.").complete()
             val membersWithoutBaseRole = guild.members.filter { it.roles.isEmpty() }
-            membersWithoutBaseRole.forEach { guild.controller.addSingleRoleToMember(it, newRole).queue() }
+            membersWithoutBaseRole.forEach { guild.controller.addSingleRoleToMember(it, baseRole).queue() }
+            channel.sendMessage("Pruned $prunableMemberCount members.").complete()
         } else {
             val prunableMemberCount = guild.getPrunableMemberCount(30).complete()
             guild.controller.prune(30).complete()
@@ -67,9 +78,7 @@ class ExtraModeration {
 private class GuildRoleMap internal constructor() {
     private val map = mutableMapOf<Long, Long>()
 
-    operator fun contains(key: Guild) = containsKey(key)
-
-    fun containsKey(key: Guild) = map.containsKey(key.idLong)
+    operator fun contains(key: Guild) = map.contains(key.idLong)
 
     operator fun get(jda: JDA, key: Guild): Role? {
         val value = map[key.idLong]
