@@ -30,7 +30,11 @@ class General {
                         .replace("(R)", ":registered:")
                         .replace("(TM)", ":tm:"),
                 "Motherboard" to systemInfo.hardware.computerSystem.baseboard.model,
-                "Total Memory" to humanReadableByteCount(systemInfo.hardware.memory.total, true)
+                "Disk" to systemInfo.hardware.diskStores[0].model
+                        .replace("(R)", ":registered:")
+                        .replace("(TM)", ":tm:")
+                        .replace("_", " "),
+                "Total Memory" to humanReadableByteCount(systemInfo.hardware.memory.total)
         ).asIterable().joinToString("\n") { "**${it.key}**: ${it.value}" }
         val osInfo = mapOf(
                 "Name" to systemInfo.operatingSystem.family,
@@ -92,6 +96,12 @@ class General {
     }
 
     @CommandFunction(
+            description = "Gets information about the invoker.",
+            locale = Locale.GUILD
+    )
+    fun selfInfo(evt: MessageReceivedEvent) = memberInfo(evt, evt.member)
+
+    @CommandFunction(
             description = "Gets information about a specific server member.",
             locale = Locale.GUILD
     )
@@ -118,11 +128,9 @@ class General {
         channel.sendMessage(embed).complete()
     }
 
-    fun humanReadableByteCount(bytes: Long, si: Boolean): String {
-        val unit = if (si) 1000 else 1024
-        if (bytes < unit) return bytes.toString() + " B"
-        val exp = (Math.log(bytes.toDouble()) / Math.log(unit.toDouble())).toInt()
-        val pre = (if (si) "kMGTPE" else "KMGTPE")[exp - 1] + if (si) "" else "i"
-        return String.format("%.1f %sB", bytes / Math.pow(unit.toDouble(), exp.toDouble()), pre)
+    private fun humanReadableByteCount(bytes: Long): String {
+        val exponent = (Math.log(bytes.toDouble()) / 6.9).toInt()
+        val unit = listOf("B", "kB", "MB", "GB", "TB", "PB", "EB")[exponent]
+        return "%.1f $unit".format(bytes / Math.pow(1000.0, exponent.toDouble()))
     }
 }
