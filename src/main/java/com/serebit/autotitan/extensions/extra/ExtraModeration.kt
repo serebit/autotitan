@@ -44,7 +44,7 @@ class ExtraModeration {
             channel.sendMessage("Autorole is not set up for this guild.").complete()
             return
         }
-        channel.sendMessage("The autorole for this server is set to `${role.name}`.")
+        channel.sendMessage("The autorole for this server is set to `${role.name}`.").complete()
     }
 
     @CommandFunction(
@@ -54,7 +54,7 @@ class ExtraModeration {
         val baseRole = map[jda, guild]
         if (baseRole != null) {
             val membersWithBaseRole = guild.getMembersWithRoles(baseRole)
-            membersWithBaseRole.forEach { guild.controller.removeSingleRoleFromMember(it, baseRole) }
+            membersWithBaseRole.forEach { guild.controller.removeSingleRoleFromMember(it, baseRole).queue() }
             val prunableMemberCount = guild.getPrunableMemberCount(30).complete()
             guild.controller.prune(30).complete()
             val membersWithoutBaseRole = guild.members.filter { it.roles.isEmpty() }
