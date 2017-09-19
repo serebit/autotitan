@@ -17,13 +17,13 @@ class Command private constructor(private val instance: Any, internal val method
     } else {
         method.name
     }.toLowerCase()
-    val description = if (info.description.isNotBlank()) info.description else "No description provided."
-    val access = info.access
-    val locale = info.locale
-    val delimitFinalParameter = info.delimitFinalParameter
-    val hidden = info.hidden
-    val permissions = info.permissions
-    val helpMessage = "`$name` - $description"
+    private val description = if (info.description.isNotBlank()) info.description else "No description provided."
+    private val access = info.access
+    private val locale = info.locale
+    private val delimitFinalParameter = info.delimitFinalParameter
+    private val hidden = info.hidden
+    private val permissions = info.permissions
+    val helpMessage = if (hidden) "" else "`$name` - $description"
 
     init {
         if (parameterTypes.any { it !in validParameterTypes }) {
@@ -63,17 +63,14 @@ class Command private constructor(private val instance: Any, internal val method
 
     private fun getMessageParameters(message: String): MutableList<String> {
         val trimmedMessage = message.removePrefix(config.prefix + name).trim()
-        val parameterCount = parameterTypes.size
         val splitParameters = trimmedMessage.split(" ").filter(String::isNotBlank).toMutableList()
         return if (delimitFinalParameter) {
             splitParameters
         } else {
-            val parameters = mutableListOf<String>()
-            (0..parameterCount - 2).forEach {
-                splitParameters.removeAt(0)
-            }
-            if (splitParameters.size > 0) parameters.add(splitParameters.joinToString(" "))
-            parameters
+            mutableListOf<String>().apply {
+                addAll(splitParameters.slice(0..(parameterTypes.size - 2)))
+                add(splitParameters.drop(parameterTypes.size - 1).joinToString(" "))
+            }.filter(String::isNotBlank).toMutableList()
         }
     }
 
