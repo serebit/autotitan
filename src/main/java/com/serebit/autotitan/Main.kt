@@ -9,7 +9,7 @@ import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDABuilder
 
 const val name = "AutoTitan"
-const val version = "0.2.1"
+const val version = "0.2.2"
 
 fun main(args: Array<String>) {
     val jda = JDABuilder(AccountType.BOT).apply {
