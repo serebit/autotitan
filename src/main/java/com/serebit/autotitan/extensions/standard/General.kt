@@ -13,7 +13,25 @@ import java.time.format.DateTimeFormatter
 
 @ExtensionClass
 class General {
-    private val dateFormat = DateTimeFormatter.ofPattern("MMMM d, yyyy")
+    private val dateFormat = DateTimeFormatter.ofPattern("d MMM, yyyy")
+    private val systemInfo = SystemInfo().run {
+        mapOf(
+                "Hardware" to mapOf(
+                        "Processor" to hardware.processor.name,
+                        "Motherboard" to hardware.computerSystem.baseboard.model,
+                        "Disk" to hardware.diskStores[0].model,
+                        "Total Memory" to humanReadableByteCount(hardware.memory.total)
+                ).asIterable().joinToString { "**${it.key}**: ${it.value}" },
+                "Operating System" to mapOf(
+                        "Name" to operatingSystem.family,
+                        "Version" to operatingSystem.version
+                ).asIterable().joinToString { "**${it.key}**: ${it.value}" },
+                "Java" to mapOf(
+                        "Name" to operatingSystem.family,
+                        "Version" to operatingSystem.version
+                ).asIterable().joinToString { "**${it.key}**: ${it.value}" }
+        )
+    }
 
     @CommandFunction(description = "Pings the bot.")
     fun ping(evt: MessageReceivedEvent): Unit = evt.run {
@@ -24,32 +42,11 @@ class General {
             description = "Gets information about the system that the bot is running on."
     )
     fun systemInfo(evt: MessageReceivedEvent): Unit = evt.run {
-        val systemInfo = SystemInfo()
-        val hardwareInfo = mapOf(
-                "Processor" to systemInfo.hardware.processor.name
-                        .replace("(R)", ":registered:")
-                        .replace("(TM)", ":tm:"),
-                "Motherboard" to systemInfo.hardware.computerSystem.baseboard.model,
-                "Disk" to systemInfo.hardware.diskStores[0].model
-                        .replace("(R)", ":registered:")
-                        .replace("(TM)", ":tm:")
-                        .replace("_", " "),
-                "Total Memory" to humanReadableByteCount(systemInfo.hardware.memory.total)
-        ).asIterable().joinToString("\n") { "**${it.key}**: ${it.value}" }
-        val osInfo = mapOf(
-                "Name" to systemInfo.operatingSystem.family,
-                "Version" to systemInfo.operatingSystem.version
-        ).asIterable().joinToString("\n") { "**${it.key}**: ${it.value}" }
-        val javaInfo = mapOf(
-                "Vendor" to System.getProperty("java.vendor"),
-                "Version" to System.getProperty("java.version")
-        ).asIterable().joinToString("\n") { "**${it.key}**: ${it.value}" }
-
         val embed = EmbedBuilder().apply {
             setColor(guild?.getMember(jda.selfUser)?.color)
-            addField("Hardware", hardwareInfo, true)
-            addField("Operating System", osInfo, true)
-            addField("JRE", javaInfo, true)
+            systemInfo.forEach { key, value ->
+                addField(key, value, true)
+            }
         }.build()
 
         channel.sendMessage(embed).complete()
