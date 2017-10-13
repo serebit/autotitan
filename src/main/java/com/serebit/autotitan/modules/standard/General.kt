@@ -1,4 +1,4 @@
-package com.serebit.autotitan.extensions.standard
+package com.serebit.autotitan.modules.standard
 
 import com.serebit.autotitan.api.Locale
 import com.serebit.autotitan.api.annotations.CommandFunction
@@ -9,27 +9,28 @@ import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import oshi.SystemInfo
+import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
 @ExtensionClass
 class General {
     private val dateFormat = DateTimeFormatter.ofPattern("d MMM, yyyy")
-    private val systemInfo = SystemInfo().run {
+    private val systemInfo get() = SystemInfo().run {
         mapOf(
                 "Hardware" to mapOf(
                         "Processor" to hardware.processor.name,
                         "Motherboard" to hardware.computerSystem.baseboard.model,
                         "Disk" to hardware.diskStores[0].model,
                         "Total Memory" to humanReadableByteCount(hardware.memory.total)
-                ).asIterable().joinToString { "**${it.key}**: ${it.value}" },
+                ).asIterable().joinToString("\n") { "**${it.key}**: ${it.value}" },
                 "Operating System" to mapOf(
                         "Name" to operatingSystem.family,
                         "Version" to operatingSystem.version
-                ).asIterable().joinToString { "**${it.key}**: ${it.value}" },
+                ).asIterable().joinToString("\n") { "**${it.key}**: ${it.value}" },
                 "Java" to mapOf(
                         "Name" to operatingSystem.family,
                         "Version" to operatingSystem.version
-                ).asIterable().joinToString { "**${it.key}**: ${it.value}" }
+                ).asIterable().joinToString("\n") { "**${it.key}**: ${it.value}" }
         )
     }
 
@@ -38,11 +39,10 @@ class General {
         channel.sendMessage("Pong. The last ping was ${jda.ping}ms.").complete()
     }
 
-    @CommandFunction(
-            description = "Gets information about the system that the bot is running on."
-    )
+    @CommandFunction(description = "Gets information about the system that the bot is running on.")
     fun systemInfo(evt: MessageReceivedEvent): Unit = evt.run {
         val embed = EmbedBuilder().apply {
+            setAuthor(guild.selfMember.effectiveName, null, jda.selfUser.effectiveAvatarUrl)
             setColor(guild?.getMember(jda.selfUser)?.color)
             systemInfo.forEach { key, value ->
                 addField(key, value, true)
@@ -54,35 +54,28 @@ class General {
 
     @CommandFunction(description = "Gets information about the server.", locale = Locale.GUILD)
     fun serverInfo(evt: MessageReceivedEvent): Unit = evt.run {
-        val canGetInvite = guild.selfMember.hasPermission(Permission.MANAGE_SERVER)
-        val creationDate = guild.creationTime.format(dateFormat)
-        val onlineMemberCount = guild.members
-                .filter { it.onlineStatus == OnlineStatus.ONLINE }
-                .size
-                .toString()
-        val totalMemberCount = guild.members.size.toString()
-        val textChannelCount = guild.textChannels.size.toString()
-        val voiceChannelCount = guild.voiceChannels.size.toString()
+        val onlineMemberCount = guild.members.count { it.onlineStatus != OnlineStatus.OFFLINE }.toString()
         val hoistedRoles = guild.roles
                 .filter { it.name != "@everyone" && it.isHoisted }
                 .joinToString(", ") { it.name }
         val embedBuilder = EmbedBuilder().apply {
+            setAuthor(guild.selfMember.effectiveName, null, jda.selfUser.effectiveAvatarUrl)
             setTitle(guild.name, null)
-            setDescription("Created on $creationDate")
+            setDescription("Created on ${guild.creationTime.format(dateFormat)}")
             setThumbnail(guild.iconUrl)
             setColor(guild.owner.color)
             addField("Owner", guild.owner.asMention, true)
             addField("Region", guild.region.toString(), true)
             addField("Online Members", onlineMemberCount, true)
-            addField("Total Members", totalMemberCount, true)
-            addField("Text Channels", textChannelCount, true)
-            addField("Voice Channels", voiceChannelCount, true)
+            addField("Total Members", guild.members.size.toString(), true)
+            addField("Text Channels", guild.textChannels.size.toString(), true)
+            addField("Voice Channels", guild.voiceChannels.size.toString(), true)
             addField("Hoisted Roles", hoistedRoles, true)
-            if (canGetInvite) {
+            if (guild.selfMember.hasPermission(Permission.MANAGE_SERVER)) {
                 val permanentInvites = guild.invites.complete().filter { !it.isTemporary }
                 if (permanentInvites.isNotEmpty()) addField(
                         "Invite Link",
-                        "https://discord.gg/${permanentInvites.first().code}",
+                        permanentInvites.first().url,
                         false
                 )
             }
@@ -112,6 +105,7 @@ class General {
         } else "None"
 
         val embed = EmbedBuilder().apply {
+            setAuthor(guild.selfMember.effectiveName, null, jda.selfUser.effectiveAvatarUrl)
             setTitle(member.effectiveName, null)
             setDescription(onlineStatus + if (member.game != null) " - Playing ${member.game}" else "")
             setColor(member.color)
@@ -120,6 +114,7 @@ class General {
             addField("Joined this Server", member.joinDate.format(dateFormat), true)
             addField("Roles", roles, true)
             setFooter("User ID: ${member.user.id}", null)
+            setTimestamp(OffsetDateTime.now())
         }.build()
 
         channel.sendMessage(embed).complete()

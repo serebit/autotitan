@@ -1,4 +1,4 @@
-package com.serebit.autotitan.extensions.standard
+package com.serebit.autotitan.modules.standard
 
 import com.serebit.autotitan.api.Locale
 import com.serebit.autotitan.api.annotations.CommandFunction
