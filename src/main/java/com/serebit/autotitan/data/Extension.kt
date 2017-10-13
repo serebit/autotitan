@@ -21,7 +21,6 @@ val listeners by lazy {
 
 private fun <T> generateExtension(extension: Class<T>): T? {
     if (extension.constructors.none { it.parameterCount == 0 }) return null
-    if (extension.methods.none { Command.isValid(it) }) return null
-    if (extension.methods.none { Listener.isValid(it) }) return null
+    if (extension.methods.none { Command.isValid(it) || Listener.isValid(it) }) return null
     return extension.newInstance()
 }
