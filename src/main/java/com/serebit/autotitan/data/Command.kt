@@ -25,21 +25,15 @@ class Command private constructor(private val instance: Any, internal val method
     private val permissions = info.permissions
     val helpMessage = if (hidden) "" else "`$name` - $description"
 
-    init {
-        if (parameterTypes.any { it !in validParameterTypes }) {
-            val invalidTypes = parameterTypes.filter { it !in validParameterTypes }.joinToString(", ")
-            throw IllegalArgumentException("Invalid argument type(s) ($invalidTypes) passed to Command constructor.")
-        }
-    }
-
     operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>): Any? =
             method.invoke(instance, evt, *parameters.toTypedArray())
 
     fun looselyMatches(rawMessageContent: String) = rawMessageContent.split(" ")[0] == config.prefix + name
 
     fun castParametersOrNull(evt: MessageReceivedEvent): List<Any>? {
-        val correctInvocation = evt.message.rawContent.split(" ")[0] == config.prefix + name
-        val correctParameters = parameterTypes.size == getMessageParameters(evt.message.rawContent).size
+        if (evt.message.rawContent.split(" ")[0] != config.prefix + name) return null
+        if (parameterTypes.size != getMessageStringParameters(evt.message.rawContent).size) return null
+        if (evt.author.idLong in config.blackList) return null
         val correctLocale = when (locale) {
             Locale.ALL -> true
             Locale.GUILD -> evt.guild != null
@@ -55,27 +49,27 @@ class Command private constructor(private val instance: Any, internal val method
             Access.RANK_BELOW -> TODO("Not yet implemented.")
         }
 
-        return if (correctInvocation && correctParameters && correctLocale && hasPermissions && hasAccess) {
+        return if (correctLocale && hasPermissions && hasAccess) {
             val castParameters = castParameters(evt)
             if (castParameters.any { it == null }) null else castParameters.filterNotNull()
         } else null
     }
 
-    private fun getMessageParameters(message: String): MutableList<String> {
+    private fun getMessageStringParameters(message: String): List<String> {
         val trimmedMessage = message.removePrefix(config.prefix + name).trim()
-        val splitParameters = trimmedMessage.split(" ").filter(String::isNotBlank).toMutableList()
+        val splitParameters = trimmedMessage.split(" ").filter(String::isNotBlank)
         return if (delimitFinalParameter) {
             splitParameters
         } else {
-            mutableListOf<String>().apply {
-                addAll(splitParameters.slice(0..(parameterTypes.size - 2)))
-                add(splitParameters.drop(parameterTypes.size - 1).joinToString(" "))
-            }.filter(String::isNotBlank).toMutableList()
-        }
+            mutableListOf(
+                    *splitParameters.slice(0..(parameterTypes.size - 2)).toTypedArray(),
+                    splitParameters.drop(parameterTypes.size - 1).joinToString(" ")
+            )
+        }.filter(String::isNotBlank)
     }
 
     private fun castParameters(evt: MessageReceivedEvent): List<Any?> {
-        val strings = getMessageParameters(evt.message.rawContent)
+        val strings = getMessageStringParameters(evt.message.rawContent)
         return parameterTypes.zip(strings).map { (type, string) ->
             castParameter(evt, type, string)
         }.toList()
@@ -112,7 +106,7 @@ class Command private constructor(private val instance: Any, internal val method
     }
 
     companion object {
-        internal val validParameterTypes = setOf(
+        private val validParameterTypes = setOf(
                 Int::class.java,
                 Long::class.java,
                 Double::class.java,
@@ -124,11 +118,11 @@ class Command private constructor(private val instance: Any, internal val method
         )
 
         internal fun generate(instance: Any, method: Method): Command? {
-            return if (!isValid(method)) null else Command(
+            return if (isValid(method)) Command(
                     instance,
                     method,
                     method.getAnnotation(CommandFunction::class.java)
-            )
+            ) else null
         }
 
         internal fun isValid(method: Method): Boolean {
@@ -136,8 +130,8 @@ class Command private constructor(private val instance: Any, internal val method
                 val hasAnnotation = method.isAnnotationPresent(CommandFunction::class.java)
                 val hasEventParameter = method.parameterTypes[0] == MessageReceivedEvent::class.java
                 val hasValidParameterTypes by lazy {
-                    method.parameterTypes.toMutableList()
-                            .apply { removeAt(0) }
+                    method.parameterTypes
+                            .drop(1)
                             .all { it in validParameterTypes }
                 }
                 hasAnnotation && hasEventParameter && hasValidParameterTypes
