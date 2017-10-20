@@ -7,7 +7,7 @@ import com.serebit.autotitan.listeners.EventListener
 import net.dv8tion.jda.core.AccountType
 
 const val NAME = "AutoTitan"
-const val VERSION = "0.3.1"
+const val VERSION = "0.3.2"
 
 fun main(args: Array<String>) {
     val jda = jda(AccountType.BOT) {
