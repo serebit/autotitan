@@ -16,21 +16,24 @@ import java.time.format.DateTimeFormatter
 class General {
     private val dateFormat = DateTimeFormatter.ofPattern("d MMM, yyyy")
     private val systemInfo get() = SystemInfo().run {
+        val format = { it: Map.Entry<String, String> ->
+            "${it.key}: `${it.value}`"
+        }
         mapOf(
                 "Hardware" to mapOf(
                         "Processor" to hardware.processor.name,
                         "Motherboard" to hardware.computerSystem.baseboard.model,
                         "Disk" to hardware.diskStores[0].model,
-                        "Total Memory" to humanReadableByteCount(hardware.memory.total)
-                ).asIterable().joinToString("\n") { "**${it.key}**: ${it.value}" },
+                        "Total Memory" to hardware.memory.total.toHumanReadableByteCount()
+                ).asIterable().joinToString("\n", transform = format),
                 "Operating System" to mapOf(
                         "Name" to operatingSystem.family,
-                        "Version" to operatingSystem.version
-                ).asIterable().joinToString("\n") { "**${it.key}**: ${it.value}" },
+                        "Version" to operatingSystem.version.toString()
+                ).asIterable().joinToString("\n", transform = format),
                 "Java" to mapOf(
-                        "Name" to operatingSystem.family,
-                        "Version" to operatingSystem.version
-                ).asIterable().joinToString("\n") { "**${it.key}**: ${it.value}" }
+                        "Vendor" to System.getProperty("java.vendor"),
+                        "Version" to System.getProperty("java.version")
+                ).asIterable().joinToString("\n", transform = format)
         )
     }
 
@@ -47,6 +50,7 @@ class General {
             systemInfo.forEach { key, value ->
                 addField(key, value, true)
             }
+            setTimestamp(OffsetDateTime.now())
         }.build()
 
         channel.sendMessage(embed).complete()
@@ -58,7 +62,7 @@ class General {
         val hoistedRoles = guild.roles
                 .filter { it.name != "@everyone" && it.isHoisted }
                 .joinToString(", ") { it.name }
-        val embedBuilder = EmbedBuilder().apply {
+        val embed = EmbedBuilder().apply {
             setAuthor(guild.selfMember.effectiveName, null, jda.selfUser.effectiveAvatarUrl)
             setTitle(guild.name, null)
             setDescription("Created on ${guild.creationTime.format(dateFormat)}")
@@ -80,9 +84,10 @@ class General {
                 )
             }
             setFooter("Server ID: ${guild.id}", null)
+            setTimestamp(OffsetDateTime.now())
         }.build()
 
-        channel.sendMessage(embedBuilder).complete()
+        channel.sendMessage(embed).complete()
     }
 
     @CommandFunction(
@@ -105,24 +110,30 @@ class General {
         } else "None"
 
         val embed = EmbedBuilder().apply {
-            setAuthor(guild.selfMember.effectiveName, null, jda.selfUser.effectiveAvatarUrl)
-            setTitle(member.effectiveName, null)
-            setDescription(onlineStatus + if (member.game != null) " - Playing ${member.game}" else "")
+            setTitle("${member.user.name}#${member.user.discriminator} (${member.effectiveName})", null)
+            setDescription("$onlineStatus - Playing ${member.game?.name ?: "nothing"}")
             setColor(member.color)
             setThumbnail(member.user.effectiveAvatarUrl)
             addField("Joined Discord", member.user.creationTime.format(dateFormat), true)
             addField("Joined this Server", member.joinDate.format(dateFormat), true)
             addField("Roles", roles, true)
+            addField("Do they own the server?", member.isOwner.toYesNo().capitalize(), true)
+            addField("Are they a bot?", member.user.isBot.toYesNo().capitalize(), true)
+            addField("Are they fake?", member.user.isFake.toYesNo().capitalize(), true)
             setFooter("User ID: ${member.user.id}", null)
             setTimestamp(OffsetDateTime.now())
         }.build()
 
         channel.sendMessage(embed).complete()
     }
+}
 
-    private fun humanReadableByteCount(bytes: Long): String {
-        val exponent = (Math.log(bytes.toDouble()) / 6.9).toInt()
-        val unit = listOf("B", "kB", "MB", "GB", "TB", "PB", "EB")[exponent]
-        return "%.1f $unit".format(bytes / Math.pow(1000.0, exponent.toDouble()))
-    }
+private fun Long.toHumanReadableByteCount(): String {
+    val exponent = (Math.log(toDouble()) / 6.9).toInt()
+    val unit = listOf("B", "kB", "MB", "GB", "TB", "PB", "EB")[exponent]
+    return "%.1f $unit".format(this / Math.pow(1000.0, exponent.toDouble()))
+}
+
+private fun Boolean.toYesNo(): String {
+    return if (this) "yes" else "no"
 }
