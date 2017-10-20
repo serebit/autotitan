@@ -12,9 +12,14 @@ class TrackScheduler(private var player: AudioPlayer) : AudioEventAdapter() {
         if (!player.startTrack(track, true)) queue.add(track)
     }
 
-    fun next() {
-        player.stopTrack()
-        if (queue.isNotEmpty()) player.playTrack(queue.removeAt(0))
+    fun next(): Boolean {
+        return if (queue.isNotEmpty()) {
+            player.stopTrack()
+            player.playTrack(queue.removeAt(0))
+            true
+        } else {
+            false
+        }
     }
 
     fun pause() = if (!player.isPaused) {
