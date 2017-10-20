@@ -5,6 +5,7 @@ import com.serebit.autotitan.api.annotations.CommandFunction
 import com.serebit.autotitan.api.annotations.ExtensionClass
 import com.serebit.autotitan.config
 import net.dv8tion.jda.core.EmbedBuilder
+import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import java.time.OffsetDateTime
 import kotlin.system.exitProcess
@@ -44,6 +45,34 @@ class Owner {
             config.serialize()
             channel.sendMessage("Set prefix to `${config.prefix}`.").complete()
         }
+    }
+
+    @CommandFunction(
+            description = "Adds a user to the blacklist.",
+            access = Access.BOT_OWNER
+    )
+    fun blackListAdd(evt: MessageReceivedEvent, user: User): Unit = evt.run {
+        if (user.idLong in config.blackList) {
+            channel.sendMessage("${user.name} is already in the blacklist.").complete()
+            return
+        }
+        config.blackList.add(user.idLong)
+        channel.sendMessage("Added ${user.name} to the blacklist.").complete()
+        config.serialize()
+    }
+
+    @CommandFunction(
+            description = "Removes a user from the blacklist.",
+            access = Access.BOT_OWNER
+    )
+    fun blackListRemove(evt: MessageReceivedEvent, user: User): Unit = evt.run {
+        if (user.idLong !in config.blackList) {
+            channel.sendMessage("${user.name} is not in the blacklist.").complete()
+            return
+        }
+        config.blackList.remove(user.idLong)
+        channel.sendMessage("Removed ${user.name} from the blacklist.")
+        config.serialize()
     }
 
     @CommandFunction(
