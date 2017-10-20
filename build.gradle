@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "com.serebit"
-version = "0.2.2"
+version = "0.3.0"
 
 description = """"""
 
@@ -50,7 +50,7 @@ compileTestKotlin {
 
 shadowJar {
     manifest.attributes "Main-Class": "com.serebit.autotitan.MainKt"
-    archiveName = "${baseName}-${version}.${extension}"
+    archiveName = "${baseName}.${extension}"
 }
 
 build {
