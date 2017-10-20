@@ -3,7 +3,7 @@ package com.serebit.autotitan.data
 import com.serebit.autotitan.api.Access
 import com.serebit.autotitan.api.Locale
 import com.serebit.autotitan.api.annotations.CommandFunction
-import com.serebit.autotitan.config.Configuration
+import com.serebit.autotitan.config
 import net.dv8tion.jda.core.entities.Channel
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.entities.User
@@ -17,29 +17,23 @@ class Command private constructor(private val instance: Any, internal val method
     } else {
         method.name
     }.toLowerCase()
-    val description = if (info.description.isNotBlank()) info.description else "No description provided."
-    val access = info.access
-    val locale = info.locale
-    val delimitFinalParameter = info.delimitFinalParameter
-    val hidden = info.hidden
-    val permissions = info.permissions
-    val helpMessage = "`$name` - $description"
-
-    init {
-        if (parameterTypes.any { it !in validParameterTypes }) {
-            val invalidTypes = parameterTypes.filter { it !in validParameterTypes }.joinToString(", ")
-            throw IllegalArgumentException("Invalid argument type(s) ($invalidTypes) passed to Command constructor.")
-        }
-    }
+    private val description = if (info.description.isNotBlank()) info.description else "No description provided."
+    private val access = info.access
+    private val locale = info.locale
+    private val delimitFinalParameter = info.delimitFinalParameter
+    private val hidden = info.hidden
+    private val permissions = info.permissions
+    val helpMessage = if (hidden) "" else "`$name` - $description"
 
     operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>): Any? =
             method.invoke(instance, evt, *parameters.toTypedArray())
 
-    fun looselyMatches(rawMessageContent: String) = rawMessageContent.split(" ")[0] == Configuration.prefix + name
+    fun looselyMatches(rawMessageContent: String) = rawMessageContent.split(" ")[0] == config.prefix + name
 
     fun castParametersOrNull(evt: MessageReceivedEvent): List<Any>? {
-        val correctInvocation = evt.message.rawContent.split(" ")[0] == Configuration.prefix + name
-        val correctParameters = parameterTypes.size == getMessageParameters(evt.message.rawContent).size
+        if (evt.message.rawContent.split(" ")[0] != config.prefix + name) return null
+        if (parameterTypes.size != getMessageStringParameters(evt.message.rawContent).size) return null
+        if (evt.author.idLong in config.blackList) return null
         val correctLocale = when (locale) {
             Locale.ALL -> true
             Locale.GUILD -> evt.guild != null
@@ -55,30 +49,27 @@ class Command private constructor(private val instance: Any, internal val method
             Access.RANK_BELOW -> TODO("Not yet implemented.")
         }
 
-        return if (correctInvocation && correctParameters && correctLocale && hasPermissions && hasAccess) {
+        return if (correctLocale && hasPermissions && hasAccess) {
             val castParameters = castParameters(evt)
             if (castParameters.any { it == null }) null else castParameters.filterNotNull()
         } else null
     }
 
-    private fun getMessageParameters(message: String): MutableList<String> {
-        val trimmedMessage = message.removePrefix(Configuration.prefix + name).trim()
-        val parameterCount = parameterTypes.size
-        val splitParameters = trimmedMessage.split(" ").filter(String::isNotBlank).toMutableList()
+    private fun getMessageStringParameters(message: String): List<String> {
+        val trimmedMessage = message.removePrefix(config.prefix + name).trim()
+        val splitParameters = trimmedMessage.split(" ").filter(String::isNotBlank)
         return if (delimitFinalParameter) {
             splitParameters
         } else {
-            val parameters = mutableListOf<String>()
-            (0..parameterCount - 2).forEach {
-                splitParameters.removeAt(0)
-            }
-            if (splitParameters.size > 0) parameters.add(splitParameters.joinToString(" "))
-            parameters
-        }
+            mutableListOf(
+                    *splitParameters.slice(0..(parameterTypes.size - 2)).toTypedArray(),
+                    splitParameters.drop(parameterTypes.size - 1).joinToString(" ")
+            )
+        }.filter(String::isNotBlank)
     }
 
     private fun castParameters(evt: MessageReceivedEvent): List<Any?> {
-        val strings = getMessageParameters(evt.message.rawContent)
+        val strings = getMessageStringParameters(evt.message.rawContent)
         return parameterTypes.zip(strings).map { (type, string) ->
             castParameter(evt, type, string)
         }.toList()
@@ -115,7 +106,7 @@ class Command private constructor(private val instance: Any, internal val method
     }
 
     companion object {
-        internal val validParameterTypes = setOf(
+        private val validParameterTypes = setOf(
                 Int::class.java,
                 Long::class.java,
                 Double::class.java,
@@ -127,11 +118,11 @@ class Command private constructor(private val instance: Any, internal val method
         )
 
         internal fun generate(instance: Any, method: Method): Command? {
-            return if (!isValid(method)) null else Command(
+            return if (isValid(method)) Command(
                     instance,
                     method,
                     method.getAnnotation(CommandFunction::class.java)
-            )
+            ) else null
         }
 
         internal fun isValid(method: Method): Boolean {
@@ -139,8 +130,8 @@ class Command private constructor(private val instance: Any, internal val method
                 val hasAnnotation = method.isAnnotationPresent(CommandFunction::class.java)
                 val hasEventParameter = method.parameterTypes[0] == MessageReceivedEvent::class.java
                 val hasValidParameterTypes by lazy {
-                    method.parameterTypes.toMutableList()
-                            .apply { removeAt(0) }
+                    method.parameterTypes
+                            .drop(1)
                             .all { it in validParameterTypes }
                 }
                 hasAnnotation && hasEventParameter && hasValidParameterTypes
