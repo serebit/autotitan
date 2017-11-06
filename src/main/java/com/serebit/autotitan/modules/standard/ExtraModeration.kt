@@ -26,7 +26,7 @@ class ExtraModeration {
             delimitFinalParameter = false
     )
     fun setAutoRole(evt: MessageReceivedEvent, roleName: String): Unit = evt.run {
-        val role = guild.roles.lastOrNull { it.name == roleName }
+        val role = guild.roles.lastOrNull { it.name.toLowerCase() == roleName.toLowerCase() }
         if (role != null) {
             channel.sendMessage("Set autorole to `$roleName`.").complete()
             map.put(guild, role)
