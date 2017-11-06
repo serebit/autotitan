@@ -6,5 +6,5 @@ import net.dv8tion.jda.core.entities.MessageChannel
 import net.dv8tion.jda.core.requests.RestAction
 
 fun MessageChannel.sendEmbed(init: EmbedBuilder.() -> Unit): RestAction<Message> {
-    return sendMessage(EmbedBuilder().apply(init).build())
+    return sendMessage(embed(init))
 }
