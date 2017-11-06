@@ -87,7 +87,7 @@ class Audio {
         val voiceStatus = voiceStatus(evt, false)
         when (voiceStatus) {
             VoiceStatus.CONNECTED_DIFFERENT_CHANNEL -> {
-                channel.sendMessage(VoiceStatus.NOT_CONNECTED.errorMessage).complete()
+                channel.sendMessage(voiceStatus.errorMessage).complete()
                 return
             }
             VoiceStatus.NOT_CONNECTED -> connectToVoiceChannel(guild.audioManager, evt.member.voiceState.channel)
