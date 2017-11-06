@@ -4,6 +4,7 @@ import com.serebit.autotitan.api.Access
 import com.serebit.autotitan.api.annotations.CommandFunction
 import com.serebit.autotitan.api.annotations.ExtensionClass
 import com.serebit.autotitan.config
+import com.serebit.extensions.jda.sendEmbed
 import net.dv8tion.jda.core.EmbedBuilder
 import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
@@ -71,8 +72,27 @@ class Owner {
             return
         }
         config.blackList.remove(user.idLong)
-        channel.sendMessage("Removed ${user.name} from the blacklist.")
+        channel.sendMessage("Removed ${user.name} from the blacklist.").complete()
         config.serialize()
+    }
+
+    @CommandFunction(
+            description = "Sends the blacklist.",
+            access = Access.BOT_OWNER
+    )
+    fun blackList(evt: MessageReceivedEvent) {
+        evt.run {
+            if (config.blackList.isNotEmpty()) {
+                channel.sendEmbed {
+                    addField("Blacklisted Users", config.blackList.joinToString("\n") {
+                        jda.getUserById(it).asMention
+                    }, true)
+                }.complete()
+            } else {
+                channel.sendMessage("The blacklist is empty.").complete()
+            }
+
+        }
     }
 
     @CommandFunction(
