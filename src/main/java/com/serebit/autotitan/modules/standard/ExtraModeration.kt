@@ -17,7 +17,7 @@ class ExtraModeration {
     private val dataManager = DataManager(this::class.java)
 
     init {
-        map = dataManager.read("rolemap.json", GuildRoleMap::class.java) ?: GuildRoleMap()
+        map = dataManager.read<GuildRoleMap>("rolemap.json") ?: GuildRoleMap()
         dataManager.write("rolemap.json", map)
     }
 
