@@ -28,11 +28,13 @@ class Command private constructor(private val instance: Any, internal val method
     operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>): Any? =
             method.invoke(instance, evt, *parameters.toTypedArray())
 
-    fun looselyMatches(rawMessageContent: String) = rawMessageContent.split(" ")[0] == config.prefix + name
+    fun looselyMatches(rawMessageContent: String): Boolean {
+        return rawMessageContent.split(" ")[0] == config.prefix + name
+    }
 
     fun castParametersOrNull(evt: MessageReceivedEvent): List<Any>? {
         if (evt.message.rawContent.split(" ")[0] != config.prefix + name) return null
-        if (parameterTypes.size != getMessageStringParameters(evt.message.rawContent).size) return null
+        if (parameterTypes.size != tokenizeMessage(evt.message.rawContent).size) return null
         if (evt.author.idLong in config.blackList) return null
         val correctLocale = when (locale) {
             Locale.ALL -> true
@@ -55,7 +57,7 @@ class Command private constructor(private val instance: Any, internal val method
         } else null
     }
 
-    private fun getMessageStringParameters(message: String): List<String> {
+    private fun tokenizeMessage(message: String): List<String> {
         val trimmedMessage = message.removePrefix(config.prefix + name).trim()
         val splitParameters = trimmedMessage.split(" ").filter(String::isNotBlank)
         return if (delimitFinalParameter) {
@@ -69,7 +71,7 @@ class Command private constructor(private val instance: Any, internal val method
     }
 
     private fun castParameters(evt: MessageReceivedEvent): List<Any?> {
-        val strings = getMessageStringParameters(evt.message.rawContent)
+        val strings = tokenizeMessage(evt.message.rawContent)
         return parameterTypes.zip(strings).map { (type, string) ->
             castParameter(evt, type, string)
         }.toList()
