@@ -30,20 +30,15 @@ class EventListener(
     }
 
     private fun runCommands(evt: MessageReceivedEvent) {
-        if (evt.message.rawContent == "${config.prefix}help") sendCommandList(evt)
-        var parameters: List<Any>? = null
-        val command = commands.asSequence()
-                .filter {
-                    it.looselyMatches(evt.message.rawContent)
-                }
-                .filter {
-                    parameters = it.castParametersOrNull(evt)
-                    parameters != null
-                }
-                .firstOrNull()
-        if (command != null && parameters != null) {
-            command(evt, parameters as List<Any>)
+        if (evt.message.rawContent == "${config.prefix}help") {
+            sendCommandList(evt)
+            return
         }
+        val (command, parameters) = commands.asSequence()
+                .filter { it.looselyMatches(evt.message.rawContent) }
+                .associate { it to it.parseTokensOrNull(evt) }.entries
+                .firstOrNull { it.value != null } ?: return
+        command(evt, parameters!!)
     }
 
     private fun sendCommandList(evt: MessageReceivedEvent) {
