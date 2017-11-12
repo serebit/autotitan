@@ -2,5 +2,9 @@ package com.serebit.extensions.jda
 
 import net.dv8tion.jda.core.EmbedBuilder
 import net.dv8tion.jda.core.entities.MessageEmbed
+import java.time.OffsetDateTime
 
-fun embed(init: EmbedBuilder.() -> Unit): MessageEmbed = EmbedBuilder().apply(init).build()
+inline fun embed(init: EmbedBuilder.() -> Unit): MessageEmbed = EmbedBuilder().apply {
+    setTimestamp(OffsetDateTime.now())
+    init()
+}.build()
