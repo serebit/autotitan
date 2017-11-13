@@ -21,7 +21,6 @@ repositories {
 dependencies {
     compile group: "org.jetbrains.kotlin", name: "kotlin-stdlib-jre8"
     compile group: "org.jetbrains.kotlinx", name: "kotlinx-coroutines-core", version: "0.20-alpha-6"
-    compile group: "com.serebit", name: "autotitan-api", version: "0.2.0"
     compile group: "commons-validator", name: "commons-validator", version: "1.6"
     compile group: "net.dv8tion", name: "JDA", version: "3.3.1_292"
     compile group: "com.sedmelluq", name: "lavaplayer", version: "1.2.44"

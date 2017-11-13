@@ -1,8 +1,8 @@
 package com.serebit.autotitan.modules.standard
 
-import com.serebit.autotitan.api.Access
-import com.serebit.autotitan.api.annotations.CommandFunction
-import com.serebit.autotitan.api.annotations.ExtensionClass
+import com.serebit.autotitan.api.meta.Access
+import com.serebit.autotitan.api.meta.annotations.CommandFunction
+import com.serebit.autotitan.api.meta.annotations.ExtensionClass
 import com.serebit.autotitan.config
 import com.serebit.extensions.jda.sendEmbed
 import net.dv8tion.jda.core.EmbedBuilder

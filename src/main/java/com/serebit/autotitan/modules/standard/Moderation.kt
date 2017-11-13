@@ -1,9 +1,9 @@
 package com.serebit.autotitan.modules.standard
 
-import com.serebit.autotitan.api.Locale
-import com.serebit.autotitan.api.annotations.CommandFunction
-import com.serebit.autotitan.api.annotations.ExtensionClass
-import com.serebit.autotitan.api.annotations.ListenerFunction
+import com.serebit.autotitan.api.meta.Locale
+import com.serebit.autotitan.api.meta.annotations.CommandFunction
+import com.serebit.autotitan.api.meta.annotations.ExtensionClass
+import com.serebit.autotitan.api.meta.annotations.ListenerFunction
 import com.serebit.autotitan.data.DataManager
 import net.dv8tion.jda.core.JDA
 import net.dv8tion.jda.core.Permission

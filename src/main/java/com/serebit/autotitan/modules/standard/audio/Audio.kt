@@ -6,10 +6,10 @@ import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
-import com.serebit.autotitan.api.Locale
-import com.serebit.autotitan.api.annotations.CommandFunction
-import com.serebit.autotitan.api.annotations.ExtensionClass
-import com.serebit.autotitan.api.annotations.ListenerFunction
+import com.serebit.autotitan.api.meta.Locale
+import com.serebit.autotitan.api.meta.annotations.CommandFunction
+import com.serebit.autotitan.api.meta.annotations.ExtensionClass
+import com.serebit.autotitan.api.meta.annotations.ListenerFunction
 import com.serebit.extensions.jda.sendEmbed
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Guild

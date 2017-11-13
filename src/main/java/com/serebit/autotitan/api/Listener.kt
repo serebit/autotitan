@@ -1,6 +1,6 @@
 package com.serebit.autotitan.api
 
-import com.serebit.autotitan.api.annotations.ListenerFunction
+import com.serebit.autotitan.api.meta.annotations.ListenerFunction
 import net.dv8tion.jda.core.events.Event
 import java.lang.reflect.Method
 
