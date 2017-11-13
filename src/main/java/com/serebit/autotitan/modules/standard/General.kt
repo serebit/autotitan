@@ -62,37 +62,36 @@ class General {
     }
 
     @CommandFunction(description = "Gets information about the server.", locale = Locale.GUILD)
-    fun serverInfo(evt: MessageReceivedEvent): Unit = evt.run {
-        val onlineMemberCount = guild.members.count { it.onlineStatus != OnlineStatus.OFFLINE }.toString()
-        val hoistedRoles = guild.roles
-                .filter { it.name != "@everyone" && it.isHoisted }
-                .joinToString(", ") { it.name }
-        val embed = EmbedBuilder().apply {
-            setAuthor(guild.selfMember.effectiveName, null, jda.selfUser.effectiveAvatarUrl)
-            setTitle(guild.name, null)
-            setDescription("Created on ${guild.creationTime.format(dateFormat)}")
-            setThumbnail(guild.iconUrl)
-            setColor(guild.owner.color)
-            addField("Owner", guild.owner.asMention, true)
-            addField("Region", guild.region.toString(), true)
-            addField("Online Members", onlineMemberCount, true)
-            addField("Total Members", guild.members.size.toString(), true)
-            addField("Text Channels", guild.textChannels.size.toString(), true)
-            addField("Voice Channels", guild.voiceChannels.size.toString(), true)
-            addField("Hoisted Roles", hoistedRoles, true)
-            if (guild.selfMember.hasPermission(Permission.MANAGE_SERVER)) {
-                val permanentInvites = guild.invites.complete().filter { !it.isTemporary }
-                if (permanentInvites.isNotEmpty()) addField(
-                        "Invite Link",
-                        permanentInvites.first().url,
-                        false
-                )
-            }
-            setFooter("Server ID: ${guild.id}", null)
-            setTimestamp(OffsetDateTime.now())
-        }.build()
+    fun serverInfo(evt: MessageReceivedEvent) {
+        evt.run {
+            val onlineMemberCount = guild.members.count { it.onlineStatus != OnlineStatus.OFFLINE }.toString()
+            val hoistedRoles = guild.roles
+                    .filter { it.name != "@everyone" && it.isHoisted }
+                    .joinToString(", ") { it.name }
 
-        channel.sendMessage(embed).complete()
+            channel.sendEmbed {
+                setTitle(guild.name, null)
+                setDescription("Created on ${guild.creationTime.format(dateFormat)}")
+                setThumbnail(guild.iconUrl)
+                setColor(guild.owner.color)
+                addField("Owner", guild.owner.asMention, true)
+                addField("Region", guild.region.toString(), true)
+                addField("Online Members", onlineMemberCount, true)
+                addField("Total Members", guild.members.size.toString(), true)
+                addField("Text Channels", guild.textChannels.size.toString(), true)
+                addField("Voice Channels", guild.voiceChannels.size.toString(), true)
+                addField("Hoisted Roles", hoistedRoles, true)
+                if (guild.selfMember.hasPermission(Permission.MANAGE_SERVER)) {
+                    val permanentInvites = guild.invites.complete().filter { !it.isTemporary }
+                    if (permanentInvites.isNotEmpty()) addField(
+                            "Invite Link",
+                            permanentInvites.first().url,
+                            false
+                    )
+                }
+                setFooter("Server ID: ${guild.id}", null)
+            }
+        }
     }
 
     @CommandFunction(
