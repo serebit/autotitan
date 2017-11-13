@@ -16,6 +16,8 @@ import twitter4j.conf.ConfigurationBuilder
 import java.util.*
 import kotlin.concurrent.timer
 
+const val CHAR_LIMIT = 280
+
 @ExtensionClass(name = "Twitter")
 class TwitterExtension {
     private val twitterManagers = mutableMapOf<Long, TwitterManager>()
@@ -119,17 +121,17 @@ private class TwitterManager(val config: TwitterConfiguration) {
         }
     }
 
-    fun tweet(evt: MessageReceivedEvent, message: String) {
-        if (message.length <= 140) {
-            val tweet = Tweet(evt.textChannel, evt.author, message)
-            tweetQueue.add(tweet)
-            evt.channel.sendMessage(
-                    """${evt.author.asMention}, your tweet has been queued."""
-            ).complete()
-        } else {
-            evt.channel.sendMessage(
-                    """${evt.author.asMention}, your tweet is ${message.length - 140} characters
-                    too long!"""
+    fun tweet(evt: MessageReceivedEvent, status: String) {
+        evt.run {
+            if (status.length > CHAR_LIMIT) {
+                channel.sendMessage(
+                        "${author.asMention}, your tweet is ${status.length - CHAR_LIMIT} characters too long!"
+                ).complete()
+                return
+            }
+            tweetQueue.add(Tweet(textChannel, author, status))
+            channel.sendMessage(
+                    """${author.asMention}, your tweet has been queued."""
             ).complete()
         }
     }
