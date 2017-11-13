@@ -135,12 +135,11 @@ class General {
     }
 }
 
-private fun Long.toHumanReadableByteCount(): String {
-    val exponent = (Math.log(toDouble()) / 6.9).toInt()
-    val unit = listOf("B", "kB", "MB", "GB", "TB", "PB", "EB")[exponent]
-    return "%.1f $unit".format(this / Math.pow(1000.0, exponent.toDouble()))
-}
+private val Long.asHumanReadableByteCount: String
+    get() {
+        val exponent = (Math.log(toDouble()) / 6.908).toInt()
+        val unit = listOf("B", "kB", "MB", "GB", "TB", "PB", "EB")[exponent]
+        return "%.1f $unit".format(this / Math.pow(1000.0, exponent.toDouble()))
+    }
 
-private fun Boolean.toYesNo(): String {
-    return if (this) "yes" else "no"
-}
+private val Boolean.asYesNo get() = if (this) "yes" else "no"
