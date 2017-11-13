@@ -24,11 +24,11 @@ class TwitterExtension {
     private val dataManager = DataManager(this::class.java)
 
     init {
-        val storedConfig = dataManager.read("config.json", TwitterExtensionConfiguration::class.java)
+        val storedConfig = dataManager.read("config.json", ModuleConfiguration::class.java)
         if (storedConfig != null) restore(storedConfig)
     }
 
-    private fun restore(config: TwitterExtensionConfiguration) {
+    private fun restore(config: ModuleConfiguration) {
         config.map.forEach {
             twitterManagers.put(it.key, TwitterManager(it.value))
         }
@@ -40,21 +40,17 @@ class TwitterExtension {
     )
     fun initTwitter(
             evt: MessageReceivedEvent,
-            oAuthConsumerKey: String,
-            oAuthConsumerSecret: String,
-            oAuthAccessToken: String,
-            oAuthAccessTokenSecret: String
+            consumerKey: String,
+            consumerSecret: String,
+            accessToken: String,
+            accessTokenSecret: String
     ) {
-        twitterManagers.put(evt.guild.idLong, TwitterManager(TwitterConfiguration(
-                oAuthConsumerKey,
-                oAuthConsumerSecret,
-                oAuthAccessToken,
-                oAuthAccessTokenSecret
-        )))
+        twitterManagers.put(
+                evt.guild.idLong,
+                TwitterManager(ApiConfiguration(consumerKey,consumerSecret,accessToken,accessTokenSecret))
+        )
 
-        dataManager.write("config.json", TwitterExtensionConfiguration(
-                twitterManagers.map { it.key to it.value.config }.toMap()
-        ))
+        dataManager.write("config.json", twitterManagers.configuration)
 
         evt.message.delete().complete()
         evt.channel.sendMessage("Twitter has been initialized.").complete()
@@ -76,18 +72,16 @@ class TwitterExtension {
     }
 }
 
-private class TwitterManager(val config: TwitterConfiguration) {
+private class TwitterManager(val config: ApiConfiguration) {
     private var twitter: Twitter? = null
     private var scheduler: Timer? = null
     private val tweetQueue = mutableListOf<Tweet>()
     val queue: MessageEmbed
         get() = EmbedBuilder().apply {
             setTitle("Tweet Queue")
-            var description = ""
-            tweetQueue.forEach {
-                description += "${it.user.asMention}: \"${it.message}\"\n"
-            }
-            setDescription(description)
+            setDescription(tweetQueue.joinToString("\n") {
+                "${it.user.asMention}: `${it.message}`"
+            })
         }.build()
 
     init {
@@ -137,19 +131,23 @@ private class TwitterManager(val config: TwitterConfiguration) {
     }
 }
 
+private val MutableMap<Long, TwitterManager>.configuration get() = ModuleConfiguration(
+        map { it.key to it.value.config }.toMap()
+)
+
 private data class Tweet(
         val channel: TextChannel,
         val user: User,
         val message: String
 )
 
-private data class TwitterConfiguration(
+private data class ApiConfiguration(
         val oAuthConsumerKey: String,
         val oAuthConsumerSecret: String,
         val oAuthAccessToken: String,
         val oAuthAccessTokenSecret: String
 )
 
-private data class TwitterExtensionConfiguration(
-        val map: Map<Long, TwitterConfiguration>
+private data class ModuleConfiguration(
+        val map: Map<Long, ApiConfiguration>
 )
