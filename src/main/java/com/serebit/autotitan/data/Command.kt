@@ -21,13 +21,13 @@ class Command(
     } else {
         method.name
     }.toLowerCase()
-    private val description = if (info.description.isNotBlank()) info.description else "No description provided."
+    private val description = if (info.description.isNotBlank()) info.description else ""
     private val access = info.access
     private val locale = info.locale
     private val delimitFinalParameter = info.delimitFinalParameter
     private val hidden = info.hidden
     private val permissions = info.permissions
-    val helpMessage = if (hidden) "" else "`$name` - $description"
+    val helpMessage = if (hidden) "" else "`$name`" + if (description.isNotEmpty()) "- $description" else ""
 
     operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>): Any? =
             method.invoke(instance, evt, *parameters.toTypedArray())
