@@ -3,38 +3,45 @@ package com.serebit.autotitan.modules.standard
 import com.serebit.autotitan.api.Locale
 import com.serebit.autotitan.api.annotations.CommandFunction
 import com.serebit.autotitan.api.annotations.ExtensionClass
-import net.dv8tion.jda.core.EmbedBuilder
+import com.serebit.extensions.jda.sendEmbed
 import net.dv8tion.jda.core.OnlineStatus
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import oshi.SystemInfo
-import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
 @ExtensionClass
 class General {
     private val dateFormat = DateTimeFormatter.ofPattern("d MMM, yyyy")
-    private val systemInfo get() = SystemInfo().run {
-        val format = { it: Map.Entry<String, String> ->
-            "${it.key}: `${it.value}`"
+    private val systemInfo by lazy {
+        SystemInfo().run {
+            val formatKeyValuePair = { it: Map.Entry<String, String> ->
+                "${it.key}: `${it.value}`"
+            }
+            val format = { it: String ->
+                it.replace('_', ' ')
+                        .replace("(R)", "\u00AE")
+                        .replace("(TM)", "\u2122")
+            }
+
+            mapOf(
+                    "Hardware" to mapOf(
+                            "Processor" to format(hardware.processor.name),
+                            "Motherboard" to format(hardware.computerSystem.baseboard.model),
+                            "Disk" to format(hardware.diskStores[0].model),
+                            "Total Memory" to hardware.memory.total.asHumanReadableByteCount
+                    ).asIterable().joinToString("\n", transform = formatKeyValuePair),
+                    "Operating System" to mapOf(
+                            "Name" to operatingSystem.family,
+                            "Version" to operatingSystem.version.toString()
+                    ).asIterable().joinToString("\n", transform = formatKeyValuePair),
+                    "Java" to mapOf(
+                            "Vendor" to System.getProperty("java.vendor"),
+                            "Version" to System.getProperty("java.version")
+                    ).asIterable().joinToString("\n", transform = formatKeyValuePair)
+            )
         }
-        mapOf(
-                "Hardware" to mapOf(
-                        "Processor" to hardware.processor.name,
-                        "Motherboard" to hardware.computerSystem.baseboard.model,
-                        "Disk" to hardware.diskStores[0].model,
-                        "Total Memory" to hardware.memory.total.toHumanReadableByteCount()
-                ).asIterable().joinToString("\n", transform = format),
-                "Operating System" to mapOf(
-                        "Name" to operatingSystem.family,
-                        "Version" to operatingSystem.version.toString()
-                ).asIterable().joinToString("\n", transform = format),
-                "Java" to mapOf(
-                        "Vendor" to System.getProperty("java.vendor"),
-                        "Version" to System.getProperty("java.version")
-                ).asIterable().joinToString("\n", transform = format)
-        )
     }
 
     @CommandFunction(description = "Pings the bot.")
