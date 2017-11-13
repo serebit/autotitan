@@ -10,11 +10,13 @@ val serializer: Gson = GsonBuilder().apply {
 
 class DataManager(type: Class<*>) {
     private val parentFolder = File(DataManager::class.java.protectionDomain.codeSource.location.toURI()).parentFile
-    val dataFolder = File("$parentFolder/data/${type.simpleName}").apply { mkdirs() }
+    private val dataFolder = File("$parentFolder/data/${type.simpleName}").apply { mkdirs() }
 
-    inline fun <reified T> read(fileName: String): T? {
+    inline fun <reified T : Any> read(fileName: String): T? = read(fileName, T::class.java)
+
+    fun <T : Any> read(fileName: String, type: Class<T>): T? {
         val file = File("$dataFolder/$fileName")
-        return if (file.exists()) serializer.fromJson(file.readText(), T::class.java) else null
+        return if (file.exists()) serializer.fromJson(file.readText(), type) else null
     }
 
     fun write(fileName: String, obj: Any) {
