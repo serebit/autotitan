@@ -94,41 +94,39 @@ class General {
         }
     }
 
-    @CommandFunction(
-            description = "Gets information about the invoker.",
-            locale = Locale.GUILD
-    )
+    @CommandFunction(description = "Gets information about the invoker.", locale = Locale.GUILD)
     fun selfInfo(evt: MessageReceivedEvent) = memberInfo(evt, evt.member)
 
-    @CommandFunction(
-            description = "Gets information about a specific server member.",
-            locale = Locale.GUILD
-    )
-    fun memberInfo(evt: MessageReceivedEvent, member: Member): Unit = evt.run {
-        val onlineStatus = member.onlineStatus.name
-                .toLowerCase()
-                .replace("_", " ")
-                .capitalize()
-        val roles = if (member.roles.isNotEmpty()) {
-            member.roles.joinToString(", ") { it.name }
-        } else "None"
+    @CommandFunction(description = "Gets information about a specific server member.", locale = Locale.GUILD)
+    fun memberInfo(evt: MessageReceivedEvent, member: Member) {
+        evt.run {
+            val title = "${member.user.name}#${member.user.discriminator}" + if (member.nickname != null) {
+                " (${member.nickname})"
+            } else {
+                ""
+            }
+            val status = member.onlineStatus.name
+                    .toLowerCase()
+                    .replace("_", " ")
+                    .capitalize()
+                    .plus(if (member.game != null) " - Playing ${member.game?.name}" else "")
+            val roles = if (member.roles.isNotEmpty()) {
+                member.roles.joinToString(", ") { it.name }
+            } else null
 
-        val embed = EmbedBuilder().apply {
-            setTitle("${member.user.name}#${member.user.discriminator} (${member.effectiveName})", null)
-            setDescription("$onlineStatus - Playing ${member.game?.name ?: "nothing"}")
-            setColor(member.color)
-            setThumbnail(member.user.effectiveAvatarUrl)
-            addField("Joined Discord", member.user.creationTime.format(dateFormat), true)
-            addField("Joined this Server", member.joinDate.format(dateFormat), true)
-            addField("Roles", roles, true)
-            addField("Do they own the server?", member.isOwner.toYesNo().capitalize(), true)
-            addField("Are they a bot?", member.user.isBot.toYesNo().capitalize(), true)
-            addField("Are they fake?", member.user.isFake.toYesNo().capitalize(), true)
-            setFooter("User ID: ${member.user.id}", null)
-            setTimestamp(OffsetDateTime.now())
-        }.build()
-
-        channel.sendMessage(embed).complete()
+            channel.sendEmbed {
+                setTitle(title, null)
+                setDescription(status)
+                setColor(member.color)
+                setThumbnail(member.user.effectiveAvatarUrl)
+                addField("Joined Discord", member.user.creationTime.format(dateFormat), true)
+                addField("Joined this Server", member.joinDate.format(dateFormat), true)
+                if (roles != null) addField("Roles", roles, true)
+                addField("Do they own the server?", member.isOwner.asYesNo.capitalize(), true)
+                addField("Are they a bot?", member.user.isBot.asYesNo.capitalize(), true)
+                setFooter("User ID: ${member.user.id}", null)
+            }.complete()
+        }
     }
 }
 
