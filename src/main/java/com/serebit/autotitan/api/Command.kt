@@ -69,8 +69,8 @@ class Command(
             splitParameters
         } else {
             listOf(
-                    *splitParameters.slice(0..(parameterTypes.size - 2)).toTypedArray(),
-                    splitParameters.drop(parameterTypes.size - 1).joinToString(" ")
+                    *splitParameters.slice(0..(parameterTypes.size - 1)).toTypedArray(),
+                    splitParameters.drop(parameterTypes.size).joinToString(" ")
             )
         }.filter(String::isNotBlank)
     }
