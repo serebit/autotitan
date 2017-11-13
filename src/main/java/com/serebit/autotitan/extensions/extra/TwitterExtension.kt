@@ -1,9 +1,9 @@
 package com.serebit.autotitan.extensions.extra
 
-import com.serebit.autotitan.api.Access
-import com.serebit.autotitan.api.Locale
-import com.serebit.autotitan.api.annotations.CommandFunction
-import com.serebit.autotitan.api.annotations.ExtensionClass
+import com.serebit.autotitan.api.meta.Access
+import com.serebit.autotitan.api.meta.Locale
+import com.serebit.autotitan.api.meta.annotations.CommandFunction
+import com.serebit.autotitan.api.meta.annotations.ExtensionClass
 import com.serebit.autotitan.data.DataManager
 import net.dv8tion.jda.core.EmbedBuilder
 import net.dv8tion.jda.core.entities.MessageEmbed
@@ -16,8 +16,7 @@ import twitter4j.conf.ConfigurationBuilder
 import java.util.*
 import kotlin.concurrent.timer
 
-
-@ExtensionClass
+@ExtensionClass(name = "Twitter")
 class TwitterExtension {
     private val twitterManagers = mutableMapOf<Long, TwitterManager>()
     private val dataManager = DataManager(this::class.java)

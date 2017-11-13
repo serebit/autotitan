@@ -1,8 +1,8 @@
-package com.serebit.autotitan.data
+package com.serebit.autotitan.api
 
-import com.serebit.autotitan.api.Access
-import com.serebit.autotitan.api.Locale
-import com.serebit.autotitan.api.annotations.CommandFunction
+import com.serebit.autotitan.api.meta.Access
+import com.serebit.autotitan.api.meta.Locale
+import com.serebit.autotitan.api.meta.annotations.CommandFunction
 import com.serebit.autotitan.config
 import net.dv8tion.jda.core.entities.Channel
 import net.dv8tion.jda.core.entities.Member
@@ -10,36 +10,44 @@ import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import java.lang.reflect.Method
 
-class Command private constructor(private val instance: Any, internal val method: Method, info: CommandFunction) {
-    private val parameterTypes: List<Class<*>> = method.parameterTypes.drop(1)
+class Command(
+        private val instance: Any,
+        internal val method: Method,
+        info: CommandFunction
+) {
+    private val parameterTypes: List<Class<out Any>> = method.parameterTypes.drop(1).toList()
     val name = if (info.name.isNotEmpty()) {
         info.name
     } else {
         method.name
     }.toLowerCase()
-    private val description = if (info.description.isNotBlank()) info.description else "No description provided."
+    private val description = if (info.description.isNotBlank()) info.description else ""
     private val access = info.access
     private val locale = info.locale
     private val delimitFinalParameter = info.delimitFinalParameter
     private val hidden = info.hidden
     private val permissions = info.permissions
-    val helpMessage = if (hidden) "" else "`$name` - $description"
+    val helpMessage = if (hidden) "" else "`$name`" + if (description.isNotEmpty()) "- $description" else ""
 
     operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>): Any? =
             method.invoke(instance, evt, *parameters.toTypedArray())
 
-    fun looselyMatches(rawMessageContent: String) = rawMessageContent.split(" ")[0] == config.prefix + name
+    fun looselyMatches(rawMessageContent: String): Boolean {
+        return rawMessageContent.split(" ")[0] == config.prefix + name
+    }
 
-    fun castParametersOrNull(evt: MessageReceivedEvent): List<Any>? {
-        if (evt.message.rawContent.split(" ")[0] != config.prefix + name) return null
-        if (parameterTypes.size != getMessageStringParameters(evt.message.rawContent).size) return null
+    fun parseTokensOrNull(evt: MessageReceivedEvent): List<Any>? {
+        val tokens = tokenizeMessage(evt.message.rawContent)
+        if (tokens[0] != config.prefix + name) return null
+        if (parameterTypes.size != tokens.size - 1) return null
         if (evt.author.idLong in config.blackList) return null
+        if (evt.guild != null && !evt.member.hasPermission(permissions.toMutableList())) return null
+
         val correctLocale = when (locale) {
             Locale.ALL -> true
             Locale.GUILD -> evt.guild != null
             Locale.PRIVATE_CHANNEL -> evt.guild == null
         }
-        val hasPermissions = if (evt.guild != null) evt.member.hasPermission(permissions.toMutableList()) else true
         val hasAccess = when (access) {
             Access.ALL -> true
             Access.GUILD_OWNER -> evt.member == evt.guild?.owner
@@ -49,33 +57,36 @@ class Command private constructor(private val instance: Any, internal val method
             Access.RANK_BELOW -> TODO("Not yet implemented.")
         }
 
-        return if (correctLocale && hasPermissions && hasAccess) {
-            val castParameters = castParameters(evt)
-            if (castParameters.any { it == null }) null else castParameters.filterNotNull()
+        return if (correctLocale && hasAccess) {
+            val parsedTokens = parseTokens(evt, tokens)
+            if (parsedTokens.any { it == null }) null else parsedTokens.filterNotNull()
         } else null
     }
 
-    private fun getMessageStringParameters(message: String): List<String> {
-        val trimmedMessage = message.removePrefix(config.prefix + name).trim()
-        val splitParameters = trimmedMessage.split(" ").filter(String::isNotBlank)
+    private fun tokenizeMessage(message: String): List<String> {
+        val splitParameters = message.split(" ").filter(String::isNotBlank)
         return if (delimitFinalParameter) {
             splitParameters
         } else {
-            mutableListOf(
+            listOf(
                     *splitParameters.slice(0..(parameterTypes.size - 2)).toTypedArray(),
                     splitParameters.drop(parameterTypes.size - 1).joinToString(" ")
             )
         }.filter(String::isNotBlank)
     }
 
-    private fun castParameters(evt: MessageReceivedEvent): List<Any?> {
-        val strings = getMessageStringParameters(evt.message.rawContent)
-        return parameterTypes.zip(strings).map { (type, string) ->
+    private fun parseTokens(evt: MessageReceivedEvent, tokens: List<String>): List<Any?> {
+        return parameterTypes.zip(tokens.drop(1)).map { (type, string) ->
             castParameter(evt, type, string)
-        }.toList()
+        }
     }
 
-    private fun castParameter(evt: MessageReceivedEvent, type: Class<*>, string: String): Any? = when (type) {
+    private fun castParameter(
+            evt: MessageReceivedEvent,
+            type: Class<out Any>,
+            string: String
+    ): Any? = when (type) {
+        String::class.java -> string
         Int::class.java -> string.toIntOrNull()
         Long::class.java -> string.toLongOrNull()
         Double::class.java -> string.toDoubleOrNull()
@@ -88,20 +99,21 @@ class Command private constructor(private val instance: Any, internal val method
         Char::class.java -> if (string.length == 1) string[0] else null
         User::class.java -> {
             evt.jda.getUserById(string
-                    .removePrefix("<@")
+                    .removeSurrounding("<@", ">")
                     .removePrefix("!")
-                    .removeSuffix(">")
             )
         }
         Member::class.java -> {
             evt.guild.getMemberById(string
-                    .removePrefix("<@")
+                    .removeSurrounding("<@", ">")
                     .removePrefix("!")
-                    .removeSuffix(">")
             )
         }
-        Channel::class.java -> evt.guild.getTextChannelById(string)
-        String::class.java -> string
+        Channel::class.java -> {
+            evt.guild.getTextChannelById(
+                    string.removeSurrounding("<#", ">")
+            )
+        }
         else -> null
     }
 
@@ -126,16 +138,12 @@ class Command private constructor(private val instance: Any, internal val method
         }
 
         internal fun isValid(method: Method): Boolean {
-            return if (method.parameterTypes.isNotEmpty()) {
-                val hasAnnotation = method.isAnnotationPresent(CommandFunction::class.java)
-                val hasEventParameter = method.parameterTypes[0] == MessageReceivedEvent::class.java
-                val hasValidParameterTypes by lazy {
-                    method.parameterTypes
-                            .drop(1)
-                            .all { it in validParameterTypes }
-                }
-                hasAnnotation && hasEventParameter && hasValidParameterTypes
-            } else false
+            if (method.parameterTypes.isEmpty()) return false
+            if (!method.isAnnotationPresent(CommandFunction::class.java)) return false
+            if (method.parameterTypes[0] != MessageReceivedEvent::class.java) return false
+            return method.parameterTypes
+                    .drop(1)
+                    .all { it in validParameterTypes }
         }
     }
 }

@@ -1,4 +1,4 @@
-package com.serebit.autotitan.extensions
+package com.serebit.extensions.jda
 
 import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDA

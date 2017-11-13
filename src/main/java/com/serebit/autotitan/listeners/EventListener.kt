@@ -1,11 +1,11 @@
 package com.serebit.autotitan.listeners
 
+import com.serebit.autotitan.api.Command
+import com.serebit.autotitan.api.Listener
 import com.serebit.autotitan.config
-import com.serebit.autotitan.data.Command
-import com.serebit.autotitan.data.Listener
+import com.serebit.extensions.jda.sendEmbed
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.launch
-import net.dv8tion.jda.core.EmbedBuilder
 import net.dv8tion.jda.core.events.Event
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import net.dv8tion.jda.core.hooks.ListenerAdapter
@@ -30,32 +30,28 @@ class EventListener(
     }
 
     private fun runCommands(evt: MessageReceivedEvent) {
-        if (evt.message.rawContent == "${config.prefix}help") sendCommandList(evt)
-        var parameters: List<Any>? = null
-        val command = commands.asSequence()
-                .filter {
-                    it.looselyMatches(evt.message.rawContent)
-                }
-                .filter {
-                    parameters = it.castParametersOrNull(evt)
-                    parameters != null
-                }
-                .firstOrNull()
-        if (command != null && parameters != null) {
-            command(evt, parameters as List<Any>)
+        if (evt.message.rawContent == "${config.prefix}help") {
+            sendCommandList(evt)
+            return
         }
+        val (command, parameters) = commands.asSequence()
+                .filter { it.looselyMatches(evt.message.rawContent) }
+                .associate { it to it.parseTokensOrNull(evt) }.entries
+                .firstOrNull { it.value != null } ?: return
+        command(evt, parameters!!)
     }
 
     private fun sendCommandList(evt: MessageReceivedEvent) {
-        val embed = EmbedBuilder().apply {
-            setColor(evt.guild?.selfMember?.color)
-            commands.sortedBy { it.name }.groupBy { it.method.declaringClass }.forEach {
-                addField(it.key.simpleName, it.value.joinToString("\n") {
-                    it.helpMessage
-                }, false)
-            }
-        }.build()
-
-        evt.channel.sendMessage(embed).queue()
+        evt.run {
+            channel.sendEmbed {
+                setColor(guild?.selfMember?.color)
+                commands.sortedBy { it.name }
+                        .groupBy { it.method.declaringClass.simpleName }.entries
+                        .sortedBy { it.key }
+                        .forEach { (extension, commands) ->
+                            addField(extension, commands.joinToString("\n") { it.helpMessage }, false)
+                        }
+            }.complete()
+        }
     }
 }

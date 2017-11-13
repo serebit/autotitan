@@ -1,8 +1,8 @@
 package com.serebit.autotitan.extensions.extra
 
-import com.serebit.autotitan.api.Locale
-import com.serebit.autotitan.api.annotations.CommandFunction
-import com.serebit.autotitan.api.annotations.ExtensionClass
+import com.serebit.autotitan.api.meta.Locale
+import com.serebit.autotitan.api.meta.annotations.CommandFunction
+import com.serebit.autotitan.api.meta.annotations.ExtensionClass
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 

@@ -1,9 +1,9 @@
 package com.serebit.autotitan
 
-import com.serebit.autotitan.data.commands
-import com.serebit.autotitan.data.listeners
-import com.serebit.autotitan.extensions.jda
+import com.serebit.autotitan.api.commands
+import com.serebit.autotitan.api.listeners
 import com.serebit.autotitan.listeners.EventListener
+import com.serebit.extensions.jda.jda
 import net.dv8tion.jda.core.AccountType
 
 const val NAME = "Spyglass"
