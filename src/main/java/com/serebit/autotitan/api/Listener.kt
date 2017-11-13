@@ -1,4 +1,4 @@
-package com.serebit.autotitan.data
+package com.serebit.autotitan.api
 
 import com.serebit.autotitan.api.annotations.ListenerFunction
 import net.dv8tion.jda.core.events.Event

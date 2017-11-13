@@ -1,7 +1,5 @@
-package com.serebit.autotitan.data
+package com.serebit.autotitan.api
 
-import com.serebit.autotitan.api.Access
-import com.serebit.autotitan.api.Locale
 import com.serebit.autotitan.api.annotations.CommandFunction
 import com.serebit.autotitan.config
 import net.dv8tion.jda.core.entities.Channel

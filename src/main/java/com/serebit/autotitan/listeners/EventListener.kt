@@ -1,8 +1,8 @@
 package com.serebit.autotitan.listeners
 
+import com.serebit.autotitan.api.Command
+import com.serebit.autotitan.api.Listener
 import com.serebit.autotitan.config
-import com.serebit.autotitan.data.Command
-import com.serebit.autotitan.data.Listener
 import com.serebit.extensions.jda.sendEmbed
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.launch

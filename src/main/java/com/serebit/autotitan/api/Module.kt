@@ -1,4 +1,4 @@
-package com.serebit.autotitan.data
+package com.serebit.autotitan.api
 
 import com.google.common.reflect.ClassPath
 
