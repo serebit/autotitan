@@ -50,17 +50,15 @@ class General {
     }
 
     @CommandFunction(description = "Gets information about the system that the bot is running on.")
-    fun systemInfo(evt: MessageReceivedEvent): Unit = evt.run {
-        val embed = EmbedBuilder().apply {
-            setAuthor(guild.selfMember.effectiveName, null, jda.selfUser.effectiveAvatarUrl)
-            setColor(guild?.getMember(jda.selfUser)?.color)
-            systemInfo.forEach { key, value ->
-                addField(key, value, true)
+    fun systemInfo(evt: MessageReceivedEvent) {
+        evt.run {
+            channel.sendEmbed {
+                setColor(guild?.getMember(jda.selfUser)?.color)
+                systemInfo.forEach { key, value ->
+                    addField(key, value, true)
+                }
             }
-            setTimestamp(OffsetDateTime.now())
-        }.build()
-
-        channel.sendMessage(embed).complete()
+        }
     }
 
     @CommandFunction(description = "Gets information about the server.", locale = Locale.GUILD)
