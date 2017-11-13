@@ -57,7 +57,7 @@ class General {
                 systemInfo.forEach { key, value ->
                     addField(key, value, true)
                 }
-            }
+            }.complete()
         }
     }
 
@@ -90,7 +90,7 @@ class General {
                     )
                 }
                 setFooter("Server ID: ${guild.id}", null)
-            }
+            }.complete()
         }
     }
 
