@@ -1,4 +1,4 @@
-package com.serebit.autotitan.extensions.extra
+package com.serebit.autotitan.modules.extra
 
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.meta.Locale
