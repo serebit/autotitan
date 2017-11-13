@@ -65,7 +65,7 @@ class Audio {
             locale = Locale.GUILD,
             delimitFinalParameter = false
     )
-    fun play(evt: MessageReceivedEvent, linkOrSearchTerms: String) {
+    fun play(evt: MessageReceivedEvent, query: String) {
         evt.run {
             val voiceStatus = voiceStatus(evt, false)
             when (voiceStatus) {
@@ -73,16 +73,16 @@ class Audio {
                     channel.sendMessage(voiceStatus.errorMessage).complete()
                     return
                 }
-                VoiceStatus.SELF_NOT_CONNECTED -> connectToVoiceChannel(guild.audioManager, evt.member.voiceState.channel)
+                VoiceStatus.SELF_NOT_CONNECTED -> connectToVoiceChannel(guild.audioManager, member.voiceState.channel)
                 else -> Unit
             }
             val audioManager = guild.getMusicManager()
-            val formattedLinkOrSearchTerms = if (urlValidator.isValid(linkOrSearchTerms)) {
-                linkOrSearchTerms
+            val formattedQuery = if (urlValidator.isValid(query)) {
+                query
             } else {
-                "ytsearch:$linkOrSearchTerms"
+                "ytsearch:$query"
             }
-            playerManager.loadItemOrdered(audioManager, formattedLinkOrSearchTerms, object : AudioLoadResultHandler {
+            playerManager.loadItemOrdered(audioManager, formattedQuery, object : AudioLoadResultHandler {
                 override fun trackLoaded(track: AudioTrack) {
                     channel.sendMessage("Adding ${track.info.title} to queue.").complete()
                     audioManager.scheduler.addToQueue(track)
