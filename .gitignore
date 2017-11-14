@@ -1,8 +1,3 @@
-*.class
-
-# Package Files
-*.jar
-
 # IntelliJ IDEA Files
 *.iml
 .idea/

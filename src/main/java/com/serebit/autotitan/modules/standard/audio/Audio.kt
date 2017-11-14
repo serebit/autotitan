@@ -118,12 +118,12 @@ class Audio {
         evt.run {
             if (voiceStatus(evt, true) != VoiceStatus.CONNECTED_SAME_CHANNEL) return
             val audioManager = guild.getMusicManager()
-            if (audioManager.scheduler.queue.isNotEmpty()) {
-                audioManager.scheduler.skipTrack()
-                channel.sendMessage("Skipped to next track.").complete()
-            } else {
+            if (audioManager.scheduler.queue.isEmpty()) {
                 channel.sendMessage("Cannot skip. No tracks are queued.").complete()
+                return
             }
+            audioManager.scheduler.skipTrack()
+            channel.sendMessage("Skipped to next track.").complete()
         }
     }
 

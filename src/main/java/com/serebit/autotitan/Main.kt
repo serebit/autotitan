@@ -1,13 +1,25 @@
 package com.serebit.autotitan
 
-import com.serebit.autotitan.api.commands
-import com.serebit.autotitan.api.listeners
+import com.google.common.reflect.ClassPath
+import com.serebit.autotitan.api.Command
+import com.serebit.autotitan.api.Listener
+import com.serebit.autotitan.api.generateModule
 import com.serebit.autotitan.listeners.EventListener
 import com.serebit.extensions.jda.jda
 import net.dv8tion.jda.core.AccountType
 
 const val NAME = "AutoTitan"
 const val VERSION = "0.3.2"
+val modules = ClassPath
+        .from(Thread.currentThread().contextClassLoader)
+        .getTopLevelClassesRecursive("com.serebit.autotitan.modules")
+        .mapNotNull { generateModule(it.load()) }
+val commands = modules.map { instance ->
+    instance::class.java.methods.mapNotNull { Command.generate(instance, it) }
+}.flatten()
+val listeners = modules.map { instance ->
+    instance::class.java.methods.mapNotNull { Listener.generate(instance, it) }
+}.flatten()
 
 fun main(args: Array<String>) {
     val jda = jda(AccountType.BOT) {

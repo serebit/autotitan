@@ -45,8 +45,10 @@ class General {
     }
 
     @CommandFunction(description = "Pings the bot.")
-    fun ping(evt: MessageReceivedEvent): Unit = evt.run {
-        channel.sendMessage("Pong. The last ping was ${jda.ping}ms.").complete()
+    fun ping(evt: MessageReceivedEvent) {
+        evt.run {
+            channel.sendMessage("Pong. The last ping was ${jda.ping}ms.").complete()
+        }
     }
 
     @CommandFunction(description = "Gets information about the system that the bot is running on.")
@@ -64,7 +66,7 @@ class General {
     @CommandFunction(description = "Gets information about the server.", locale = Locale.GUILD)
     fun serverInfo(evt: MessageReceivedEvent) {
         evt.run {
-            val onlineMemberCount = guild.members.count { it.onlineStatus != OnlineStatus.OFFLINE }.toString()
+            val onlineMemberCount = guild.members.count { it.onlineStatus != OnlineStatus.OFFLINE }
             val hoistedRoles = guild.roles
                     .filter { it.name != "@everyone" && it.isHoisted }
                     .joinToString(", ") { it.name }
@@ -76,7 +78,7 @@ class General {
                 setColor(guild.owner.color)
                 addField("Owner", guild.owner.asMention, true)
                 addField("Region", guild.region.toString(), true)
-                addField("Online Members", onlineMemberCount, true)
+                addField("Online Members", onlineMemberCount.toString(), true)
                 addField("Total Members", guild.members.size.toString(), true)
                 addField("Text Channels", guild.textChannels.size.toString(), true)
                 addField("Voice Channels", guild.voiceChannels.size.toString(), true)

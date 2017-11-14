@@ -17,7 +17,7 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 @ExtensionClass
 class Moderation {
     private val dataManager = DataManager(this::class.java)
-    private val map: GuildRoleMap = dataManager.read<GuildRoleMap>("rolemap.json") ?: GuildRoleMap()
+    private val map: GuildRoleMap = dataManager.read("rolemap.json") ?: GuildRoleMap()
 
     init {
         dataManager.write("rolemap.json", map)
@@ -28,9 +28,11 @@ class Moderation {
             locale = Locale.GUILD,
             permissions = arrayOf(Permission.KICK_MEMBERS)
     )
-    fun kick(evt: MessageReceivedEvent, member: Member): Unit = evt.run {
-        guild.controller.kick(member).complete()
-        channel.sendMessage("Kicked ${member.effectiveName}.").complete()
+    fun kick(evt: MessageReceivedEvent, member: Member) {
+        evt.run {
+            guild.controller.kick(member).complete()
+            channel.sendMessage("Kicked ${member.effectiveName}.").complete()
+        }
     }
 
     @CommandFunction(
@@ -38,9 +40,11 @@ class Moderation {
             locale = Locale.GUILD,
             permissions = arrayOf(Permission.BAN_MEMBERS)
     )
-    fun ban(evt: MessageReceivedEvent, user: User): Unit = evt.run {
-        guild.controller.ban(user, 0).complete()
-        channel.sendMessage("Banned ${user.name}.")
+    fun ban(evt: MessageReceivedEvent, user: User) {
+        evt.run {
+            guild.controller.ban(user, 0).complete()
+            channel.sendMessage("Banned ${user.name}.")
+        }
     }
 
     @CommandFunction(
@@ -48,9 +52,11 @@ class Moderation {
             locale = Locale.GUILD,
             permissions = arrayOf(Permission.BAN_MEMBERS)
     )
-    fun unBan(evt: MessageReceivedEvent, user: User): Unit = evt.run {
-        guild.controller.unban(user).complete()
-        channel.sendMessage("Unbanned ${user.name}.").complete()
+    fun unBan(evt: MessageReceivedEvent, user: User) {
+        evt.run {
+            guild.controller.unban(user).complete()
+            channel.sendMessage("Unbanned ${user.name}.").complete()
+        }
     }
 
     @CommandFunction(
@@ -58,12 +64,15 @@ class Moderation {
             locale = Locale.GUILD,
             permissions = arrayOf(Permission.MESSAGE_MANAGE)
     )
-    fun cleanUp(evt: MessageReceivedEvent, number: Int): Unit = evt.run {
-        if (number in 1..99) {
-            val messages = textChannel.history.retrievePast(number + 1).complete()
-            textChannel.deleteMessages(messages).complete()
-        } else {
-            textChannel.sendMessage("The number has to be in the range of `1..99`.").complete()
+    fun cleanUp(evt: MessageReceivedEvent, number: Int) {
+        evt.run {
+            if (number !in 1..99) {
+                channel.sendMessage("The number has to be in the range of `1..99`.").complete()
+                return
+            } else {
+                val messages = textChannel.history.retrievePast(number + 1).complete()
+                textChannel.deleteMessages(messages).complete()
+            }
         }
     }
 

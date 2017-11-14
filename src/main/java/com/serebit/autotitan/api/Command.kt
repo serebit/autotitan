@@ -32,9 +32,7 @@ class Command(
     operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>): Any? =
             method.invoke(instance, evt, *parameters.toTypedArray())
 
-    fun looselyMatches(rawMessageContent: String): Boolean {
-        return rawMessageContent.split(" ")[0] == config.prefix + name
-    }
+    fun looselyMatches(rawMessageContent: String): Boolean = rawMessageContent.split(" ")[0] == config.prefix + name
 
     fun parseTokensOrNull(evt: MessageReceivedEvent): List<Any>? {
         val tokens = tokenizeMessage(evt.message.rawContent)
