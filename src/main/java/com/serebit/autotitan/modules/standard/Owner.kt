@@ -6,7 +6,6 @@ import com.serebit.autotitan.api.meta.annotations.ExtensionClass
 import com.serebit.autotitan.config
 import com.serebit.autotitan.resetJda
 import com.serebit.extensions.jda.sendEmbed
-import net.dv8tion.jda.core.EmbedBuilder
 import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import java.time.OffsetDateTime
@@ -114,8 +113,6 @@ class Owner {
                     jda.getUserById(it).asMention
                 }, true)
             }.complete()
-
-
         }
     }
 
@@ -138,8 +135,7 @@ class Owner {
     fun serverList(evt: MessageReceivedEvent) {
         evt.run {
             val color = guild?.selfMember?.color
-            val embedBuilder = EmbedBuilder()
-            embedBuilder.apply {
+            channel.sendEmbed {
                 setColor(color)
                 jda.guilds.forEach {
                     addField(
@@ -149,8 +145,7 @@ class Owner {
                     )
                 }
                 setTimestamp(OffsetDateTime.now())
-            }
-            channel.sendMessage(embedBuilder.build()).complete()
+            }.complete()
         }
     }
 
