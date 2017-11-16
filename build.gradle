@@ -1,28 +1,24 @@
 plugins {
-    id "maven"
-    id "org.jetbrains.kotlin.jvm" version "1.1.51"
+    id "org.jetbrains.kotlin.jvm" version "1.1.60"
     id "com.github.johnrengelman.shadow" version "2.0.1"
     id 'com.github.ben-manes.versions' version '0.17.0'
-    id "maven-publish"
-    id "com.jfrog.bintray" version "1.8.0"
 }
 
 group = "com.serebit"
 version = "0.3.2"
 
-description = """"""
+description = """AutoTitan is a modular, self-hosted Discord bot built in Kotlin using the Java Discord API."""
 
 repositories {
     jcenter()
     mavenCentral()
-    maven { url "https://jitpack.io" }
 }
 
 dependencies {
     compile group: "org.jetbrains.kotlin", name: "kotlin-stdlib-jre8"
     compile group: "org.jetbrains.kotlinx", name: "kotlinx-coroutines-core", version: "0.20-alpha-9"
     compile group: "commons-validator", name: "commons-validator", version: "1.6"
-    compile group: "net.dv8tion", name: "JDA", version: "3.3.1_303"
+    compile group: "net.dv8tion", name: "JDA", version: "3.3.1_304"
     compile group: "com.sedmelluq", name: "lavaplayer", version: "1.2.44"
     compile group: "com.google.code.gson", name: "gson", version: "2.8.2"
     compile group: "com.google.guava", name: "guava", version: "23.4-jre"
@@ -38,13 +34,6 @@ kotlin {
 }
 
 compileKotlin {
-    kotlinOptions {
-        jvmTarget = "1.8"
-        javaParameters = true
-    }
-}
-
-compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
 }
 

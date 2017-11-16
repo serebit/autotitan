@@ -2,18 +2,18 @@ package com.serebit.autotitan.api
 
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.meta.Locale
-import com.serebit.autotitan.api.meta.annotations.CommandFunction
 import com.serebit.autotitan.config
 import net.dv8tion.jda.core.entities.Channel
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import java.lang.reflect.Method
+import com.serebit.autotitan.api.meta.annotations.Command as CommandAnnotation
 
 class Command(
         private val instance: Any,
         internal val method: Method,
-        info: CommandFunction
+        info: CommandAnnotation
 ) {
     private val parameterTypes: List<Class<out Any>> = method.parameterTypes.drop(1).toList()
     val name = if (info.name.isNotEmpty()) {
@@ -26,22 +26,20 @@ class Command(
     private val locale = info.locale
     private val delimitFinalParameter = info.delimitFinalParameter
     private val hidden = info.hidden
-    private val permissions = info.permissions
+    private val memberPermissions = info.memberPermissions.toList()
     val helpMessage = if (hidden) "" else "`$name`" + if (description.isNotEmpty()) "- $description" else ""
 
     operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>): Any? =
             method.invoke(instance, evt, *parameters.toTypedArray())
 
-    fun looselyMatches(rawMessageContent: String): Boolean {
-        return rawMessageContent.split(" ")[0] == config.prefix + name
-    }
+    fun looselyMatches(rawMessageContent: String): Boolean = rawMessageContent.split(" ")[0] == config.prefix + name
 
     fun parseTokensOrNull(evt: MessageReceivedEvent): List<Any>? {
         val tokens = tokenizeMessage(evt.message.rawContent)
         if (tokens[0] != config.prefix + name) return null
         if (parameterTypes.size != tokens.size - 1) return null
         if (evt.author.idLong in config.blackList) return null
-        if (evt.guild != null && !evt.member.hasPermission(permissions.toMutableList())) return null
+        if (evt.guild != null && !evt.member.hasPermission(memberPermissions.toMutableList())) return null
 
         val correctLocale = when (locale) {
             Locale.ALL -> true
@@ -133,13 +131,13 @@ class Command(
             return if (isValid(method)) Command(
                     instance,
                     method,
-                    method.getAnnotation(CommandFunction::class.java)
+                    method.getAnnotation(CommandAnnotation::class.java)
             ) else null
         }
 
         internal fun isValid(method: Method): Boolean {
             if (method.parameterTypes.isEmpty()) return false
-            if (!method.isAnnotationPresent(CommandFunction::class.java)) return false
+            if (!method.isAnnotationPresent(CommandAnnotation::class.java)) return false
             if (method.parameterTypes[0] != MessageReceivedEvent::class.java) return false
             return method.parameterTypes
                     .drop(1)

@@ -4,28 +4,28 @@ import com.serebit.autotitan.api.Command
 import com.serebit.autotitan.api.Listener
 import com.serebit.autotitan.config
 import com.serebit.extensions.jda.sendEmbed
-import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.launch
 import net.dv8tion.jda.core.events.Event
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import net.dv8tion.jda.core.hooks.ListenerAdapter
 
 class EventListener(
-        private val commands: Set<Command>,
-        private val listeners: Set<Listener>
+        private val commands: Collection<Command>,
+        private val listeners: Collection<Listener>
 ) : ListenerAdapter() {
     override fun onGenericEvent(evt: Event) {
-        launch(CommonPool) {
-            if (evt is MessageReceivedEvent && evt.message.rawContent.startsWith(config.prefix)) {
-                runCommands(evt)
+        launch {
+            listeners.filter { it.eventType == evt::class.java }.forEach {
+                it(evt)
             }
-            runListeners(evt)
         }
     }
 
-    private fun runListeners(evt: Event) {
-        listeners.filter { it.eventType == evt::class.java }.forEach {
-            it(evt)
+    override fun onMessageReceived(evt: MessageReceivedEvent) {
+        launch {
+            if (evt.message.rawContent.startsWith(config.prefix)) {
+                runCommands(evt)
+            }
         }
     }
 

@@ -1,22 +1,10 @@
 package com.serebit.autotitan.api
 
-import com.google.common.reflect.ClassPath
+import com.serebit.autotitan.api.meta.annotations.Module as ModuleAnnotation
 
-val modules = ClassPath
-        .from(Thread.currentThread().contextClassLoader)
-        .getTopLevelClassesRecursive("com.serebit.autotitan.modules")
-        .mapNotNull { generateModule(it.load()) }
-
-val commands = modules.map { instance ->
-    instance::class.java.methods.mapNotNull { Command.generate(instance, it) }
-}.flatten().toSet()
-
-val listeners = modules.map { instance ->
-    instance::class.java.methods.mapNotNull { Listener.generate(instance, it) }
-}.flatten().toSet()
-
-private fun <T> generateModule(extension: Class<T>): T? {
-    if (extension.constructors.none { it.parameterCount == 0 }) return null
-    if (extension.methods.none { Command.isValid(it) || Listener.isValid(it) }) return null
-    return extension.getConstructor().newInstance()
+fun <T : Any> generateModule(moduleClass: Class<T>): T? {
+    if (moduleClass.isAnnotationPresent(ModuleAnnotation::class.java))
+    if (moduleClass.constructors.none { it.parameterCount == 0 }) return null
+    if (moduleClass.methods.none { Command.isValid(it) || Listener.isValid(it) }) return null
+    return moduleClass.getConstructor().newInstance()
 }
