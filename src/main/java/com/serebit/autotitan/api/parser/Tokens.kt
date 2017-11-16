@@ -5,11 +5,11 @@ import com.serebit.autotitan.config
 data class Token(val type: Tokens, val value: String)
 
 enum class Tokens(val regex: Regex) {
-    INVOCATION("\\s${Regex.escape(config.prefix)}\\w+\\s".toRegex()),
-    INTEGER("\\s\\d+\\s".toRegex()),
-    FLOAT("\\s-?\\d+\\.\\d+\\s".toRegex()),
-    STRING("\\s\".+?\"\\s".toRegex()),
-    USER("\\s<@!?\\d+?>\\s".toRegex()),
-    MEMBER("\\s<@!?\\d+?>\\s".toRegex()),
-    CHANNEL("\\s<#\\d+?>\\s".toRegex());
+    INVOCATION("${Regex.escape(config.prefix)}\\w+".toRegex()),
+    INTEGER("\\d+".toRegex()),
+    FLOAT("-?\\d+\\.\\d+".toRegex()),
+    STRING("\".+?\"".toRegex(RegexOption.DOT_MATCHES_ALL)),
+    USER("<@!?\\d+?>".toRegex()),
+    MEMBER("<@!?\\d+?>".toRegex()),
+    CHANNEL("<#\\d+?>".toRegex());
 }
