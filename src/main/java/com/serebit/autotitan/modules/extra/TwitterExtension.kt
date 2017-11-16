@@ -2,8 +2,8 @@ package com.serebit.autotitan.modules.extra
 
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.meta.Locale
-import com.serebit.autotitan.api.meta.annotations.CommandFunction
-import com.serebit.autotitan.api.meta.annotations.ExtensionClass
+import com.serebit.autotitan.api.meta.annotations.Command
+import com.serebit.autotitan.api.meta.annotations.Module
 import com.serebit.autotitan.data.DataManager
 import net.dv8tion.jda.core.EmbedBuilder
 import net.dv8tion.jda.core.entities.MessageEmbed
@@ -18,7 +18,7 @@ import kotlin.concurrent.timer
 
 const val CHAR_LIMIT = 280
 
-@ExtensionClass(name = "Twitter")
+@Module(name = "Twitter")
 class TwitterExtension {
     private val twitterManagers = mutableMapOf<Long, TwitterManager>()
     private val dataManager = DataManager(this::class.java)
@@ -34,7 +34,7 @@ class TwitterExtension {
         }
     }
 
-    @CommandFunction(
+    @Command(
             locale = Locale.GUILD,
             access = Access.BOT_OWNER
     )
@@ -56,12 +56,12 @@ class TwitterExtension {
         evt.channel.sendMessage("Twitter has been initialized.").complete()
     }
 
-    @CommandFunction(locale = Locale.GUILD, delimitFinalParameter = false)
+    @Command(locale = Locale.GUILD, delimitFinalParameter = false)
     fun tweet(evt: MessageReceivedEvent, message: String) {
         twitterManagers[evt.guild.idLong]?.tweet(evt, message)
     }
 
-    @CommandFunction(locale = Locale.GUILD)
+    @Command(locale = Locale.GUILD)
     fun tweetQueue(evt: MessageReceivedEvent): Unit = evt.run {
         val manager = twitterManagers[evt.guild.idLong]
         if (manager == null) {
