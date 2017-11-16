@@ -153,7 +153,7 @@ class Owner {
             description = "Leaves the server.",
             access = Access.BOT_OWNER
     )
-    fun leaveServer(evt: MessageReceivedEvent): Unit {
+    fun leaveServer(evt: MessageReceivedEvent) {
         evt.run {
             channel.sendMessage("Leaving the server.").complete()
             guild.leave().complete()
