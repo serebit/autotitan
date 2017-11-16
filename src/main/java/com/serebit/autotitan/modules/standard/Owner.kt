@@ -1,8 +1,8 @@
 package com.serebit.autotitan.modules.standard
 
 import com.serebit.autotitan.api.meta.Access
-import com.serebit.autotitan.api.meta.annotations.CommandFunction
-import com.serebit.autotitan.api.meta.annotations.ExtensionClass
+import com.serebit.autotitan.api.meta.annotations.Command
+import com.serebit.autotitan.api.meta.annotations.Module
 import com.serebit.autotitan.config
 import com.serebit.autotitan.resetJda
 import com.serebit.extensions.jda.sendEmbed
@@ -11,9 +11,9 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import java.time.OffsetDateTime
 import kotlin.system.exitProcess
 
-@ExtensionClass
+@Module
 class Owner {
-    @CommandFunction(
+    @Command(
             description = "Shuts down the bot with an exit code of 0.",
             access = Access.BOT_OWNER
     )
@@ -26,7 +26,7 @@ class Owner {
         }
     }
 
-    @CommandFunction(
+    @Command(
             description = "Resets the command and listener classes of the bot, effectively restarting it.",
             access = Access.BOT_OWNER
     )
@@ -38,7 +38,7 @@ class Owner {
         }
     }
 
-    @CommandFunction(
+    @Command(
             description = "Renames the bot.",
             delimitFinalParameter = false,
             access = Access.BOT_OWNER
@@ -50,7 +50,7 @@ class Owner {
         }
     }
 
-    @CommandFunction(
+    @Command(
             description = "Changes the bot's command prefix.",
             access = Access.BOT_OWNER
     )
@@ -66,7 +66,7 @@ class Owner {
         }
     }
 
-    @CommandFunction(
+    @Command(
             description = "Adds a user to the blacklist.",
             access = Access.BOT_OWNER
     )
@@ -82,7 +82,7 @@ class Owner {
         }
     }
 
-    @CommandFunction(
+    @Command(
             description = "Removes a user from the blacklist.",
             access = Access.BOT_OWNER
     )
@@ -98,7 +98,7 @@ class Owner {
         }
     }
 
-    @CommandFunction(
+    @Command(
             description = "Sends the blacklist.",
             access = Access.BOT_OWNER
     )
@@ -116,7 +116,7 @@ class Owner {
         }
     }
 
-    @CommandFunction(
+    @Command(
             description = "Sends the bot's invite link to the command invoker.",
             access = Access.BOT_OWNER
     )
@@ -128,7 +128,7 @@ class Owner {
         }
     }
 
-    @CommandFunction(
+    @Command(
             description = "Gets the list of servers that the bot is currently in.",
             access = Access.BOT_OWNER
     )
@@ -149,7 +149,7 @@ class Owner {
         }
     }
 
-    @CommandFunction(
+    @Command(
             description = "Leaves the server.",
             access = Access.BOT_OWNER
     )

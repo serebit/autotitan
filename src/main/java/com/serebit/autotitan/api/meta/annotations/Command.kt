@@ -15,15 +15,16 @@ import net.dv8tion.jda.core.Permission
  * @param hidden Defines whether or not this command will appear in help messages.
  * @param delimitFinalParameter If the last parameter of the command is a string, setting this to
  * false will prevent AutoTitan from splitting the string by whitespace.
- * @param permissions The permissions a Guild member must have in order to use the command.
+ * @param memberPermissions The memberPermissions a Guild member must have in order to use the command.
  */
 @Target(AnnotationTarget.FUNCTION)
-annotation class CommandFunction(
+annotation class Command(
         val name: String = "",
         val description: String = "",
         val locale: Locale = Locale.ALL,
         val access: Access = Access.ALL,
         val hidden: Boolean = false,
         val delimitFinalParameter: Boolean = true,
-        val permissions: Array<Permission> = arrayOf()
+        val botPermissions: Array<Permission> = arrayOf(),
+        val memberPermissions: Array<Permission> = arrayOf()
 )

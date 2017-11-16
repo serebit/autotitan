@@ -1,8 +1,8 @@
 package com.serebit.autotitan.modules.standard
 
 import com.serebit.autotitan.api.meta.Locale
-import com.serebit.autotitan.api.meta.annotations.CommandFunction
-import com.serebit.autotitan.api.meta.annotations.ExtensionClass
+import com.serebit.autotitan.api.meta.annotations.Command
+import com.serebit.autotitan.api.meta.annotations.Module
 import com.serebit.extensions.jda.sendEmbed
 import net.dv8tion.jda.core.OnlineStatus
 import net.dv8tion.jda.core.Permission
@@ -11,7 +11,7 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import oshi.SystemInfo
 import java.time.format.DateTimeFormatter
 
-@ExtensionClass
+@Module
 class General {
     private val dateFormat = DateTimeFormatter.ofPattern("d MMM, yyyy")
     private val systemInfo by lazy {
@@ -44,14 +44,14 @@ class General {
         }
     }
 
-    @CommandFunction(description = "Pings the bot.")
+    @Command(description = "Pings the bot.")
     fun ping(evt: MessageReceivedEvent) {
         evt.run {
             channel.sendMessage("Pong. The last ping was ${jda.ping}ms.").complete()
         }
     }
 
-    @CommandFunction(description = "Gets information about the system that the bot is running on.")
+    @Command(description = "Gets information about the system that the bot is running on.")
     fun systemInfo(evt: MessageReceivedEvent) {
         evt.run {
             channel.sendEmbed {
@@ -63,7 +63,7 @@ class General {
         }
     }
 
-    @CommandFunction(description = "Gets information about the server.", locale = Locale.GUILD)
+    @Command(description = "Gets information about the server.", locale = Locale.GUILD)
     fun serverInfo(evt: MessageReceivedEvent) {
         evt.run {
             val onlineMemberCount = guild.members.count { it.onlineStatus != OnlineStatus.OFFLINE }
@@ -96,10 +96,10 @@ class General {
         }
     }
 
-    @CommandFunction(description = "Gets information about the invoker.", locale = Locale.GUILD)
+    @Command(description = "Gets information about the invoker.", locale = Locale.GUILD)
     fun selfInfo(evt: MessageReceivedEvent) = memberInfo(evt, evt.member)
 
-    @CommandFunction(description = "Gets information about a specific server member.", locale = Locale.GUILD)
+    @Command(description = "Gets information about a specific server member.", locale = Locale.GUILD)
     fun memberInfo(evt: MessageReceivedEvent, member: Member) {
         evt.run {
             val title = "${member.user.name}#${member.user.discriminator}" + if (member.nickname != null) {

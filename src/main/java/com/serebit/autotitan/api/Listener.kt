@@ -1,8 +1,8 @@
 package com.serebit.autotitan.api
 
-import com.serebit.autotitan.api.meta.annotations.ListenerFunction
 import net.dv8tion.jda.core.events.Event
 import java.lang.reflect.Method
+import com.serebit.autotitan.api.meta.annotations.Listener as ListenerAnnotation
 
 class Listener private constructor(private val instance: Any, private val method: Method) {
     val eventType: Class<out Any> = method.parameterTypes[0]
@@ -22,7 +22,7 @@ class Listener private constructor(private val instance: Any, private val method
 
         fun isValid(method: Method): Boolean {
             if (method.parameterCount != 1) return false
-            if (!method.isAnnotationPresent(ListenerFunction::class.java)) return false
+            if (!method.isAnnotationPresent(ListenerAnnotation::class.java)) return false
             return Event::class.java.isAssignableFrom(method.parameterTypes[0])
         }
     }

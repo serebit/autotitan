@@ -1,9 +1,9 @@
 package com.serebit.autotitan.modules.standard
 
 import com.serebit.autotitan.api.meta.Locale
-import com.serebit.autotitan.api.meta.annotations.CommandFunction
-import com.serebit.autotitan.api.meta.annotations.ExtensionClass
-import com.serebit.autotitan.api.meta.annotations.ListenerFunction
+import com.serebit.autotitan.api.meta.annotations.Command
+import com.serebit.autotitan.api.meta.annotations.Listener
+import com.serebit.autotitan.api.meta.annotations.Module
 import com.serebit.autotitan.data.DataManager
 import net.dv8tion.jda.core.JDA
 import net.dv8tion.jda.core.Permission
@@ -14,7 +14,7 @@ import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 
-@ExtensionClass
+@Module
 class Moderation {
     private val dataManager = DataManager(this::class.java)
     private val map: GuildRoleMap = dataManager.read("rolemap.json") ?: GuildRoleMap()
@@ -23,10 +23,10 @@ class Moderation {
         dataManager.write("rolemap.json", map)
     }
 
-    @CommandFunction(
+    @Command(
             description = "Kicks a member.",
             locale = Locale.GUILD,
-            permissions = arrayOf(Permission.KICK_MEMBERS)
+            memberPermissions = arrayOf(Permission.KICK_MEMBERS)
     )
     fun kick(evt: MessageReceivedEvent, member: Member) {
         evt.run {
@@ -35,10 +35,10 @@ class Moderation {
         }
     }
 
-    @CommandFunction(
+    @Command(
             description = "Bans a user.",
             locale = Locale.GUILD,
-            permissions = arrayOf(Permission.BAN_MEMBERS)
+            memberPermissions = arrayOf(Permission.BAN_MEMBERS)
     )
     fun ban(evt: MessageReceivedEvent, user: User) {
         evt.run {
@@ -47,10 +47,10 @@ class Moderation {
         }
     }
 
-    @CommandFunction(
+    @Command(
             description = "Unbans a banned user from the current server.",
             locale = Locale.GUILD,
-            permissions = arrayOf(Permission.BAN_MEMBERS)
+            memberPermissions = arrayOf(Permission.BAN_MEMBERS)
     )
     fun unBan(evt: MessageReceivedEvent, user: User) {
         evt.run {
@@ -59,10 +59,10 @@ class Moderation {
         }
     }
 
-    @CommandFunction(
+    @Command(
             description = "Deletes the last N messages in the channel. N must be in the range of 1..99.",
             locale = Locale.GUILD,
-            permissions = arrayOf(Permission.MESSAGE_MANAGE)
+            memberPermissions = arrayOf(Permission.MESSAGE_MANAGE)
     )
     fun cleanUp(evt: MessageReceivedEvent, number: Int) {
         evt.run {
@@ -76,8 +76,8 @@ class Moderation {
         }
     }
 
-    @CommandFunction(
-            permissions = arrayOf(Permission.MANAGE_ROLES),
+    @Command(
+            memberPermissions = arrayOf(Permission.MANAGE_ROLES),
             delimitFinalParameter = false
     )
     fun setAutoRole(evt: MessageReceivedEvent, roleName: String) {
@@ -93,8 +93,8 @@ class Moderation {
         }
     }
 
-    @CommandFunction(
-            permissions = arrayOf(Permission.MANAGE_ROLES)
+    @Command(
+            memberPermissions = arrayOf(Permission.MANAGE_ROLES)
     )
     fun getAutoRole(evt: MessageReceivedEvent) {
         evt.run {
@@ -106,8 +106,8 @@ class Moderation {
         }
     }
 
-    @CommandFunction(
-            permissions = arrayOf(Permission.MANAGE_SERVER)
+    @Command(
+            memberPermissions = arrayOf(Permission.MANAGE_SERVER)
     )
     fun smartPrune(evt: MessageReceivedEvent) {
         evt.run {
@@ -128,7 +128,7 @@ class Moderation {
         }
     }
 
-    @ListenerFunction
+    @Listener
     fun giveRole(evt: GuildMemberJoinEvent) {
         evt.run {
             if (map.contains(guild)) {
