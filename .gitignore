@@ -1,16 +1,15 @@
-# IntelliJ IDEA Files
+# IntelliJ IDEA files
 *.iml
 .idea/
 
-# Gradle Files
-gradle/
+# Gradle cache
 .gradle/
 
-# Compilation Output
+# Compilation output
 bin/
 target/
 build/
 out/
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+# Virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
