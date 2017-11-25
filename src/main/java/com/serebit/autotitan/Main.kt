@@ -11,23 +11,25 @@ import net.dv8tion.jda.core.events.Event
 
 const val NAME = "AutoTitan"
 const val VERSION = "0.3.2"
-private val modules = ClassPath
-        .from(Thread.currentThread().contextClassLoader)
-        .getTopLevelClassesRecursive("com.serebit.autotitan.modules")
-        .mapNotNull { generateModule(it.load()) }
-private val commands
-    get() = modules.map { instance ->
-        instance::class.java.methods.mapNotNull { method -> Command.generate(instance, method) }
-    }.flatten()
-private val listeners
-    get() = modules.map { instance ->
-        instance::class.java.methods.mapNotNull { method -> Listener.generate(instance, method) }
-    }.flatten()
+private val modules: Pair<List<Command>, List<Listener>>
+    get() {
+        val instances = ClassPath
+                .from(Thread.currentThread().contextClassLoader)
+                .getTopLevelClassesRecursive("com.serebit.autotitan.modules")
+                .mapNotNull { generateModule(it.load()) }
+        val commands = instances.map { instance ->
+            instance::class.java.methods.mapNotNull { method -> Command.generate(instance, method) }
+        }.flatten()
+        val listeners = instances.map { instance ->
+            instance::class.java.methods.mapNotNull { method -> Listener.generate(instance, method) }
+        }.flatten()
+        return commands to listeners
+    }
 
 fun main(args: Array<String>) {
     val jda = jda(AccountType.BOT) {
         setToken(config.token)
-        addEventListener(EventListener(commands, listeners))
+        addEventListener(EventListener(modules.first, modules.second))
     }
 
     println()
@@ -40,6 +42,6 @@ fun main(args: Array<String>) {
 fun resetJda(evt: Event) {
     evt.run {
         jda.registeredListeners.forEach { jda.removeEventListener(it) }
-        jda.addEventListener(EventListener(commands, listeners))
+        jda.addEventListener(EventListener(modules.first, modules.second))
     }
 }

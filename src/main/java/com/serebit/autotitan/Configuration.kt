@@ -11,11 +11,11 @@ class Configuration private constructor(
         var prefix: String,
         val blackList: MutableSet<Long>
 ) {
-    fun serialize() = file.apply { createNewFile() }.writeText(Gson().toJson(this))
+    fun serialize() = file.also { it.createNewFile() }.writeText(Gson().toJson(this))
 
     companion object {
         private val parentFolder = File(this::class.java.protectionDomain.codeSource.location.toURI()).parentFile
-        val file = File("$parentFolder/.config")
+        private val file = File("$parentFolder/.config")
 
         fun generate(): Configuration = if (file.exists()) {
             Gson().fromJson(file.readText(), Configuration::class.java)
@@ -24,7 +24,7 @@ class Configuration private constructor(
                     token = prompt("Enter new token:") { !it.contains("\\s".toRegex()) },
                     prefix = prompt("Enter new command prefix:") { !it.contains("\\s".toRegex()) },
                     blackList = mutableSetOf()
-            ).apply { serialize() }
+            ).also(Configuration::serialize)
         }
 
         private fun prompt(text: String, condition: (String) -> Boolean): String {
