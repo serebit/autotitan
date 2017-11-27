@@ -8,7 +8,7 @@ fun tokenizeMessage(message: String): List<Token> {
         val whitespaceIndex = if (it == numWhitespaces) message.length
         else message.drop(position).indexOfFirst { it.isWhitespace() } + position
         val substring = message.substring(position until whitespaceIndex)
-        val tokenType = Tokens.values().firstOrNull { substring.matches(it.regex) } ?: return@forEach
+        val tokenType = TokenType.values().firstOrNull { substring.matches(it.regex) } ?: return@forEach
         tokens.add(Token(tokenType, substring))
         position = whitespaceIndex + 1
     }
