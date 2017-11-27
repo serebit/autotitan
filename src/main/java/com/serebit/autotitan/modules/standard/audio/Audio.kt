@@ -26,6 +26,16 @@ class Audio {
     private val urlValidator = UrlValidator(arrayOf("http", "https"))
     private val playerManager = DefaultAudioPlayerManager()
     private val musicManagers = mutableMapOf<Long, GuildMusicManager>()
+    private val Guild.musicManager: GuildMusicManager
+        get() {
+            val musicManager = musicManagers.getOrElse(idLong, {
+                val newManager = GuildMusicManager(playerManager)
+                musicManagers.put(idLong, newManager)
+                newManager
+            })
+            audioManager.sendingHandler = musicManager.sendHandler
+            return musicManager
+        }
 
     init {
         AudioSourceManagers.registerRemoteSources(playerManager)
@@ -54,7 +64,7 @@ class Audio {
     fun leaveVoice(evt: MessageReceivedEvent) {
         evt.run {
             if (guild.audioManager.isConnected) {
-                guild.getMusicManager().scheduler.stop()
+                guild.musicManager.scheduler.stop()
                 guild.audioManager.closeAudioConnection()
             }
         }
@@ -76,7 +86,7 @@ class Audio {
                 VoiceStatus.SELF_NOT_CONNECTED -> connectToVoiceChannel(guild.audioManager, member.voiceState.channel)
                 else -> Unit
             }
-            val audioManager = guild.getMusicManager()
+            val audioManager = guild.musicManager
             val formattedQuery = if (urlValidator.isValid(query)) {
                 query
             } else {
@@ -117,7 +127,7 @@ class Audio {
     fun skip(evt: MessageReceivedEvent) {
         evt.run {
             if (voiceStatus(evt, true) != VoiceStatus.CONNECTED_SAME_CHANNEL) return
-            val audioManager = guild.getMusicManager()
+            val audioManager = guild.musicManager
             if (audioManager.scheduler.queue.isEmpty()) {
                 channel.sendMessage("Cannot skip. No tracks are queued.").complete()
                 return
@@ -134,7 +144,7 @@ class Audio {
     )
     fun stop(evt: MessageReceivedEvent) {
         evt.run {
-            guild.getMusicManager().scheduler.stop()
+            guild.musicManager.scheduler.stop()
             channel.sendMessage("Cleared the music queue.").complete()
         }
     }
@@ -146,7 +156,7 @@ class Audio {
     fun pause(evt: MessageReceivedEvent) {
         evt.run {
             if (voiceStatus(evt, true) != VoiceStatus.CONNECTED_SAME_CHANNEL) return
-            val audioManager = guild.getMusicManager()
+            val audioManager = guild.musicManager
             if (audioManager.scheduler.pause()) {
                 channel.sendMessage("Paused.").complete()
             }
@@ -160,7 +170,7 @@ class Audio {
     fun resume(evt: MessageReceivedEvent) {
         evt.run {
             if (voiceStatus(evt, true) != VoiceStatus.CONNECTED_SAME_CHANNEL) return
-            if (guild.getMusicManager().scheduler.resume()) {
+            if (guild.musicManager.scheduler.resume()) {
                 channel.sendMessage("Resumed.").complete()
             }
         }
@@ -172,11 +182,11 @@ class Audio {
     )
     fun queue(evt: MessageReceivedEvent) {
         evt.run {
-            if (guild.getMusicManager().player.playingTrack == null) {
+            if (guild.musicManager.player.playingTrack == null) {
                 channel.sendMessage("No songs are queued.").complete()
                 return
             }
-            val audioManager = guild.getMusicManager()
+            val audioManager = guild.musicManager
 
             channel.sendEmbed {
                 setAuthor(guild.selfMember.effectiveName, null, jda.selfUser.effectiveAvatarUrl)
@@ -216,18 +226,8 @@ class Audio {
             volume < 0 -> 0
             else -> volume
         }
-        guild.getMusicManager().player.volume = newVolume
+        guild.musicManager.player.volume = newVolume
         channel.sendMessage("Set volume to $newVolume%.").complete()
-    }
-
-    private fun Guild.getMusicManager(): GuildMusicManager {
-        val audioManager = musicManagers.getOrElse(idLong, {
-            val newManager = GuildMusicManager(playerManager)
-            musicManagers.put(idLong, newManager)
-            newManager
-        })
-        this.audioManager.sendingHandler = audioManager.sendHandler
-        return audioManager
     }
 
     @Listener
@@ -236,7 +236,7 @@ class Audio {
             if (guild.audioManager.connectedChannel != channelLeft) return
             val nobodyLeft = guild.audioManager.connectedChannel.members.size == 1
             if (guild.audioManager.isConnected && nobodyLeft) {
-                val audioPlayer = guild.getMusicManager()
+                val audioPlayer = guild.musicManager
                 audioPlayer.scheduler.stop()
                 guild.audioManager.closeAudioConnection()
             }
@@ -249,7 +249,7 @@ class Audio {
             if (guild.audioManager.connectedChannel != channelLeft) return
             val nobodyLeft = guild.audioManager.connectedChannel.members.size == 1
             if (guild.audioManager.isConnected && nobodyLeft) {
-                guild.getMusicManager().scheduler.stop()
+                guild.musicManager.scheduler.stop()
                 guild.audioManager.closeAudioConnection()
             }
         }
@@ -285,7 +285,7 @@ private enum class VoiceStatus(val errorMessage: String?) {
     CONNECTED_SAME_CHANNEL(null)
 }
 
-fun toHumanReadableDuration(millis: Long): String {
+private fun toHumanReadableDuration(millis: Long): String {
     val totalSeconds = millis / 1000
     val hours = (totalSeconds / 3600).toInt()
     val minutes = (totalSeconds % 3600 / 60).toInt()
