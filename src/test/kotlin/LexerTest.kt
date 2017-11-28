@@ -1,5 +1,5 @@
 import com.serebit.autotitan.api.parser.Token
-import com.serebit.autotitan.api.parser.Tokens
+import com.serebit.autotitan.api.parser.TokenType
 import com.serebit.autotitan.api.parser.tokenizeMessage
 import io.kotlintest.properties.Gen
 import io.kotlintest.properties.forAll
@@ -15,10 +15,10 @@ class LexerTest : StringSpec() {
                     StringGenerator()
             ) { f: Float, i: Int, s: String ->
                 tokenizeMessage("!run $f $i \"$s\"") == listOf(
-                        Token(Tokens.INVOCATION, "!run"),
-                        Token(Tokens.FLOAT, f.toString()),
-                        Token(Tokens.INTEGER, i.toString()),
-                        Token(Tokens.STRING, "\"$s\"")
+                        Token(TokenType.INVOCATION, "!run"),
+                        Token(TokenType.FLOAT, f.toString()),
+                        Token(TokenType.INTEGER, i.toString()),
+                        Token(TokenType.STRING, "\"$s\"")
                 )
             }
         }
