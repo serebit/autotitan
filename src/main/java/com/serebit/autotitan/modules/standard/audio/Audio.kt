@@ -140,7 +140,7 @@ class Audio {
     @Command(
             description = "Stops playing music and clears the queue.",
             locale = Locale.GUILD,
-            memberPermissions = arrayOf(Permission.VOICE_MUTE_OTHERS)
+            memberPermissions = [Permission.VOICE_MUTE_OTHERS]
     )
     fun stop(evt: MessageReceivedEvent) {
         evt.run {
