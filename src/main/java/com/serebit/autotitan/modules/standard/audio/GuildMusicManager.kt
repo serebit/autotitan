@@ -31,13 +31,10 @@ class GuildMusicManager(manager: AudioPlayerManager) {
             }
         }
 
-        fun skipTrack(): Boolean {
-            return if (player.playingTrack != null) {
+        fun skipTrack() {
+            if (player.playingTrack != null) {
                 player.stopTrack()
                 if (queue.isNotEmpty()) player.playTrack(queue.removeAt(0))
-                true
-            } else {
-                false
             }
         }
 
