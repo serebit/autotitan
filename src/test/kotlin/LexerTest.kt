@@ -1,6 +1,8 @@
+import com.serebit.autotitan.Configuration
 import com.serebit.autotitan.api.parser.Token
 import com.serebit.autotitan.api.parser.TokenType
 import com.serebit.autotitan.api.parser.tokenizeMessage
+import com.serebit.autotitan.config
 import io.kotlintest.properties.Gen
 import io.kotlintest.properties.forAll
 import io.kotlintest.specs.StringSpec
@@ -8,6 +10,7 @@ import java.util.*
 
 class LexerTest : StringSpec() {
     init {
+        config = Configuration.generateDummy()
         "tests lexer parsing" {
             forAll(
                     Gen.default(),

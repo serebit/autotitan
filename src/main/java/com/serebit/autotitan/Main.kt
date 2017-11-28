@@ -11,6 +11,7 @@ import net.dv8tion.jda.core.events.Event
 
 const val NAME = "AutoTitan"
 const val VERSION = "0.3.2"
+lateinit var config: Configuration
 private val modules: Pair<List<Command>, List<Listener>>
     get() {
         val instances = ClassPath
@@ -27,16 +28,18 @@ private val modules: Pair<List<Command>, List<Listener>>
     }
 
 fun main(args: Array<String>) {
-    val jda = jda(AccountType.BOT) {
+    config = Configuration.generate()
+    jda(AccountType.BOT) {
         setToken(config.token)
         addEventListener(EventListener(modules.first, modules.second))
+    }.let {
+        println()
+        println("$NAME v$VERSION")
+        println("Username:    ${it.selfUser.name}")
+        println("Ping:        ${it.ping}ms")
+        println("Invite link: ${it.asBot().getInviteUrl()}")
     }
 
-    println()
-    println("$NAME v$VERSION")
-    println("Username:    ${jda.selfUser.name}")
-    println("Ping:        ${jda.ping}ms")
-    println("Invite link: ${jda.asBot().getInviteUrl()}")
 }
 
 fun resetJda(evt: Event) {
