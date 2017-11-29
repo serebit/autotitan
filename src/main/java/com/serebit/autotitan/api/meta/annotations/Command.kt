@@ -25,6 +25,6 @@ annotation class Command(
         val access: Access = Access.ALL,
         val hidden: Boolean = false,
         val delimitFinalParameter: Boolean = true,
-        val botPermissions: Array<Permission> = arrayOf(),
-        val memberPermissions: Array<Permission> = arrayOf()
+        val botPermissions: Array<Permission> = [],
+        val memberPermissions: Array<Permission> = []
 )
