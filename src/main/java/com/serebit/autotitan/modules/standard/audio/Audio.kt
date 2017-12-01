@@ -1,17 +1,23 @@
 package com.serebit.autotitan.modules.standard.audio
 
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler
+import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
+import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager
+import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
+import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
+import com.sedmelluq.discord.lavaplayer.track.playback.AudioFrame
 import com.serebit.autotitan.api.meta.Locale
 import com.serebit.autotitan.api.meta.annotations.Command
 import com.serebit.autotitan.api.meta.annotations.Listener
 import com.serebit.autotitan.api.meta.annotations.Module
 import com.serebit.extensions.jda.sendEmbed
 import net.dv8tion.jda.core.Permission
+import net.dv8tion.jda.core.audio.AudioSendHandler
 import net.dv8tion.jda.core.entities.Guild
 import net.dv8tion.jda.core.entities.VoiceChannel
 import net.dv8tion.jda.core.events.guild.voice.GuildVoiceLeaveEvent
@@ -42,10 +48,7 @@ class Audio {
         AudioSourceManagers.registerLocalSource(playerManager)
     }
 
-    @Command(
-            description = "Joins the voice channel that the invoker is in.",
-            locale = Locale.GUILD
-    )
+    @Command(description = "Joins the voice channel that the invoker is in.", locale = Locale.GUILD)
     fun joinVoice(evt: MessageReceivedEvent) {
         evt.run {
             if (member.voiceState.inVoiceChannel()) {
@@ -57,10 +60,7 @@ class Audio {
         }
     }
 
-    @Command(
-            description = "Leaves the voice channel that the bot is in.",
-            locale = Locale.GUILD
-    )
+    @Command(description = "Leaves the voice channel that the bot is in.", locale = Locale.GUILD)
     fun leaveVoice(evt: MessageReceivedEvent) {
         evt.run {
             if (guild.audioManager.isConnected) {
@@ -120,10 +120,7 @@ class Audio {
         }
     }
 
-    @Command(
-            description = "Skips the currently playing song.",
-            locale = Locale.GUILD
-    )
+    @Command(description = "Skips the currently playing song.", locale = Locale.GUILD)
     fun skip(evt: MessageReceivedEvent) {
         evt.run {
             if (voiceStatus(evt, true) != VoiceStatus.CONNECTED_SAME_CHANNEL) return
@@ -149,10 +146,7 @@ class Audio {
         }
     }
 
-    @Command(
-            description = "Pauses the currently playing song.",
-            locale = Locale.GUILD
-    )
+    @Command(description = "Pauses the currently playing song.", locale = Locale.GUILD)
     fun pause(evt: MessageReceivedEvent) {
         evt.run {
             if (voiceStatus(evt, true) != VoiceStatus.CONNECTED_SAME_CHANNEL) return
@@ -163,10 +157,7 @@ class Audio {
         }
     }
 
-    @Command(
-            description = "Resumes the currently playing song.",
-            locale = Locale.GUILD
-    )
+    @Command(description = "Resumes the currently playing song.", locale = Locale.GUILD)
     fun resume(evt: MessageReceivedEvent) {
         evt.run {
             if (voiceStatus(evt, true) != VoiceStatus.CONNECTED_SAME_CHANNEL) return
@@ -176,10 +167,7 @@ class Audio {
         }
     }
 
-    @Command(
-            description = "Sends an embed with the list of songs in the queue.",
-            locale = Locale.GUILD
-    )
+    @Command(description = "Sends an embed with the list of songs in the queue.", locale = Locale.GUILD)
     fun queue(evt: MessageReceivedEvent) {
         evt.run {
             if (guild.musicManager.player.playingTrack == null) {
@@ -215,10 +203,7 @@ class Audio {
         }
     }
 
-    @Command(
-            description = "Sets the volume.",
-            locale = Locale.GUILD
-    )
+    @Command(description = "Sets the volume.", locale = Locale.GUILD)
     fun setVolume(evt: MessageReceivedEvent, volume: Int): Unit = evt.run {
         if (voiceStatus(evt, true) != VoiceStatus.CONNECTED_SAME_CHANNEL) return
         val newVolume = when {
@@ -293,5 +278,75 @@ private fun toHumanReadableDuration(millis: Long): String {
     return when (hours) {
         0 -> String.format("%d:%02d", minutes, seconds)
         else -> String.format("%d:%02d:%02d", hours, minutes, seconds)
+    }
+}
+
+private class GuildMusicManager(manager: AudioPlayerManager) {
+    val player: AudioPlayer = manager.createPlayer()
+    val scheduler = TrackScheduler()
+    val sendHandler by lazy {
+        AudioPlayerSendHandler()
+    }
+
+    init {
+        player.addListener(scheduler)
+    }
+
+    inner class TrackScheduler : AudioEventAdapter() {
+        val queue = mutableListOf<AudioTrack>()
+
+        fun addToQueue(track: AudioTrack) {
+            if (player.playingTrack == null) {
+                player.playTrack(track)
+            } else {
+                queue.add(track)
+            }
+        }
+
+        fun skipTrack() {
+            if (player.playingTrack != null) {
+                player.stopTrack()
+                if (queue.isNotEmpty()) player.playTrack(queue.removeAt(0))
+            }
+        }
+
+        fun pause() = if (!player.isPaused) {
+            player.isPaused = true
+            true
+        } else false
+
+        fun resume() = if (player.isPaused) {
+            player.isPaused = false
+            true
+        } else false
+
+        fun stop() {
+            player.stopTrack()
+            queue.clear()
+        }
+
+        override fun onTrackEnd(player: AudioPlayer, track: AudioTrack, endReason: AudioTrackEndReason) {
+            if (queue.isNotEmpty() && endReason == AudioTrackEndReason.FINISHED) {
+                player.playTrack(queue.removeAt(0))
+            }
+        }
+    }
+
+    inner class AudioPlayerSendHandler : AudioSendHandler {
+        private var lastFrame: AudioFrame? = null
+
+        override fun canProvide(): Boolean {
+            if (lastFrame == null) lastFrame = player.provide()
+            return lastFrame != null
+        }
+
+        override fun provide20MsAudio(): ByteArray? {
+            if (lastFrame == null) lastFrame = player.provide()
+            val data = if (lastFrame != null) lastFrame?.data else null
+            lastFrame = null
+            return data
+        }
+
+        override fun isOpus() = true
     }
 }
