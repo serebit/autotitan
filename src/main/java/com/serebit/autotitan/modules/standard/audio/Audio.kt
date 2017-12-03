@@ -19,6 +19,7 @@ import com.serebit.extensions.jda.sendEmbed
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.audio.AudioSendHandler
 import net.dv8tion.jda.core.entities.Guild
+import net.dv8tion.jda.core.entities.MessageChannel
 import net.dv8tion.jda.core.entities.VoiceChannel
 import net.dv8tion.jda.core.events.guild.voice.GuildVoiceLeaveEvent
 import net.dv8tion.jda.core.events.guild.voice.GuildVoiceMoveEvent
@@ -77,10 +78,10 @@ class Audio {
     )
     fun play(evt: MessageReceivedEvent, query: String) {
         evt.run {
-            val voiceStatus = voiceStatus(evt, false)
+            val voiceStatus = voiceStatus(evt)
             when (voiceStatus) {
                 VoiceStatus.CONNECTED_DIFFERENT_CHANNEL, VoiceStatus.USER_NOT_CONNECTED -> {
-                    channel.sendMessage(voiceStatus.errorMessage).complete()
+                    voiceStatus.sendErrorMessage(channel)
                     return
                 }
                 VoiceStatus.SELF_NOT_CONNECTED -> connectToVoiceChannel(guild.audioManager, member.voiceState.channel)
@@ -123,7 +124,12 @@ class Audio {
     @Command(description = "Skips the currently playing song.", locale = Locale.GUILD)
     fun skip(evt: MessageReceivedEvent) {
         evt.run {
-            if (voiceStatus(evt, true) != VoiceStatus.CONNECTED_SAME_CHANNEL) return
+            voiceStatus(evt).let {
+                if (it != VoiceStatus.CONNECTED_SAME_CHANNEL) {
+                    it.sendErrorMessage(channel)
+                    return
+                }
+            }
             val audioManager = guild.musicManager
             if (audioManager.scheduler.queue.isEmpty() && audioManager.player.playingTrack == null) {
                 channel.sendMessage("Cannot skip. Nothing is playing.").complete()
@@ -149,7 +155,12 @@ class Audio {
     @Command(description = "Pauses the currently playing song.", locale = Locale.GUILD)
     fun pause(evt: MessageReceivedEvent) {
         evt.run {
-            if (voiceStatus(evt, true) != VoiceStatus.CONNECTED_SAME_CHANNEL) return
+            voiceStatus(evt).let {
+                if (it != VoiceStatus.CONNECTED_SAME_CHANNEL) {
+                    it.sendErrorMessage(channel)
+                    return
+                }
+            }
             val audioManager = guild.musicManager
             if (audioManager.scheduler.pause()) {
                 channel.sendMessage("Paused.").complete()
@@ -160,7 +171,12 @@ class Audio {
     @Command(description = "Resumes the currently playing song.", locale = Locale.GUILD)
     fun resume(evt: MessageReceivedEvent) {
         evt.run {
-            if (voiceStatus(evt, true) != VoiceStatus.CONNECTED_SAME_CHANNEL) return
+            voiceStatus(evt).let {
+                if (it != VoiceStatus.CONNECTED_SAME_CHANNEL) {
+                    it.sendErrorMessage(channel)
+                    return
+                }
+            }
             if (guild.musicManager.scheduler.resume()) {
                 channel.sendMessage("Resumed.").complete()
             }
@@ -204,15 +220,17 @@ class Audio {
     }
 
     @Command(description = "Sets the volume.", locale = Locale.GUILD)
-    fun setVolume(evt: MessageReceivedEvent, volume: Int): Unit = evt.run {
-        if (voiceStatus(evt, true) != VoiceStatus.CONNECTED_SAME_CHANNEL) return
-        val newVolume = when {
-            volume > 100 -> 100
-            volume < 0 -> 0
-            else -> volume
+    fun setVolume(evt: MessageReceivedEvent, volume: Int) {
+        evt.run {
+            voiceStatus(evt).let {
+                if (it != VoiceStatus.CONNECTED_SAME_CHANNEL) {
+                    it.sendErrorMessage(channel)
+                    return
+                }
+            }
+            guild.musicManager.player.volume = volume.coerceIn(0..100)
+            channel.sendMessage("Set volume to ${guild.musicManager.player.volume}%.").complete()
         }
-        guild.musicManager.player.volume = newVolume
-        channel.sendMessage("Set volume to $newVolume%.").complete()
     }
 
     @Listener
@@ -246,19 +264,17 @@ class Audio {
         }
     }
 
-    private fun voiceStatus(evt: MessageReceivedEvent, sendErrorMessage: Boolean): VoiceStatus {
+    private fun voiceStatus(evt: MessageReceivedEvent): VoiceStatus {
         evt.run {
             val selfIsConnected = guild.audioManager.isConnected
             val userIsConnected = member.voiceState.inVoiceChannel()
             val sameChannel = member.voiceState.channel == guild.audioManager.connectedChannel
-            val status = when {
+            return when {
                 !userIsConnected -> VoiceStatus.USER_NOT_CONNECTED
                 !selfIsConnected -> VoiceStatus.SELF_NOT_CONNECTED
                 !sameChannel -> VoiceStatus.CONNECTED_DIFFERENT_CHANNEL
                 else -> VoiceStatus.CONNECTED_SAME_CHANNEL
             }
-            if (sendErrorMessage && status.errorMessage != null) channel.sendMessage(status.errorMessage).complete()
-            return status
         }
     }
 }
@@ -267,7 +283,11 @@ private enum class VoiceStatus(val errorMessage: String?) {
     SELF_NOT_CONNECTED("I need to be in a voice channel to do that."),
     USER_NOT_CONNECTED("You need to be in a voice channel for me to do that."),
     CONNECTED_DIFFERENT_CHANNEL("We need to be in the same voice channel for you to do that."),
-    CONNECTED_SAME_CHANNEL(null)
+    CONNECTED_SAME_CHANNEL(null);
+
+    fun sendErrorMessage(channel: MessageChannel) {
+        errorMessage?.let { channel.sendMessage(it).complete() }
+    }
 }
 
 private fun toHumanReadableDuration(millis: Long): String {
