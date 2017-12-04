@@ -36,6 +36,7 @@ class Command(
 
     fun parseTokensOrNull(evt: MessageReceivedEvent): List<Any>? {
         val tokens = tokenizeMessage(evt.message.rawContent)
+        if (evt.author.isBot) return null
         if (tokens[0] != config.prefix + name) return null
         if (parameterTypes.size != tokens.size - 1) return null
         if (evt.author.idLong in config.blackList) return null
