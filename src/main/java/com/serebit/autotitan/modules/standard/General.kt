@@ -10,6 +10,8 @@ import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import oshi.SystemInfo
 import java.time.format.DateTimeFormatter
+import kotlin.math.ln
+import kotlin.math.pow
 
 @Module
 class General {
@@ -134,9 +136,9 @@ class General {
 
 private val Long.asHumanReadableByteCount: String
     get() {
-        val exponent = (Math.log(toDouble()) / 6.908).toInt()
+        val exponent = (ln(this.toDouble()) / 6.908).toInt()
         val unit = listOf("B", "kB", "MB", "GB", "TB", "PB", "EB")[exponent]
-        return "%.1f $unit".format(this / Math.pow(1000.0, exponent.toDouble()))
+        return "%.1f $unit".format(this / 1000.0.pow(exponent))
     }
 
 private val Boolean.asYesNo get() = if (this) "yes" else "no"
