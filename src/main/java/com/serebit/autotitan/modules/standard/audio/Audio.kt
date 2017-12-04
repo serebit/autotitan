@@ -237,10 +237,9 @@ class Audio {
     fun leaveVoiceAutomatically(evt: GuildVoiceLeaveEvent) {
         evt.run {
             if (guild.audioManager.connectedChannel != channelLeft) return
-            val nobodyLeft = guild.audioManager.connectedChannel.members.size == 1
-            if (guild.audioManager.isConnected && nobodyLeft) {
-                val audioPlayer = guild.musicManager
-                audioPlayer.scheduler.stop()
+            if (guild.audioManager.connectedChannel.members.any { !it.user.isBot }) return
+            if (guild.audioManager.isConnected) {
+                guild.musicManager.scheduler.stop()
                 guild.audioManager.closeAudioConnection()
             }
         }
@@ -250,8 +249,8 @@ class Audio {
     fun leaveVoiceAutomatically(evt: GuildVoiceMoveEvent) {
         evt.run {
             if (guild.audioManager.connectedChannel != channelLeft) return
-            val nobodyLeft = guild.audioManager.connectedChannel.members.size == 1
-            if (guild.audioManager.isConnected && nobodyLeft) {
+            if (guild.audioManager.connectedChannel.members.any { !it.user.isBot }) return
+            if (guild.audioManager.isConnected) {
                 guild.musicManager.scheduler.stop()
                 guild.audioManager.closeAudioConnection()
             }
