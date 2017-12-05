@@ -10,7 +10,7 @@ import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.events.Event
 
 const val NAME = "Spyglass"
-const val VERSION = "0.3.2"
+const val VERSION = "0.3.3"
 lateinit var config: Configuration
 private val modules: Pair<List<Command>, List<Listener>>
     get() {
