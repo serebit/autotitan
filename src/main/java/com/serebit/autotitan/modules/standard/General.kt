@@ -10,7 +10,8 @@ import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import oshi.SystemInfo
 import java.time.format.DateTimeFormatter
-import kotlin.math.ln
+import kotlin.math.ceil
+import kotlin.math.log
 import kotlin.math.pow
 
 @Module
@@ -82,6 +83,7 @@ class General {
                 addField("Region", guild.region.toString(), true)
                 addField("Online Members", onlineMemberCount.toString(), true)
                 addField("Total Members", guild.members.size.toString(), true)
+                addField("Bots", guild.members.count { it.user.isBot }.toString(), true)
                 addField("Text Channels", guild.textChannels.size.toString(), true)
                 addField("Voice Channels", guild.voiceChannels.size.toString(), true)
                 addField("Hoisted Roles", hoistedRoles, true)
@@ -125,9 +127,9 @@ class General {
                 setThumbnail(member.user.effectiveAvatarUrl)
                 addField("Joined Discord", member.user.creationTime.format(dateFormat), true)
                 addField("Joined this Server", member.joinDate.format(dateFormat), true)
-                if (roles != null) addField("Roles", roles, true)
                 addField("Do they own the server?", member.isOwner.asYesNo.capitalize(), true)
                 addField("Are they a bot?", member.user.isBot.asYesNo.capitalize(), true)
+                if (roles != null) addField("Roles", roles, true)
                 setFooter("User ID: ${member.user.id}", null)
             }.complete()
         }
@@ -136,7 +138,7 @@ class General {
 
 private val Long.asHumanReadableByteCount: String
     get() {
-        val exponent = (ln(this.toDouble()) / 6.908).toInt()
+        val exponent = ceil(log(this.toDouble(), 1000.0)).toInt() - 1
         val unit = listOf("B", "kB", "MB", "GB", "TB", "PB", "EB")[exponent]
         return "%.1f $unit".format(this / 1000.0.pow(exponent))
     }
