@@ -3,34 +3,29 @@ package com.serebit.autotitan.api
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.meta.Locale
 import com.serebit.autotitan.config
+import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Channel
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
-import java.lang.reflect.Method
-import com.serebit.autotitan.api.meta.annotations.Command as CommandAnnotation
+import kotlin.reflect.KFunction
+import kotlin.reflect.jvm.jvmErasure
 
 class Command(
-        private val instance: Any,
-        internal val method: Method,
-        info: CommandAnnotation
+        private val function: KFunction<Unit>,
+        val name: String,
+        description: String,
+        private val access: Access,
+        private val locale: Locale,
+        private val delimitLastString: Boolean,
+        hidden: Boolean,
+        private val memberPermissions: List<Permission>
 ) {
-    private val parameterTypes: List<Class<out Any>> = method.parameterTypes.drop(1).toList()
-    val name = if (info.name.isNotEmpty()) {
-        info.name
-    } else {
-        method.name
-    }.toLowerCase()
-    private val description = if (info.description.isNotBlank()) info.description else ""
-    private val access = info.access
-    private val locale = info.locale
-    private val delimitFinalParameter = info.delimitFinalParameter
-    private val hidden = info.hidden
-    private val memberPermissions = info.memberPermissions.toList()
+    private val parameterTypes: List<Class<out Any>> = function.parameters.map { it.type.jvmErasure.java }
     val helpMessage = if (hidden) "" else "`$name`" + if (description.isNotEmpty()) "- $description" else ""
 
     operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>): Any? =
-            method.invoke(instance, evt, *parameters.toTypedArray())
+            function.call(evt, *parameters.toTypedArray())
 
     fun looselyMatches(rawMessageContent: String): Boolean = rawMessageContent.split(" ")[0] == config.prefix + name
 
@@ -64,7 +59,7 @@ class Command(
 
     private fun tokenizeMessage(message: String): List<String> {
         val splitParameters = message.split(" ").filter(String::isNotBlank)
-        return if (delimitFinalParameter) {
+        return if (delimitLastString) {
             splitParameters
         } else {
             listOf(
@@ -114,35 +109,5 @@ class Command(
             )
         }
         else -> null
-    }
-
-    companion object {
-        private val validParameterTypes = setOf(
-                Int::class.java,
-                Long::class.java,
-                Double::class.java,
-                Float::class.java,
-                User::class.java,
-                Member::class.java,
-                Channel::class.java,
-                String::class.java
-        )
-
-        internal fun generate(instance: Any, method: Method): Command? {
-            return if (isValid(method)) Command(
-                    instance,
-                    method,
-                    method.getAnnotation(CommandAnnotation::class.java)
-            ) else null
-        }
-
-        internal fun isValid(method: Method): Boolean {
-            if (method.parameterTypes.isEmpty()) return false
-            if (!method.isAnnotationPresent(CommandAnnotation::class.java)) return false
-            if (method.parameterTypes[0] != MessageReceivedEvent::class.java) return false
-            return method.parameterTypes
-                    .drop(1)
-                    .all { it in validParameterTypes }
-        }
     }
 }

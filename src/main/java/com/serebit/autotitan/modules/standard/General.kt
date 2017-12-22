@@ -1,22 +1,21 @@
 package com.serebit.autotitan.modules.standard
 
-import com.serebit.autotitan.api.meta.Locale
-import com.serebit.autotitan.api.meta.annotations.Command
-import com.serebit.autotitan.api.meta.annotations.Module
+import com.serebit.autotitan.api.Module
+import com.serebit.extensions.jda.embed
 import com.serebit.extensions.jda.sendEmbed
 import net.dv8tion.jda.core.OnlineStatus
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Member
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent
+import net.dv8tion.jda.core.entities.MessageEmbed
 import oshi.SystemInfo
 import java.time.format.DateTimeFormatter
 import kotlin.math.ceil
 import kotlin.math.log
 import kotlin.math.pow
 
-@Module
-class General {
-    private val dateFormat = DateTimeFormatter.ofPattern("d MMM, yyyy")
+private val dateFormat = DateTimeFormatter.ofPattern("d MMM, yyyy")
+
+class General : Module() {
     private val systemInfo by lazy {
         SystemInfo().run {
             val formatKeyValuePair = { it: Map.Entry<String, String> ->
@@ -47,94 +46,92 @@ class General {
         }
     }
 
-    @Command(description = "Pings the bot.")
-    fun ping(evt: MessageReceivedEvent) {
-        evt.run {
-            channel.sendMessage("Pong. The last ping was ${jda.ping}ms.").complete()
+    init {
+        command("ping") { evt ->
+            evt.channel.sendMessage("Pong. The last ping was ${evt.jda.ping}ms.").complete()
         }
-    }
 
-    @Command(description = "Gets information about the system that the bot is running on.")
-    fun systemInfo(evt: MessageReceivedEvent) {
-        evt.run {
-            channel.sendEmbed {
-                setColor(guild?.getMember(jda.selfUser)?.color)
+        command("systemInfo") { evt ->
+            evt.channel.sendEmbed {
+                setColor(evt.guild?.getMember(evt.jda.selfUser)?.color)
                 systemInfo.forEach { key, value ->
                     addField(key, value, true)
                 }
             }.complete()
         }
-    }
 
-    @Command(description = "Gets information about the server.", locale = Locale.GUILD)
-    fun serverInfo(evt: MessageReceivedEvent) {
-        evt.run {
-            val onlineMemberCount = guild.members.count { it.onlineStatus != OnlineStatus.OFFLINE }
-            val hoistedRoles = guild.roles
-                    .filter { it.name != "@everyone" && it.isHoisted }
-                    .joinToString(", ") { it.name }
+        command("serverInfo") { evt ->
+            evt.run {
+                val onlineMemberCount = guild.members.count { it.onlineStatus != OnlineStatus.OFFLINE }
+                val hoistedRoles = guild.roles
+                        .filter { it.name != "@everyone" && it.isHoisted }
+                        .joinToString(", ") { it.name }
 
-            channel.sendEmbed {
-                setTitle(guild.name, null)
-                setDescription("Created on ${guild.creationTime.format(dateFormat)}")
-                setThumbnail(guild.iconUrl)
-                setColor(guild.owner.color)
-                addField("Owner", guild.owner.asMention, true)
-                addField("Region", guild.region.toString(), true)
-                addField("Online Members", onlineMemberCount.toString(), true)
-                addField("Total Members", guild.members.size.toString(), true)
-                addField("Bots", guild.members.count { it.user.isBot }.toString(), true)
-                addField("Text Channels", guild.textChannels.size.toString(), true)
-                addField("Voice Channels", guild.voiceChannels.size.toString(), true)
-                addField("Hoisted Roles", hoistedRoles, true)
-                if (guild.selfMember.hasPermission(Permission.MANAGE_SERVER)) {
-                    val permanentInvites = guild.invites.complete().filter { !it.isTemporary }
-                    if (permanentInvites.isNotEmpty()) addField(
-                            "Invite Link",
-                            permanentInvites.first().url,
-                            false
-                    )
-                }
-                setFooter("Server ID: ${guild.id}", null)
-            }.complete()
-        }
-    }
-
-    @Command(description = "Gets information about the invoker.", locale = Locale.GUILD)
-    fun selfInfo(evt: MessageReceivedEvent) = memberInfo(evt, evt.member)
-
-    @Command(description = "Gets information about a specific server member.", locale = Locale.GUILD)
-    fun memberInfo(evt: MessageReceivedEvent, member: Member) {
-        evt.run {
-            val title = "${member.user.name}#${member.user.discriminator}" + if (member.nickname != null) {
-                " (${member.nickname})"
-            } else {
-                ""
+                channel.sendEmbed {
+                    setTitle(guild.name, null)
+                    setDescription("Created on ${guild.creationTime.format(dateFormat)}")
+                    setThumbnail(guild.iconUrl)
+                    setColor(guild.owner.color)
+                    addField("Owner", guild.owner.asMention, true)
+                    addField("Region", guild.region.toString(), true)
+                    addField("Online Members", onlineMemberCount.toString(), true)
+                    addField("Total Members", guild.members.size.toString(), true)
+                    addField("Bots", guild.members.count { it.user.isBot }.toString(), true)
+                    addField("Text Channels", guild.textChannels.size.toString(), true)
+                    addField("Voice Channels", guild.voiceChannels.size.toString(), true)
+                    addField("Hoisted Roles", hoistedRoles, true)
+                    if (guild.selfMember.hasPermission(Permission.MANAGE_SERVER)) {
+                        val permanentInvites = guild.invites.complete().filter { !it.isTemporary }
+                        if (permanentInvites.isNotEmpty()) addField(
+                                "Invite Link",
+                                permanentInvites.first().url,
+                                false
+                        )
+                    }
+                    setFooter("Server ID: ${guild.id}", null)
+                }.complete()
             }
-            val status = member.onlineStatus.name
-                    .toLowerCase()
-                    .replace("_", " ")
-                    .capitalize()
-                    .plus(if (member.game != null) " - Playing ${member.game?.name}" else "")
-            val roles = if (member.roles.isNotEmpty()) {
-                member.roles.joinToString(", ") { it.name }
-            } else null
+        }
 
-            channel.sendEmbed {
-                setTitle(title, null)
-                setDescription(status)
-                setColor(member.color)
-                setThumbnail(member.user.effectiveAvatarUrl)
-                addField("Joined Discord", member.user.creationTime.format(dateFormat), true)
-                addField("Joined this Server", member.joinDate.format(dateFormat), true)
-                addField("Do they own the server?", member.isOwner.asYesNo.capitalize(), true)
-                addField("Are they a bot?", member.user.isBot.asYesNo.capitalize(), true)
-                if (roles != null) addField("Roles", roles, true)
-                setFooter("User ID: ${member.user.id}", null)
-            }.complete()
+        command("selfInfo") { evt ->
+            evt.channel.sendMessage(evt.member.info).complete()
+        }
+
+        command("memberInfo") { evt, member: Member ->
+            evt.channel.sendMessage(member.info).complete()
         }
     }
 }
+
+private val Member.info: MessageEmbed
+    get() {
+        val title = "${user.name}#${user.discriminator}" + if (nickname != null) {
+            " ($nickname)"
+        } else {
+            ""
+        }
+        val status = onlineStatus.name
+                .toLowerCase()
+                .replace("_", " ")
+                .capitalize()
+                .plus(if (game != null) " - Playing ${game?.name}" else "")
+        val roles = if (roles.isNotEmpty()) {
+            roles.joinToString(", ") { it.name }
+        } else null
+
+        return embed {
+            setTitle(title, null)
+            setDescription(status)
+            setColor(color)
+            setThumbnail(user.effectiveAvatarUrl)
+            addField("Joined Discord", user.creationTime.format(dateFormat), true)
+            addField("Joined Server", joinDate.format(dateFormat), true)
+            addField("Do they own the server?", isOwner.asYesNo.capitalize(), true)
+            addField("Are they a bot?", user.isBot.asYesNo.capitalize(), true)
+            if (roles != null) addField("Roles", roles, true)
+            setFooter("User ID: ${user.id}", null)
+        }
+    }
 
 private val Long.asHumanReadableByteCount: String
     get() {

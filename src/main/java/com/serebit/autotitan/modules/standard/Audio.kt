@@ -11,12 +11,8 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
 import com.sedmelluq.discord.lavaplayer.track.playback.AudioFrame
-import com.serebit.autotitan.api.meta.Locale
-import com.serebit.autotitan.api.meta.annotations.Command
-import com.serebit.autotitan.api.meta.annotations.Listener
-import com.serebit.autotitan.api.meta.annotations.Module
+import com.serebit.autotitan.api.Module
 import com.serebit.extensions.jda.sendEmbed
-import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.audio.AudioSendHandler
 import net.dv8tion.jda.core.entities.Guild
 import net.dv8tion.jda.core.entities.MessageChannel
@@ -28,8 +24,7 @@ import net.dv8tion.jda.core.managers.AudioManager
 import org.apache.commons.validator.routines.UrlValidator
 import java.time.OffsetDateTime
 
-@Module
-class Audio {
+class Audio : Module() {
     private val urlValidator = UrlValidator(arrayOf("http", "https"))
     private val playerManager = DefaultAudioPlayerManager()
     private val musicManagers = mutableMapOf<Long, GuildMusicManager>()
@@ -47,47 +42,36 @@ class Audio {
     init {
         AudioSourceManagers.registerRemoteSources(playerManager)
         AudioSourceManagers.registerLocalSource(playerManager)
-    }
 
-    @Command(description = "Joins the voice channel that the invoker is in.", locale = Locale.GUILD)
-    fun joinVoice(evt: MessageReceivedEvent) {
-        evt.run {
-            if (member.voiceState.inVoiceChannel()) {
-                connectToVoiceChannel(guild.audioManager, member.voiceState.channel)
-                channel.sendMessage("Now connected to ${member.voiceState.channel.name}.").complete()
+        command("joinVoice") { evt ->
+            if (evt.member.voiceState.inVoiceChannel()) {
+                connectToVoiceChannel(evt.guild.audioManager, evt.member.voiceState.channel)
+                evt.channel.sendMessage("Now connected to ${evt.member.voiceState.channel.name}.").complete()
             } else {
-                channel.sendMessage("You need to be in a voice channel for me to do that.").complete()
+                evt.channel.sendMessage("You need to be in a voice channel for me to do that.").complete()
             }
         }
-    }
 
-    @Command(description = "Leaves the voice channel that the bot is in.", locale = Locale.GUILD)
-    fun leaveVoice(evt: MessageReceivedEvent) {
-        evt.run {
-            if (guild.audioManager.isConnected) {
-                guild.musicManager.scheduler.stop()
-                guild.audioManager.closeAudioConnection()
+        command("leaveVoice") { evt ->
+            if (evt.guild.audioManager.isConnected) {
+                evt.guild.musicManager.scheduler.stop()
+                evt.guild.audioManager.closeAudioConnection()
             }
         }
-    }
 
-    @Command(
-            description = "Plays a URL, or searches YouTube for the given search terms.",
-            locale = Locale.GUILD,
-            delimitFinalParameter = false
-    )
-    fun play(evt: MessageReceivedEvent, query: String) {
-        evt.run {
+        command("play") { evt, query: String ->
             val voiceStatus = voiceStatus(evt)
             when (voiceStatus) {
                 VoiceStatus.CONNECTED_DIFFERENT_CHANNEL, VoiceStatus.USER_NOT_CONNECTED -> {
-                    voiceStatus.sendErrorMessage(channel)
-                    return
+                    voiceStatus.sendErrorMessage(evt.channel)
+                    return@command
                 }
-                VoiceStatus.SELF_NOT_CONNECTED -> connectToVoiceChannel(guild.audioManager, member.voiceState.channel)
+                VoiceStatus.SELF_NOT_CONNECTED -> {
+                    connectToVoiceChannel(evt.guild.audioManager, evt.member.voiceState.channel)
+                }
                 else -> Unit
             }
-            val audioManager = guild.musicManager
+            val audioManager = evt.guild.musicManager
             val formattedQuery = if (urlValidator.isValid(query)) {
                 query
             } else {
@@ -95,7 +79,7 @@ class Audio {
             }
             playerManager.loadItemOrdered(audioManager, formattedQuery, object : AudioLoadResultHandler {
                 override fun trackLoaded(track: AudioTrack) {
-                    channel.sendMessage("Adding ${track.info.title} to queue.").complete()
+                    evt.channel.sendMessage("Adding ${track.info.title} to queue.").complete()
                     audioManager.scheduler.addToQueue(track)
                 }
 
@@ -103,156 +87,136 @@ class Audio {
                     if (playlist.isSearchResult) {
                         val track = playlist.tracks[0]
                         audioManager.scheduler.addToQueue(track)
-                        channel.sendMessage("Adding ${track.info.title} to queue.").complete()
+                        evt.channel.sendMessage("Adding ${track.info.title} to queue.").complete()
                     } else {
-                        channel.sendMessage("Adding ${playlist.tracks.size} songs from ${playlist.name} to queue.").complete()
+                        evt.channel.sendMessage(
+                                "Adding ${playlist.tracks.size} songs from ${playlist.name} to queue."
+                        ).complete()
                         playlist.tracks.forEach { audioManager.scheduler.addToQueue(it) }
                     }
                 }
 
                 override fun noMatches() {
-                    channel.sendMessage("Nothing found.").complete()
+                    evt.channel.sendMessage("Nothing found.").complete()
                 }
 
                 override fun loadFailed(exception: FriendlyException) {
-                    channel.sendMessage("Could not queue: ${exception.message}").complete()
+                    evt.channel.sendMessage("Could not queue: ${exception.message}").complete()
                 }
             })
         }
-    }
 
-    @Command(description = "Skips the currently playing song.", locale = Locale.GUILD)
-    fun skip(evt: MessageReceivedEvent) {
-        evt.run {
+        command("skip") { evt ->
             voiceStatus(evt).let {
                 if (it != VoiceStatus.CONNECTED_SAME_CHANNEL) {
-                    it.sendErrorMessage(channel)
-                    return
+                    it.sendErrorMessage(evt.channel)
+                    return@command
                 }
             }
-            val audioManager = guild.musicManager
+            val audioManager = evt.guild.musicManager
             if (audioManager.scheduler.queue.isEmpty() && audioManager.player.playingTrack == null) {
-                channel.sendMessage("Cannot skip. Nothing is playing.").complete()
-                return
+                evt.channel.sendMessage("Cannot skip. Nothing is playing.").complete()
+                return@command
             }
             audioManager.scheduler.skipTrack()
-            channel.sendMessage("Skipped to next track.").complete()
+            evt.channel.sendMessage("Skipped to next track.").complete()
         }
-    }
 
-    @Command(
-            description = "Stops playing music and clears the queue.",
-            locale = Locale.GUILD,
-            memberPermissions = [Permission.VOICE_MUTE_OTHERS]
-    )
-    fun stop(evt: MessageReceivedEvent) {
-        evt.run {
-            guild.musicManager.scheduler.stop()
-            channel.sendMessage("Cleared the music queue.").complete()
+        command("stop") { evt ->
+            evt.guild.musicManager.scheduler.stop()
+            evt.channel.sendMessage("Cleared the music queue.").complete()
         }
-    }
 
-    @Command(description = "Pauses the currently playing song.", locale = Locale.GUILD)
-    fun pause(evt: MessageReceivedEvent) {
-        evt.run {
+        command("pause") { evt ->
             voiceStatus(evt).let {
                 if (it != VoiceStatus.CONNECTED_SAME_CHANNEL) {
-                    it.sendErrorMessage(channel)
-                    return
+                    it.sendErrorMessage(evt.channel)
+                    return@command
                 }
             }
-            val audioManager = guild.musicManager
+            val audioManager = evt.guild.musicManager
             if (audioManager.scheduler.pause()) {
-                channel.sendMessage("Paused.").complete()
+                evt.channel.sendMessage("Paused.").complete()
             }
         }
-    }
 
-    @Command(description = "Resumes the currently playing song.", locale = Locale.GUILD)
-    fun resume(evt: MessageReceivedEvent) {
-        evt.run {
+        command("resume") { evt ->
             voiceStatus(evt).let {
                 if (it != VoiceStatus.CONNECTED_SAME_CHANNEL) {
-                    it.sendErrorMessage(channel)
-                    return
+                    it.sendErrorMessage(evt.channel)
+                    return@command
                 }
             }
-            if (guild.musicManager.scheduler.resume()) {
-                channel.sendMessage("Resumed.").complete()
+            if (evt.guild.musicManager.scheduler.resume()) {
+                evt.channel.sendMessage("Resumed.").complete()
             }
         }
-    }
 
-    @Command(description = "Sends an embed with the list of songs in the queue.", locale = Locale.GUILD)
-    fun queue(evt: MessageReceivedEvent) {
-        evt.run {
-            if (guild.musicManager.player.playingTrack == null) {
-                channel.sendMessage("No songs are queued.").complete()
-                return
-            }
-            val audioManager = guild.musicManager
-
-            channel.sendEmbed {
-                setAuthor(guild.selfMember.effectiveName, null, jda.selfUser.effectiveAvatarUrl)
-                setTitle("Music Queue", null)
-                setColor(guild.getMember(jda.selfUser).color)
-                val playingTrack = audioManager.player.playingTrack
-                val position = toHumanReadableDuration(playingTrack.position)
-                val duration = toHumanReadableDuration(playingTrack.duration)
-                val upNextList = audioManager.scheduler.queue.take(8).joinToString("\n") {
-                    "${it.info.title} (${toHumanReadableDuration(it.duration)})"
+        command("queue") { evt ->
+            evt.run {
+                if (guild.musicManager.player.playingTrack == null) {
+                    channel.sendMessage("No songs are queued.").complete()
+                    return@command
                 }
-                addField(
-                        "Now Playing",
-                        "${playingTrack.info.title} ($position/$duration)",
-                        false
-                )
-                if (audioManager.scheduler.queue.isNotEmpty()) addField(
-                        "Up Next",
-                        upNextList + if (audioManager.scheduler.queue.size > 8) {
-                            "\n plus ${audioManager.scheduler.queue.drop(8).size} more..."
-                        } else "",
-                        false
-                )
-                setTimestamp(OffsetDateTime.now())
-            }.complete()
-        }
-    }
+                val audioManager = guild.musicManager
 
-    @Command(description = "Sets the volume.", locale = Locale.GUILD)
-    fun setVolume(evt: MessageReceivedEvent, volume: Int) {
-        evt.run {
+                channel.sendEmbed {
+                    setAuthor(guild.selfMember.effectiveName, null, jda.selfUser.effectiveAvatarUrl)
+                    setTitle("Music Queue", null)
+                    setColor(guild.getMember(jda.selfUser).color)
+                    val playingTrack = audioManager.player.playingTrack
+                    val position = toHumanReadableDuration(playingTrack.position)
+                    val duration = toHumanReadableDuration(playingTrack.duration)
+                    val upNextList = audioManager.scheduler.queue.take(8).joinToString("\n") {
+                        "${it.info.title} (${toHumanReadableDuration(it.duration)})"
+                    }
+                    addField(
+                            "Now Playing",
+                            "${playingTrack.info.title} ($position/$duration)",
+                            false
+                    )
+                    if (audioManager.scheduler.queue.isNotEmpty()) addField(
+                            "Up Next",
+                            upNextList + if (audioManager.scheduler.queue.size > 8) {
+                                "\n plus ${audioManager.scheduler.queue.drop(8).size} more..."
+                            } else "",
+                            false
+                    )
+                    setTimestamp(OffsetDateTime.now())
+                }.complete()
+            }
+        }
+
+        command("setVolume") { evt, volume: Int ->
             voiceStatus(evt).let {
                 if (it != VoiceStatus.CONNECTED_SAME_CHANNEL) {
-                    it.sendErrorMessage(channel)
-                    return
+                    it.sendErrorMessage(evt.channel)
+                    return@command
                 }
             }
-            guild.musicManager.player.volume = volume.coerceIn(0..100)
-            channel.sendMessage("Set volume to ${guild.musicManager.player.volume}%.").complete()
+            evt.guild.musicManager.player.volume = volume.coerceIn(0..100)
+            evt.channel.sendMessage("Set volume to ${evt.guild.musicManager.player.volume}%.").complete()
         }
-    }
 
-    @Listener
-    fun leaveVoiceAutomatically(evt: GuildVoiceLeaveEvent) {
-        evt.run {
-            if (guild.audioManager.connectedChannel != channelLeft) return
-            if (guild.audioManager.connectedChannel.members.any { !it.user.isBot }) return
-            if (guild.audioManager.isConnected) {
-                guild.musicManager.scheduler.stop()
-                guild.audioManager.closeAudioConnection()
+        listener { evt: GuildVoiceLeaveEvent ->
+            evt.run {
+                if (guild.audioManager.connectedChannel != channelLeft) return@listener
+                if (guild.audioManager.connectedChannel.members.any { !it.user.isBot }) return@listener
+                if (guild.audioManager.isConnected) {
+                    guild.musicManager.scheduler.stop()
+                    guild.audioManager.closeAudioConnection()
+                }
             }
         }
-    }
 
-    @Listener
-    fun leaveVoiceAutomatically(evt: GuildVoiceMoveEvent) {
-        evt.run {
-            if (guild.audioManager.connectedChannel != channelLeft) return
-            if (guild.audioManager.connectedChannel.members.any { !it.user.isBot }) return
-            if (guild.audioManager.isConnected) {
-                guild.musicManager.scheduler.stop()
-                guild.audioManager.closeAudioConnection()
+        listener { evt: GuildVoiceMoveEvent ->
+            evt.run {
+                if (guild.audioManager.connectedChannel != channelLeft) return@listener
+                if (guild.audioManager.connectedChannel.members.any { !it.user.isBot }) return@listener
+                if (guild.audioManager.isConnected) {
+                    guild.musicManager.scheduler.stop()
+                    guild.audioManager.closeAudioConnection()
+                }
             }
         }
     }

@@ -1,9 +1,7 @@
 package com.serebit.autotitan
 
 import com.google.common.reflect.ClassPath
-import com.serebit.autotitan.api.Command
-import com.serebit.autotitan.api.Listener
-import com.serebit.autotitan.api.generateModule
+import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.listeners.EventListener
 import com.serebit.extensions.jda.jda
 import net.dv8tion.jda.core.AccountType
@@ -13,26 +11,19 @@ const val NAME = "AutoTitan"
 const val VERSION = "0.3.3"
 lateinit var config: Configuration
     private set
-private val modules: Pair<List<Command>, List<Listener>>
-    get() {
-        val instances = ClassPath
-                .from(Thread.currentThread().contextClassLoader)
-                .getTopLevelClassesRecursive("com.serebit.autotitan.modules")
-                .mapNotNull { generateModule(it.load()) }
-        val commands = instances.map { instance ->
-            instance::class.java.methods.mapNotNull { method -> Command.generate(instance, method) }
-        }.flatten()
-        val listeners = instances.map { instance ->
-            instance::class.java.methods.mapNotNull { method -> Listener.generate(instance, method) }
-        }.flatten()
-        return commands to listeners
-    }
+private val modules: List<Module>
+    get() = ClassPath
+            .from(Thread.currentThread().contextClassLoader)
+            .getTopLevelClassesRecursive("com.serebit.autotitan.modules")
+            .map { it.load() }
+            .filter { it.constructors.any { it.parameterCount == 0 } }
+            .map { it.getConstructor().newInstance() as Module }
 
 fun main(args: Array<String>) {
     config = Configuration.generate()
     jda(AccountType.BOT) {
         setToken(config.token)
-        addEventListener(EventListener(modules.first, modules.second))
+        addEventListener(EventListener(modules))
     }.let {
         println()
         println("$NAME v$VERSION")
@@ -46,6 +37,6 @@ fun main(args: Array<String>) {
 fun resetJda(evt: Event) {
     evt.run {
         jda.registeredListeners.forEach { jda.removeEventListener(it) }
-        jda.addEventListener(EventListener(modules.first, modules.second))
+        jda.addEventListener(EventListener(modules))
     }
 }
