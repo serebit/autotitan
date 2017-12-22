@@ -38,8 +38,8 @@ class EventListener(
             val (command, parameters) = it.commands.asSequence()
                     .filter { it.looselyMatches(evt.message.rawContent) }
                     .associate { it to it.parseTokensOrNull(evt) }.entries
-                    .firstOrNull { it.value != null } ?: return
-            command(evt, parameters!!)
+                    .firstOrNull { it.value != null } ?: return@forEach
+            command(it, evt, parameters!!)
         }
     }
 
