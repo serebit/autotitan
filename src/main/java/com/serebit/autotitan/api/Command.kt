@@ -3,6 +3,7 @@ package com.serebit.autotitan.api
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.meta.Locale
 import com.serebit.autotitan.config
+import com.serebit.extensions.jda.embed
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Channel
 import net.dv8tion.jda.core.entities.Member
@@ -27,7 +28,14 @@ class Command(
         private val memberPermissions: List<Permission> = emptyList()
 ) {
     private val parameterTypes: List<KClass<out Any>> = function.valueParameters.map { it.type.jvmErasure }.drop(1)
-    val helpMessage = if (hidden) "" else "`$name`" + if (description.isNotBlank()) "- $description" else ""
+    val summary = if (hidden) {
+        ""
+    } else {
+        "`$name ${parameterTypes.joinToString(" ") { "<${it.simpleName}>" }}`"
+    }
+    val helpEmbed = embed {
+        addField(summary, description, false)
+    }
 
     operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>): Any? =
             function.call(instance, evt, *parameters.toTypedArray())
@@ -85,30 +93,30 @@ class Command(
             type: KClass<out Any>,
             string: String
     ): Any? = when (type) {
-        String::class.java -> string
-        Int::class.java -> string.toIntOrNull()
-        Long::class.java -> string.toLongOrNull()
-        Double::class.java -> string.toDoubleOrNull()
-        Float::class.java -> string.toFloatOrNull()
-        Short::class.java -> string.toShortOrNull()
-        Byte::class.java -> string.toByteOrNull()
+        String::class -> string
+        Int::class -> string.toIntOrNull()
+        Long::class -> string.toLongOrNull()
+        Double::class -> string.toDoubleOrNull()
+        Float::class -> string.toFloatOrNull()
+        Short::class -> string.toShortOrNull()
+        Byte::class -> string.toByteOrNull()
         Boolean::class.java -> {
             if (string == "true" || string == "false") string.toBoolean() else null
         }
-        Char::class.java -> if (string.length == 1) string[0] else null
-        User::class.java -> {
+        Char::class -> if (string.length == 1) string[0] else null
+        User::class -> {
             evt.jda.getUserById(string
                     .removeSurrounding("<@", ">")
                     .removePrefix("!")
             )
         }
-        Member::class.java -> {
+        Member::class -> {
             evt.guild.getMemberById(string
                     .removeSurrounding("<@", ">")
                     .removePrefix("!")
             )
         }
-        Channel::class.java -> {
+        Channel::class -> {
             evt.guild.getTextChannelById(
                     string.removeSurrounding("<#", ">")
             )
