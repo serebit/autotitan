@@ -73,9 +73,10 @@ class EventListener(
 
         @CommandAnnotation(description = "Sends an embed with information about the requested command.")
         fun help(evt: MessageReceivedEvent, commandName: String) {
-            evt.channel.sendEmbed {
+            val matchingCommands = commands.filter { it.name == commandName }
+            if (matchingCommands.isNotEmpty()) evt.channel.sendEmbed {
                 setColor(evt.guild?.selfMember?.color)
-                commands.filter { it.name == commandName }.forEach { command ->
+                matchingCommands.forEach { command ->
                     addField(command.helpField)
                 }
             }.complete()
