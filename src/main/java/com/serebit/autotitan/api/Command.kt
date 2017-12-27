@@ -10,7 +10,8 @@ import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
-import kotlin.reflect.jvm.javaMethod
+import kotlin.reflect.full.findAnnotation
+import kotlin.reflect.full.valueParameters
 import kotlin.reflect.jvm.jvmErasure
 import com.serebit.autotitan.api.meta.annotations.Command as CommandAnnotation
 
@@ -25,7 +26,7 @@ class Command(
         hidden: Boolean,
         private val memberPermissions: List<Permission> = emptyList()
 ) {
-    private val parameterTypes: List<KClass<out Any>> = function.parameters.map { it.type.jvmErasure }.drop(2)
+    private val parameterTypes: List<KClass<out Any>> = function.valueParameters.map { it.type.jvmErasure }.drop(1)
     val helpMessage = if (hidden) "" else "`$name`" + if (description.isNotBlank()) "- $description" else ""
 
     operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>): Any? =
@@ -129,7 +130,7 @@ class Command(
 
         internal fun generate(function: KFunction<*>, instance: Any): Command? {
             return if (isValid(function)) {
-                val annotation = function.javaMethod?.getAnnotation(CommandAnnotation::class.java) ?: return null
+                val annotation = function.findAnnotation<CommandAnnotation>() ?: return null
                 @Suppress("UNCHECKED_CAST")
                 Command(
                         function as KFunction<Unit>,
@@ -147,11 +148,11 @@ class Command(
 
         internal fun isValid(function: KFunction<*>): Boolean {
             if (function.returnType.jvmErasure != Unit::class) return false
-            if (function.parameters.isEmpty()) return false
-            if (!function.javaMethod!!.isAnnotationPresent(CommandAnnotation::class.java)) return false
-            if (function.parameters[1].type.jvmErasure != MessageReceivedEvent::class) return false
-            return function.parameters
-                    .drop(2)
+            if (function.valueParameters.isEmpty()) return false
+            if (function.findAnnotation<CommandAnnotation>() == null) return false
+            if (function.valueParameters[0].type.jvmErasure != MessageReceivedEvent::class) return false
+            return function.valueParameters
+                    .drop(1)
                     .all {
                         it.type.jvmErasure in validParameterTypes
                     }
