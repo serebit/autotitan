@@ -56,7 +56,7 @@ class EventListener(
 
     @Module
     inner class Help {
-        @CommandAnnotation
+        @CommandAnnotation(description = "Sends an embed with a list of commands.")
         fun help(evt: MessageReceivedEvent) {
             evt.run {
                 channel.sendEmbed {
@@ -71,11 +71,14 @@ class EventListener(
             }
         }
 
-        @CommandAnnotation
+        @CommandAnnotation(description = "Sends an embed with information about the requested command.")
         fun help(evt: MessageReceivedEvent, commandName: String) {
-            commands.firstOrNull { it.name == commandName }?.let { command ->
-                evt.channel.sendMessage(command.helpEmbed).complete()
-            }
+            evt.channel.sendEmbed {
+                setColor(evt.guild?.selfMember?.color)
+                commands.filter { it.name == commandName }.forEach { command ->
+                    addField(command.helpField)
+                }
+            }.complete()
         }
     }
 }

@@ -3,10 +3,10 @@ package com.serebit.autotitan.api
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.meta.Locale
 import com.serebit.autotitan.config
-import com.serebit.extensions.jda.embed
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Channel
 import net.dv8tion.jda.core.entities.Member
+import net.dv8tion.jda.core.entities.MessageEmbed
 import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import kotlin.reflect.KClass
@@ -33,9 +33,7 @@ class Command(
     } else {
         "`$name ${parameterTypes.joinToString(" ") { "<${it.simpleName}>" }}`"
     }
-    val helpEmbed = embed {
-        addField(summary, description, false)
-    }
+    val helpField = MessageEmbed.Field(summary, description, false)
 
     operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>): Any? =
             function.call(instance, evt, *parameters.toTypedArray())
