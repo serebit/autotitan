@@ -9,6 +9,7 @@ import com.serebit.extensions.jda.jda
 import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.events.Event
 import kotlin.reflect.full.declaredFunctions
+import kotlin.reflect.full.declaredMemberFunctions
 
 const val NAME = "AutoTitan"
 const val VERSION = "0.3.3"
@@ -26,7 +27,7 @@ private val modules: Pair<List<Command>, List<Listener>>
             }
         }.flatten()
         val listeners = instances.map { instance ->
-            instance::class.java.methods.mapNotNull { method -> Listener.generate(instance, method) }
+            instance::class.declaredMemberFunctions.mapNotNull { method -> Listener.generate(method, instance) }
         }.flatten()
         return commands to listeners
     }

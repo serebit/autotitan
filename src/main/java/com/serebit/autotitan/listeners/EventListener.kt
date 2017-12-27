@@ -17,7 +17,7 @@ class EventListener(
 ) : ListenerAdapter() {
     override fun onGenericEvent(evt: Event) {
         launch {
-            listeners.filter { it.eventType == evt::class.java }.forEach {
+            listeners.filter { it.eventType == evt::class }.forEach {
                 it(evt)
             }
         }
