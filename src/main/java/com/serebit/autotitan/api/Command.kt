@@ -11,7 +11,6 @@ import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
-import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.valueParameters
 import kotlin.reflect.jvm.jvmErasure
 import com.serebit.autotitan.api.meta.annotations.Command as CommandAnnotation
@@ -120,48 +119,5 @@ class Command(
             )
         }
         else -> null
-    }
-
-    companion object {
-        private val validParameterTypes = setOf(
-                Int::class,
-                Long::class,
-                Double::class,
-                Float::class,
-                User::class,
-                Member::class,
-                Channel::class,
-                String::class
-        )
-
-        internal fun generate(function: KFunction<*>, instance: Any): Command? {
-            return if (isValid(function)) {
-                val annotation = function.findAnnotation<CommandAnnotation>() ?: return null
-                @Suppress("UNCHECKED_CAST")
-                Command(
-                        function as KFunction<Unit>,
-                        instance,
-                        (if (annotation.name.isNotBlank()) annotation.name else function.name).toLowerCase(),
-                        annotation.description.trim(),
-                        annotation.access,
-                        annotation.locale,
-                        annotation.splitLastParameter,
-                        annotation.hidden,
-                        annotation.memberPermissions.toList()
-                )
-            } else null
-        }
-
-        internal fun isValid(function: KFunction<*>): Boolean {
-            if (function.returnType.jvmErasure != Unit::class) return false
-            if (function.valueParameters.isEmpty()) return false
-            if (function.findAnnotation<CommandAnnotation>() == null) return false
-            if (function.valueParameters[0].type.jvmErasure != MessageReceivedEvent::class) return false
-            return function.valueParameters
-                    .drop(1)
-                    .all {
-                        it.type.jvmErasure in validParameterTypes
-                    }
-        }
     }
 }

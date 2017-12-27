@@ -1,8 +1,8 @@
 package com.serebit.autotitan.modules.standard
 
+import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.api.meta.Locale
 import com.serebit.autotitan.api.meta.annotations.Command
-import com.serebit.autotitan.api.meta.annotations.Module
 import com.serebit.extensions.jda.sendEmbed
 import net.dv8tion.jda.core.OnlineStatus
 import net.dv8tion.jda.core.Permission
@@ -14,8 +14,7 @@ import kotlin.math.ceil
 import kotlin.math.log
 import kotlin.math.pow
 
-@Module
-class General {
+class General : Module() {
     private val dateFormat = DateTimeFormatter.ofPattern("d MMM, yyyy")
     private val systemInfo by lazy {
         SystemInfo().run {

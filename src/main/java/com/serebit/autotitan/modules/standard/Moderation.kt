@@ -1,9 +1,9 @@
 package com.serebit.autotitan.modules.standard
 
+import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.api.meta.Locale
 import com.serebit.autotitan.api.meta.annotations.Command
 import com.serebit.autotitan.api.meta.annotations.Listener
-import com.serebit.autotitan.api.meta.annotations.Module
 import com.serebit.autotitan.data.DataManager
 import net.dv8tion.jda.core.JDA
 import net.dv8tion.jda.core.Permission
@@ -14,8 +14,7 @@ import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 
-@Module
-class Moderation {
+class Moderation : Module() {
     private val dataManager = DataManager(this::class.java)
     private val map: GuildRoleMap = dataManager.read("rolemap.json") ?: GuildRoleMap()
 

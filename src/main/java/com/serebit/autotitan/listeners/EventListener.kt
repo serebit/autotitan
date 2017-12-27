@@ -1,39 +1,29 @@
 package com.serebit.autotitan.listeners
 
-import com.serebit.autotitan.api.Command
-import com.serebit.autotitan.api.Listener
-import com.serebit.autotitan.api.meta.annotations.Module
+import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.config
 import com.serebit.extensions.jda.sendEmbed
 import kotlinx.coroutines.experimental.launch
 import net.dv8tion.jda.core.events.Event
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import net.dv8tion.jda.core.hooks.ListenerAdapter
-import kotlin.reflect.full.declaredMemberFunctions
-import kotlin.reflect.full.instanceParameter
-import kotlin.reflect.jvm.jvmErasure
 import com.serebit.autotitan.api.meta.annotations.Command as CommandAnnotation
 
 class EventListener(
-        commands: Collection<Command>,
-        listeners: Collection<Listener>
+        modules: List<Module>
 ) : ListenerAdapter() {
-    private val commands = commands.toMutableList()
-    private val listeners = listeners.toMutableList()
+    private val modules = modules.toMutableList()
 
     init {
-        Help().let { helpModule ->
-            this.commands.addAll(
-                    helpModule::class.declaredMemberFunctions.mapNotNull { Command.generate(it, helpModule) }
-            )
-        }
-
+        this.modules.add(Help())
     }
 
     override fun onGenericEvent(evt: Event) {
         launch {
-            listeners.filter { it.eventType == evt::class }.forEach {
-                it(evt)
+            modules.forEach { module ->
+                module.listeners.filter { it.eventType == evt::class }.forEach { listener ->
+                    listener(evt)
+                }
             }
         }
     }
@@ -47,25 +37,24 @@ class EventListener(
     }
 
     private fun runCommands(evt: MessageReceivedEvent) {
-        val (command, parameters) = commands.asSequence()
-                .filter { it.looselyMatches(evt.message.contentRaw) }
-                .associate { it to it.parseTokensOrNull(evt) }.entries
-                .firstOrNull { it.value != null } ?: return
-        command(evt, parameters!!)
+        modules.forEach { module ->
+            val (command, parameters) = module.commands.asSequence()
+                    .filter { it.looselyMatches(evt.message.contentRaw) }
+                    .associate { it to it.parseTokensOrNull(evt) }.entries
+                    .firstOrNull { it.value != null } ?: return@forEach
+            command(evt, parameters!!)
+        }
     }
 
-    @Module
-    inner class Help {
+    inner class Help : Module() {
         @CommandAnnotation(description = "Sends an embed with a list of commands.")
         fun help(evt: MessageReceivedEvent) {
             evt.run {
                 channel.sendEmbed {
                     setColor(guild?.selfMember?.color)
-                    commands.sortedBy { it.name }
-                            .groupBy { it.function.instanceParameter?.type?.jvmErasure?.simpleName }.entries
-                            .sortedBy { it.key }
-                            .forEach { (extension, commands) ->
-                                addField(extension, commands.joinToString("\n") { it.summary }, false)
+                    modules.sortedBy { it.name }
+                            .forEach { module ->
+                                addField(module.name, module.commands.joinToString("\n") { it.summary }, false)
                             }
                 }.complete()
             }
@@ -73,7 +62,7 @@ class EventListener(
 
         @CommandAnnotation(description = "Sends an embed with information about the requested command.")
         fun help(evt: MessageReceivedEvent, commandName: String) {
-            val matchingCommands = commands.filter { it.name == commandName }
+            val matchingCommands = modules.map { it.commands }.flatten().filter { it.name == commandName }
             if (matchingCommands.isNotEmpty()) evt.channel.sendEmbed {
                 setColor(evt.guild?.selfMember?.color)
                 matchingCommands.forEach { command ->

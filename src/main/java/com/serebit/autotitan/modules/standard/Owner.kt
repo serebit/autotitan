@@ -1,8 +1,8 @@
 package com.serebit.autotitan.modules.standard
 
+import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.meta.annotations.Command
-import com.serebit.autotitan.api.meta.annotations.Module
 import com.serebit.autotitan.config
 import com.serebit.autotitan.resetJda
 import com.serebit.extensions.jda.sendEmbed
@@ -11,8 +11,7 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import java.time.OffsetDateTime
 import kotlin.system.exitProcess
 
-@Module
-class Owner {
+class Owner : Module() {
     @Command(
             description = "Shuts down the bot with an exit code of 0.",
             access = Access.BOT_OWNER
