@@ -8,6 +8,7 @@ import com.serebit.autotitan.listeners.EventListener
 import com.serebit.extensions.jda.jda
 import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.events.Event
+import kotlin.reflect.full.declaredFunctions
 
 const val NAME = "AutoTitan"
 const val VERSION = "0.3.3"
@@ -18,9 +19,11 @@ private val modules: Pair<List<Command>, List<Listener>>
         val instances = ClassPath
                 .from(Thread.currentThread().contextClassLoader)
                 .getTopLevelClassesRecursive("com.serebit.autotitan.modules")
-                .mapNotNull { generateModule(it.load()) }
+                .mapNotNull { generateModule(it.load().kotlin) }
         val commands = instances.map { instance ->
-            instance::class.java.methods.mapNotNull { method -> Command.generate(instance, method) }
+            instance::class.declaredFunctions.mapNotNull { function ->
+                Command.generate(function, instance)
+            }
         }.flatten()
         val listeners = instances.map { instance ->
             instance::class.java.methods.mapNotNull { method -> Listener.generate(instance, method) }

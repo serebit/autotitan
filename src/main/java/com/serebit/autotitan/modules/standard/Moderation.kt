@@ -78,7 +78,7 @@ class Moderation {
 
     @Command(
             memberPermissions = [Permission.MANAGE_ROLES],
-            delimitFinalParameter = false
+            splitLastParameter = false
     )
     fun setAutoRole(evt: MessageReceivedEvent, roleName: String) {
         evt.run {
@@ -136,17 +136,17 @@ class Moderation {
             }
         }
     }
-}
 
-private class GuildRoleMap {
-    private val map = mutableMapOf<Long, Long>()
+    private class GuildRoleMap {
+        private val map = mutableMapOf<Long, Long>()
 
-    operator fun contains(key: Guild) = map.contains(key.idLong)
+        operator fun contains(key: Guild) = map.contains(key.idLong)
 
-    operator fun get(jda: JDA, key: Guild): Role? {
-        val value = map[key.idLong]
-        return if (value != null) jda.getRoleById(value) else null
+        operator fun get(jda: JDA, key: Guild): Role? {
+            val value = map[key.idLong]
+            return if (value != null) jda.getRoleById(value) else null
+        }
+
+        fun put(key: Guild, value: Role) = map.put(key.idLong, value.idLong)
     }
-
-    fun put(key: Guild, value: Role) = map.put(key.idLong, value.idLong)
 }

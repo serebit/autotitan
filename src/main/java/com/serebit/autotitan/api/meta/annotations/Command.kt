@@ -13,7 +13,7 @@ import net.dv8tion.jda.core.Permission
  * @param locale The locale in which this command can be used.
  * @param access Who has access to this command.
  * @param hidden Defines whether or not this command will appear in help messages.
- * @param delimitFinalParameter If the last parameter of the command is a string, setting this to
+ * @param splitLastParameter If the last parameter of the command is a string, setting this to
  * false will prevent AutoTitan from splitting the string by whitespace.
  * @param memberPermissions The memberPermissions a Guild member must have in order to use the command.
  */
@@ -24,7 +24,7 @@ annotation class Command(
         val locale: Locale = Locale.ALL,
         val access: Access = Access.ALL,
         val hidden: Boolean = false,
-        val delimitFinalParameter: Boolean = true,
+        val splitLastParameter: Boolean = true,
         val botPermissions: Array<Permission> = [],
         val memberPermissions: Array<Permission> = []
 )

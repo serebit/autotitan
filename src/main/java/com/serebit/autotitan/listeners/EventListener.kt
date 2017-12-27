@@ -8,6 +8,8 @@ import kotlinx.coroutines.experimental.launch
 import net.dv8tion.jda.core.events.Event
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import net.dv8tion.jda.core.hooks.ListenerAdapter
+import kotlin.reflect.full.instanceParameter
+import kotlin.reflect.jvm.jvmErasure
 
 class EventListener(
         private val commands: Collection<Command>,
@@ -46,7 +48,7 @@ class EventListener(
             channel.sendEmbed {
                 setColor(guild?.selfMember?.color)
                 commands.sortedBy { it.name }
-                        .groupBy { it.method.declaringClass.simpleName }.entries
+                        .groupBy { it.function.instanceParameter?.type?.jvmErasure?.simpleName }.entries
                         .sortedBy { it.key }
                         .forEach { (extension, commands) ->
                             addField(extension, commands.joinToString("\n") { it.helpMessage }, false)

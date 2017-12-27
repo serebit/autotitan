@@ -3,34 +3,33 @@ package com.serebit.autotitan.api
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.meta.Locale
 import com.serebit.autotitan.config
+import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Channel
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
-import java.lang.reflect.Method
+import kotlin.reflect.KClass
+import kotlin.reflect.KFunction
+import kotlin.reflect.jvm.javaMethod
+import kotlin.reflect.jvm.jvmErasure
 import com.serebit.autotitan.api.meta.annotations.Command as CommandAnnotation
 
 class Command(
+        val function: KFunction<Unit>,
         private val instance: Any,
-        internal val method: Method,
-        info: CommandAnnotation
+        val name: String,
+        description: String,
+        private val access: Access,
+        private val locale: Locale,
+        private val splitLastParameter: Boolean = true,
+        hidden: Boolean,
+        private val memberPermissions: List<Permission> = emptyList()
 ) {
-    private val parameterTypes: List<Class<out Any>> = method.parameterTypes.drop(1).toList()
-    val name = if (info.name.isNotEmpty()) {
-        info.name
-    } else {
-        method.name
-    }.toLowerCase()
-    private val description = if (info.description.isNotBlank()) info.description else ""
-    private val access = info.access
-    private val locale = info.locale
-    private val delimitFinalParameter = info.delimitFinalParameter
-    private val hidden = info.hidden
-    private val memberPermissions = info.memberPermissions.toList()
-    val helpMessage = if (hidden) "" else "`$name`" + if (description.isNotEmpty()) "- $description" else ""
+    private val parameterTypes: List<KClass<out Any>> = function.parameters.map { it.type.jvmErasure }.drop(2)
+    val helpMessage = if (hidden) "" else "`$name`" + if (description.isNotBlank()) "- $description" else ""
 
     operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>): Any? =
-            method.invoke(instance, evt, *parameters.toTypedArray())
+            function.call(instance, evt, *parameters.toTypedArray())
 
     fun looselyMatches(rawMessageContent: String): Boolean = rawMessageContent.split(" ")[0] == config.prefix + name
 
@@ -64,7 +63,7 @@ class Command(
 
     private fun tokenizeMessage(message: String): List<String> {
         val splitParameters = message.split(" ").filter(String::isNotBlank)
-        return if (delimitFinalParameter) {
+        return if (splitLastParameter) {
             splitParameters
         } else {
             listOf(
@@ -82,7 +81,7 @@ class Command(
 
     private fun castParameter(
             evt: MessageReceivedEvent,
-            type: Class<out Any>,
+            type: KClass<out Any>,
             string: String
     ): Any? = when (type) {
         String::class.java -> string
@@ -118,31 +117,44 @@ class Command(
 
     companion object {
         private val validParameterTypes = setOf(
-                Int::class.java,
-                Long::class.java,
-                Double::class.java,
-                Float::class.java,
-                User::class.java,
-                Member::class.java,
-                Channel::class.java,
-                String::class.java
+                Int::class,
+                Long::class,
+                Double::class,
+                Float::class,
+                User::class,
+                Member::class,
+                Channel::class,
+                String::class
         )
 
-        internal fun generate(instance: Any, method: Method): Command? {
-            return if (isValid(method)) Command(
-                    instance,
-                    method,
-                    method.getAnnotation(CommandAnnotation::class.java)
-            ) else null
+        internal fun generate(function: KFunction<*>, instance: Any): Command? {
+            return if (isValid(function)) {
+                val annotation = function.javaMethod?.getAnnotation(CommandAnnotation::class.java) ?: return null
+                @Suppress("UNCHECKED_CAST")
+                Command(
+                        function as KFunction<Unit>,
+                        instance,
+                        (if (annotation.name.isNotBlank()) annotation.name else function.name).toLowerCase(),
+                        annotation.description.trim(),
+                        annotation.access,
+                        annotation.locale,
+                        annotation.splitLastParameter,
+                        annotation.hidden,
+                        annotation.memberPermissions.toList()
+                )
+            } else null
         }
 
-        internal fun isValid(method: Method): Boolean {
-            if (method.parameterTypes.isEmpty()) return false
-            if (!method.isAnnotationPresent(CommandAnnotation::class.java)) return false
-            if (method.parameterTypes[0] != MessageReceivedEvent::class.java) return false
-            return method.parameterTypes
-                    .drop(1)
-                    .all { it in validParameterTypes }
+        internal fun isValid(function: KFunction<*>): Boolean {
+            if (function.returnType.jvmErasure != Unit::class) return false
+            if (function.parameters.isEmpty()) return false
+            if (!function.javaMethod!!.isAnnotationPresent(CommandAnnotation::class.java)) return false
+            if (function.parameters[1].type.jvmErasure != MessageReceivedEvent::class) return false
+            return function.parameters
+                    .drop(2)
+                    .all {
+                        it.type.jvmErasure in validParameterTypes
+                    }
         }
     }
 }

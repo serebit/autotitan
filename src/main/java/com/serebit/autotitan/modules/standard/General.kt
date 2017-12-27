@@ -134,13 +134,13 @@ class General {
             }.complete()
         }
     }
+
+    private val Long.asHumanReadableByteCount: String
+        get() {
+            val exponent = ceil(log(this.toDouble(), 1000.0)).toInt() - 1
+            val unit = listOf("B", "kB", "MB", "GB", "TB", "PB", "EB")[exponent]
+            return "%.1f $unit".format(this / 1000.0.pow(exponent))
+        }
+
+    private val Boolean.asYesNo get() = if (this) "yes" else "no"
 }
-
-private val Long.asHumanReadableByteCount: String
-    get() {
-        val exponent = ceil(log(this.toDouble(), 1000.0)).toInt() - 1
-        val unit = listOf("B", "kB", "MB", "GB", "TB", "PB", "EB")[exponent]
-        return "%.1f $unit".format(this / 1000.0.pow(exponent))
-    }
-
-private val Boolean.asYesNo get() = if (this) "yes" else "no"

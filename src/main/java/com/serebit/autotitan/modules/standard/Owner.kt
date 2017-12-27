@@ -40,7 +40,7 @@ class Owner {
 
     @Command(
             description = "Renames the bot.",
-            delimitFinalParameter = false,
+            splitLastParameter = false,
             access = Access.BOT_OWNER
     )
     fun setName(evt: MessageReceivedEvent, name: String) {
