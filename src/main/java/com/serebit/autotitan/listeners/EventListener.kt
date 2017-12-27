@@ -40,7 +40,7 @@ class EventListener(
 
     override fun onMessageReceived(evt: MessageReceivedEvent) {
         launch {
-            if (evt.message.rawContent.startsWith(config.prefix)) {
+            if (evt.message.contentRaw.startsWith(config.prefix)) {
                 runCommands(evt)
             }
         }
@@ -48,7 +48,7 @@ class EventListener(
 
     private fun runCommands(evt: MessageReceivedEvent) {
         val (command, parameters) = commands.asSequence()
-                .filter { it.looselyMatches(evt.message.rawContent) }
+                .filter { it.looselyMatches(evt.message.contentRaw) }
                 .associate { it to it.parseTokensOrNull(evt) }.entries
                 .firstOrNull { it.value != null } ?: return
         command(evt, parameters!!)
