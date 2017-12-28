@@ -15,7 +15,8 @@ import com.serebit.autotitan.api.meta.annotations.Command as CommandAnnotation
 import com.serebit.autotitan.api.meta.annotations.Listener as ListenerAnnotation
 
 abstract class Module(name: String = "") {
-    val name = if (name.isNotBlank()) name else this::class.simpleName
+    var name: String = name
+        private set
     val commands: MutableList<Command> = mutableListOf()
     val listeners: MutableList<Listener> = mutableListOf()
     private val validParameterTypes = setOf(
@@ -29,8 +30,9 @@ abstract class Module(name: String = "") {
             String::class
     )
 
-    init {
-        this::class.declaredMemberFunctions.map { function -> addFunction(function) }
+    fun init() {
+        this::class.declaredMemberFunctions.forEach { addFunction(it) }
+        name = if (name.isNotBlank()) name else this::class.simpleName ?: name
     }
 
     private fun <T> addFunction(function: KFunction<T>): Boolean {
@@ -74,7 +76,7 @@ abstract class Module(name: String = "") {
         get() {
             if (returnType.jvmErasure != Unit::class) return false
             if (valueParameters.isEmpty()) return false
-            if (findAnnotation<com.serebit.autotitan.api.meta.annotations.Command>() == null) return false
+            if (findAnnotation<CommandAnnotation>() == null) return false
             if (valueParameters[0].type.jvmErasure != MessageReceivedEvent::class) return false
             return valueParameters
                     .drop(1)

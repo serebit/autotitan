@@ -17,6 +17,7 @@ private val modules: List<Module>
             .from(Thread.currentThread().contextClassLoader)
             .getTopLevelClassesRecursive("com.serebit.autotitan.modules")
             .mapNotNull { it.load().kotlin.createInstance() as Module }
+            .onEach { it.init() }
 
 
 fun main(args: Array<String>) {
