@@ -39,7 +39,7 @@ class EventListener(
 
     inner class Help : Module() {
         @CommandAnnotation(description = "Sends an embed with a list of commands.")
-        fun help(evt: MessageReceivedEvent) {
+        fun commands(evt: MessageReceivedEvent) {
             evt.run {
                 channel.sendEmbed {
                     loadedModules.sortedBy { it.name }.forEach { module ->
@@ -47,6 +47,21 @@ class EventListener(
                     }
                 }.complete()
             }
+        }
+
+        @CommandAnnotation(description = "Sends an embed with general information on how to use the bot.")
+        fun help(evt: MessageReceivedEvent) {
+            evt.channel.sendEmbed {
+                addField(
+                        "Help",
+                        """
+                            My prefix is `${config.prefix}`.
+                            For a list of commands, enter `${config.prefix}commands`.
+                            For information on a certain command, enter `${config.prefix}help <command name>`.
+                        """.trimIndent(),
+                        false
+                )
+            }.complete()
         }
 
         @CommandAnnotation(description = "Sends an embed with information about the requested command.")
