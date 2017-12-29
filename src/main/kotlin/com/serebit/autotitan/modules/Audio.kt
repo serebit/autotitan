@@ -26,7 +26,6 @@ import net.dv8tion.jda.core.events.guild.voice.GuildVoiceMoveEvent
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import net.dv8tion.jda.core.managers.AudioManager
 import org.apache.commons.validator.routines.UrlValidator
-import java.time.OffsetDateTime
 
 class Audio : Module() {
     private val urlValidator = UrlValidator(arrayOf("http", "https"))
@@ -194,7 +193,6 @@ class Audio : Module() {
             channel.sendEmbed {
                 setAuthor(guild.selfMember.effectiveName, null, jda.selfUser.effectiveAvatarUrl)
                 setTitle("Music Queue", null)
-                setColor(guild.getMember(jda.selfUser).color)
                 val playingTrack = audioManager.player.playingTrack
                 val position = toHumanReadableDuration(playingTrack.position)
                 val duration = toHumanReadableDuration(playingTrack.duration)
@@ -213,7 +211,6 @@ class Audio : Module() {
                         } else "",
                         false
                 )
-                setTimestamp(OffsetDateTime.now())
             }.complete()
         }
     }

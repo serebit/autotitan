@@ -57,7 +57,6 @@ class General : Module() {
     fun systemInfo(evt: MessageReceivedEvent) {
         evt.run {
             channel.sendEmbed {
-                setColor(guild?.getMember(jda.selfUser)?.color)
                 systemInfo.forEach { key, value ->
                     addField(key, value, true)
                 }
@@ -77,7 +76,6 @@ class General : Module() {
                 setTitle(guild.name, null)
                 setDescription("Created on ${guild.creationTime.format(dateFormat)}")
                 setThumbnail(guild.iconUrl)
-                setColor(guild.owner.color)
                 addField("Owner", guild.owner.asMention, true)
                 addField("Region", guild.region.toString(), true)
                 addField("Online Members", onlineMemberCount.toString(), true)

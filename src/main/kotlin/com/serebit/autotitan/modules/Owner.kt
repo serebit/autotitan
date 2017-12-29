@@ -8,7 +8,6 @@ import com.serebit.autotitan.resetJda
 import com.serebit.extensions.jda.sendEmbed
 import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
-import java.time.OffsetDateTime
 import kotlin.system.exitProcess
 
 class Owner : Module() {
@@ -133,9 +132,7 @@ class Owner : Module() {
     )
     fun serverList(evt: MessageReceivedEvent) {
         evt.run {
-            val color = guild?.selfMember?.color
             channel.sendEmbed {
-                setColor(color)
                 jda.guilds.forEach {
                     addField(
                             it.name + "(${it.id})",
@@ -143,7 +140,6 @@ class Owner : Module() {
                             true
                     )
                 }
-                setTimestamp(OffsetDateTime.now())
             }.complete()
         }
     }

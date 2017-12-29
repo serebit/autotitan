@@ -42,7 +42,6 @@ class EventListener(
         fun help(evt: MessageReceivedEvent) {
             evt.run {
                 channel.sendEmbed {
-                    setColor(guild?.selfMember?.color)
                     loadedModules.sortedBy { it.name }.forEach { module ->
                         addField(module.commandListField)
                     }
@@ -57,7 +56,6 @@ class EventListener(
                     .filter { it.isNotHidden }
             if (matchingCommands.isNotEmpty()) {
                 evt.channel.sendEmbed {
-                    setColor(evt.guild?.selfMember?.color)
                     matchingCommands.forEach { command ->
                         addField(command.helpField)
                     }
