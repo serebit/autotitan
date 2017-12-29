@@ -21,14 +21,17 @@ abstract class Module(name: String = "", val isOptional: Boolean = false) {
     private val commands: MutableList<Command> = mutableListOf()
     private val listeners: MutableList<Listener> = mutableListOf()
     private val validParameterTypes = setOf(
+            Boolean::class,
+            Byte::class,
+            Short::class,
             Int::class,
             Long::class,
-            Double::class,
             Float::class,
-            Boolean::class,
+            Double::class,
             User::class,
             Member::class,
             Channel::class,
+            Char::class,
             String::class
     )
     lateinit var commandListField: MessageEmbed.Field
