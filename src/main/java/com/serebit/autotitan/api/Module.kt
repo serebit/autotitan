@@ -25,6 +25,7 @@ abstract class Module(name: String = "", val isOptional: Boolean = false) {
             Long::class,
             Double::class,
             Float::class,
+            Boolean::class,
             User::class,
             Member::class,
             Channel::class,

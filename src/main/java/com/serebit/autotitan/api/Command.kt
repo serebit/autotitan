@@ -97,7 +97,7 @@ class Command(
         Float::class -> string.toFloatOrNull()
         Short::class -> string.toShortOrNull()
         Byte::class -> string.toByteOrNull()
-        Boolean::class.java -> {
+        Boolean::class -> {
             if (string == "true" || string == "false") string.toBoolean() else null
         }
         Char::class -> if (string.length == 1) string[0] else null

@@ -158,4 +158,12 @@ class Owner : Module() {
             guild.leave().complete()
         }
     }
+
+    @Command(description = "Enables optional modules.", access = Access.BOT_OWNER)
+    fun toggleOptionals(evt: MessageReceivedEvent, flag: Boolean) {
+        config.optionalsEnabled = flag
+        config.serialize()
+        if (flag) evt.channel.sendMessage("Enabled optional modules.").complete()
+        else evt.channel.sendMessage("Disabled optional modules.").complete()
+    }
 }
