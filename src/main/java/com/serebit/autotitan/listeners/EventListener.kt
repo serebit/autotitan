@@ -12,37 +12,28 @@ import com.serebit.autotitan.api.meta.annotations.Command as CommandAnnotation
 class EventListener(
         modules: List<Module>
 ) : ListenerAdapter() {
-    private val modules = modules.toMutableList()
+    private val allModules: List<Module>
+    private val standardModules: List<Module>
+    private val optionalModules: List<Module>
+    private val loadedModules get() = if (config.optionalsEnabled) allModules else standardModules
 
     init {
-        this.modules.add(Help())
+        allModules = modules.toMutableList().apply { add(Help().apply(Module::init)) }.toList()
+        standardModules = allModules.filter { it.isStandard }
+        optionalModules = allModules.filter { it.isOptional }
     }
 
     override fun onGenericEvent(evt: Event) {
         launch {
-            modules.forEach { module ->
-                module.listeners.filter { it.eventType == evt::class }.forEach { listener ->
-                    listener(evt)
-                }
-            }
+            loadedModules.forEach { it.runListeners(evt) }
         }
     }
 
     override fun onMessageReceived(evt: MessageReceivedEvent) {
         launch {
             if (evt.message.contentRaw.startsWith(config.prefix)) {
-                runCommands(evt)
+                loadedModules.forEach { it.runCommands(evt) }
             }
-        }
-    }
-
-    private fun runCommands(evt: MessageReceivedEvent) {
-        modules.forEach { module ->
-            val (command, parameters) = module.commands.asSequence()
-                    .filter { it.looselyMatches(evt.message.contentRaw) }
-                    .associate { it to it.parseTokensOrNull(evt) }.entries
-                    .firstOrNull { it.value != null } ?: return@forEach
-            command(evt, parameters!!)
         }
     }
 
@@ -52,17 +43,16 @@ class EventListener(
             evt.run {
                 channel.sendEmbed {
                     setColor(guild?.selfMember?.color)
-                    modules.sortedBy { it.name }
-                            .forEach { module ->
-                                addField(module.name, module.commands.joinToString("\n") { it.summary }, false)
-                            }
+                    loadedModules.sortedBy { it.name }.forEach { module ->
+                        addField(module.commandListField)
+                    }
                 }.complete()
             }
         }
 
         @CommandAnnotation(description = "Sends an embed with information about the requested command.")
         fun help(evt: MessageReceivedEvent, commandName: String) {
-            val matchingCommands = modules.map { it.commands }.flatten().filter { it.name == commandName }
+            val matchingCommands = loadedModules.mapNotNull { it.findCommandByName(commandName) }
             if (matchingCommands.isNotEmpty()) evt.channel.sendEmbed {
                 setColor(evt.guild?.selfMember?.color)
                 matchingCommands.forEach { command ->

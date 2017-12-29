@@ -10,18 +10,16 @@ import kotlin.reflect.full.createInstance
 
 const val NAME = "AutoTitan"
 const val VERSION = "0.3.3"
-lateinit var config: Configuration
-    private set
+val config: Configuration = Configuration.generate()
 private val modules: List<Module>
     get() = ClassPath
             .from(Thread.currentThread().contextClassLoader)
             .getTopLevelClassesRecursive("com.serebit.autotitan.modules")
             .mapNotNull { it.load().kotlin.createInstance() as Module }
-            .onEach { it.init() }
+            .onEach(Module::init)
 
 
 fun main(args: Array<String>) {
-    config = Configuration.generate()
     jda(AccountType.BOT) {
         setToken(config.token)
         addEventListener(EventListener(modules))

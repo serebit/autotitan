@@ -16,7 +16,7 @@ import kotlin.reflect.jvm.jvmErasure
 import com.serebit.autotitan.api.meta.annotations.Command as CommandAnnotation
 
 class Command(
-        val function: KFunction<Unit>,
+        private val function: KFunction<Unit>,
         private val instance: Any,
         val name: String,
         description: String,

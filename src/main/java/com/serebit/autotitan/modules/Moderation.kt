@@ -1,4 +1,4 @@
-package com.serebit.autotitan.modules.standard
+package com.serebit.autotitan.modules
 
 import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.api.meta.Locale

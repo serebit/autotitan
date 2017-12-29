@@ -2,6 +2,7 @@ package com.serebit.autotitan.api
 
 import net.dv8tion.jda.core.entities.Channel
 import net.dv8tion.jda.core.entities.Member
+import net.dv8tion.jda.core.entities.MessageEmbed
 import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.Event
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
@@ -14,11 +15,11 @@ import kotlin.reflect.jvm.jvmErasure
 import com.serebit.autotitan.api.meta.annotations.Command as CommandAnnotation
 import com.serebit.autotitan.api.meta.annotations.Listener as ListenerAnnotation
 
-abstract class Module(name: String = "") {
+abstract class Module(name: String = "", val isOptional: Boolean = false) {
     var name: String = name
         private set
-    val commands: MutableList<Command> = mutableListOf()
-    val listeners: MutableList<Listener> = mutableListOf()
+    private val commands: MutableList<Command> = mutableListOf()
+    private val listeners: MutableList<Listener> = mutableListOf()
     private val validParameterTypes = setOf(
             Int::class,
             Long::class,
@@ -29,10 +30,25 @@ abstract class Module(name: String = "") {
             Channel::class,
             String::class
     )
+    lateinit var commandListField: MessageEmbed.Field
+    val isStandard get() = !isOptional
 
     fun init() {
         this::class.declaredMemberFunctions.forEach { addFunction(it) }
         name = if (name.isNotBlank()) name else this::class.simpleName ?: name
+        commandListField = MessageEmbed.Field(name, commands.joinToString("\n") { it.summary }, false)
+    }
+
+    fun runListeners(evt: Event) {
+        listeners.filter { it.eventType == evt::class }.forEach { it.invoke(evt) }
+    }
+
+    fun runCommands(evt: MessageReceivedEvent) {
+        val (command, parameters) = commands.asSequence()
+                .filter { it.looselyMatches(evt.message.contentRaw) }
+                .associate { it to it.parseTokensOrNull(evt) }.entries
+                .firstOrNull { it.value != null } ?: return
+        command(evt, parameters!!)
     }
 
     private fun <T> addFunction(function: KFunction<T>): Boolean {
@@ -64,6 +80,8 @@ abstract class Module(name: String = "") {
             else -> false
         }
     }
+
+    fun findCommandByName(name: String): Command? = commands.find { it.name == name }
 
     private val KFunction<Unit>.isValidListener: Boolean
         get() {
