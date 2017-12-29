@@ -23,15 +23,12 @@ class Command(
         private val access: Access,
         private val locale: Locale,
         private val splitLastParameter: Boolean = true,
-        hidden: Boolean,
+        val isHidden: Boolean,
         private val memberPermissions: List<Permission> = emptyList()
 ) {
     private val parameterTypes: List<KClass<out Any>> = function.valueParameters.map { it.type.jvmErasure }.drop(1)
-    val summary = if (hidden) {
-        ""
-    } else {
-        "`$name ${parameterTypes.joinToString(" ") { "<${it.simpleName}>" }}`"
-    }
+    val isNotHidden get() = !isHidden
+    val summary = "`$name ${parameterTypes.joinToString(" ") { "<${it.simpleName}>" }}`"
     val helpField = MessageEmbed.Field(summary, description, false)
 
     operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>): Any? =

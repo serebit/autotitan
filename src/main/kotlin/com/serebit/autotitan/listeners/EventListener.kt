@@ -52,13 +52,19 @@ class EventListener(
 
         @CommandAnnotation(description = "Sends an embed with information about the requested command.")
         fun help(evt: MessageReceivedEvent, commandName: String) {
-            val matchingCommands = loadedModules.mapNotNull { it.findCommandByName(commandName) }
-            if (matchingCommands.isNotEmpty()) evt.channel.sendEmbed {
-                setColor(evt.guild?.selfMember?.color)
-                matchingCommands.forEach { command ->
-                    addField(command.helpField)
-                }
-            }.complete()
+            val matchingCommands = loadedModules
+                    .mapNotNull { it.findCommandByName(commandName) }
+                    .filter { it.isNotHidden }
+            if (matchingCommands.isNotEmpty()) {
+                evt.channel.sendEmbed {
+                    setColor(evt.guild?.selfMember?.color)
+                    matchingCommands.forEach { command ->
+                        addField(command.helpField)
+                    }
+                }.complete()
+            } else {
+                evt.channel.sendMessage("Could not find any commands matching `$commandName`.").complete()
+            }
         }
     }
 }

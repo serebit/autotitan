@@ -37,7 +37,11 @@ abstract class Module(name: String = "", val isOptional: Boolean = false) {
     fun init() {
         this::class.declaredMemberFunctions.forEach { addFunction(it) }
         name = if (name.isNotBlank()) name else this::class.simpleName ?: name
-        commandListField = MessageEmbed.Field(name, commands.joinToString("\n") { it.summary }, false)
+        commandListField = MessageEmbed.Field(
+                name,
+                commands.filter { it.isNotHidden }.joinToString("\n") { it.summary },
+                false
+        )
     }
 
     fun runListeners(evt: Event) {
