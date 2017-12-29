@@ -20,9 +20,10 @@ private val modules: List<Module>
 
 
 fun main(args: Array<String>) {
+    EventListener.init(modules)
     jda(AccountType.BOT) {
         setToken(config.token)
-        addEventListener(EventListener(modules))
+        addEventListener(EventListener)
     }.let {
         println()
         println("$NAME v$VERSION")
@@ -33,8 +34,7 @@ fun main(args: Array<String>) {
 }
 
 fun resetJda(evt: Event) {
-    evt.run {
-        jda.registeredListeners.forEach { jda.removeEventListener(it) }
-        jda.addEventListener(EventListener(modules))
-    }
+    evt.jda.removeEventListener(EventListener)
+    EventListener.init(modules)
+    evt.jda.addEventListener(EventListener)
 }

@@ -4,6 +4,7 @@ import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.meta.annotations.Command
 import com.serebit.autotitan.config
+import com.serebit.autotitan.listeners.EventListener
 import com.serebit.autotitan.resetJda
 import com.serebit.extensions.jda.sendEmbed
 import net.dv8tion.jda.core.entities.User
@@ -155,11 +156,37 @@ class Owner : Module() {
         }
     }
 
-    @Command(description = "Enables optional modules.", access = Access.BOT_OWNER)
-    fun toggleOptionals(evt: MessageReceivedEvent, flag: Boolean) {
-        config.optionalsEnabled = flag
+    @Command(description = "Sends a list of all the modules.", access = Access.BOT_OWNER)
+    fun moduleList(evt: MessageReceivedEvent) {
+        evt.channel.sendEmbed {
+            setTitle("Modules")
+            setDescription(EventListener.allModules.joinToString("\n") {
+                it.name + if (it.isOptional) " (Optional)" else ""
+            })
+        }.complete()
+    }
+
+    @Command(description = "Enables the given optional module.", access = Access.BOT_OWNER)
+    fun enableModule(evt: MessageReceivedEvent, moduleName: String) {
+        if (EventListener.allModules.filter { it.isOptional }.none { it.name == moduleName }) return
+        if (moduleName in config.enabledModules) {
+            evt.channel.sendMessage("Module `$moduleName` is already enabled.").complete()
+            return
+        }
+        config.enabledModules.add(moduleName)
         config.serialize()
-        if (flag) evt.channel.sendMessage("Enabled optional modules.").complete()
-        else evt.channel.sendMessage("Disabled optional modules.").complete()
+        evt.channel.sendMessage("Enabled the `$moduleName` module.").complete()
+    }
+
+    @Command(description = "Disables the given optional module.", access = Access.BOT_OWNER)
+    fun disableModule(evt: MessageReceivedEvent, moduleName: String) {
+        if (EventListener.allModules.filter { it.isOptional }.none { it.name == moduleName }) return
+        if (moduleName !in config.enabledModules) {
+            evt.channel.sendMessage("Module `$moduleName` is already disabled.").complete()
+            return
+        }
+        config.enabledModules.remove(moduleName)
+        config.serialize()
+        evt.channel.sendMessage("Disabled the `$moduleName` module.").complete()
     }
 }

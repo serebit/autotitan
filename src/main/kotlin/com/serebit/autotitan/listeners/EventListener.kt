@@ -9,18 +9,13 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import net.dv8tion.jda.core.hooks.ListenerAdapter
 import com.serebit.autotitan.api.meta.annotations.Command as CommandAnnotation
 
-class EventListener(
-        modules: List<Module>
-) : ListenerAdapter() {
-    private val allModules: List<Module>
-    private val standardModules: List<Module>
-    private val optionalModules: List<Module>
-    private val loadedModules get() = if (config.optionalsEnabled) allModules else standardModules
+object EventListener : ListenerAdapter() {
+    lateinit var allModules: List<Module>
+        private set
+    private val loadedModules get() = allModules.filter { it.isStandard || it.name in config.enabledModules }
 
-    init {
+    fun init(modules: List<Module>) {
         allModules = modules.toMutableList().apply { add(Help().apply(Module::init)) }.toList()
-        standardModules = allModules.filter { it.isStandard }
-        optionalModules = allModules.filter { it.isOptional }
     }
 
     override fun onGenericEvent(evt: Event) {
@@ -37,7 +32,7 @@ class EventListener(
         }
     }
 
-    inner class Help : Module() {
+    class Help : Module() {
         @CommandAnnotation(description = "Sends an embed with a list of commands.")
         fun commands(evt: MessageReceivedEvent) {
             evt.run {

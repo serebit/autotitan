@@ -8,8 +8,8 @@ import java.util.*
 class Configuration private constructor(
         val token: String,
         var prefix: String,
-        val blackList: MutableSet<Long>,
-        var optionalsEnabled: Boolean
+        val blackList: MutableSet<Long> = mutableSetOf(),
+        val enabledModules: MutableSet<String> = mutableSetOf()
 ) {
     fun serialize() = file.also { it.createNewFile() }.writeText(Gson().toJson(this))
 
@@ -23,23 +23,14 @@ class Configuration private constructor(
             file.exists() -> Gson().fromJson(file.readText())
             else -> Configuration(
                     token = prompt("Enter new token:") { !it.contains("\\s".toRegex()) },
-                    prefix = prompt("Enter new command prefix:") { !it.contains("\\s".toRegex()) },
-                    blackList = mutableSetOf(),
-                    optionalsEnabled = prompt("Enable optional modules? [Y/n]:") {
-                        listOf("y", "n").contains(it.toLowerCase())
-                    }.let {
-                        when (it.toLowerCase()) {
-                            "y" -> true
-                            "n" -> false
-                            else -> throw IllegalStateException("""This should never happen, I take pity on the poor
-fool who witnesses this event unfold."""
-                            )
-                        }
-                    }
+                    prefix = prompt("Enter new command prefix:") { !it.contains("\\s".toRegex()) }
             ).also(Configuration::serialize)
         }
 
-        private fun generateDummy(): Configuration = Configuration("", "!", mutableSetOf(), true)
+        private fun generateDummy(): Configuration = Configuration(
+                "",
+                "!"
+        )
 
         private tailrec fun prompt(text: String, condition: (String) -> Boolean): String {
             print("$text\n> ")
