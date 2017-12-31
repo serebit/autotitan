@@ -49,3 +49,7 @@ build {
     dependsOn shadowJar
     jar.enabled = false
 }
+
+test {
+    environment "AUTOTITAN_TEST_MODE_FLAG", "true"
+}
