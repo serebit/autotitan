@@ -23,7 +23,7 @@ class Command(
         private val access: Access,
         private val locale: Locale,
         private val splitLastParameter: Boolean = true,
-        val isHidden: Boolean,
+        private val isHidden: Boolean,
         private val memberPermissions: List<Permission> = emptyList()
 ) {
     private val parameterTypes: List<KClass<out Any>> = function.valueParameters.map { it.type.jvmErasure }.drop(1)
@@ -37,7 +37,7 @@ class Command(
     fun looselyMatches(rawMessageContent: String): Boolean = rawMessageContent.split(" ")[0] == config.prefix + name
 
     fun parseTokensOrNull(evt: MessageReceivedEvent): List<Any>? {
-        val tokens = tokenizeMessage(evt.message.rawContent)
+        val tokens = tokenizeMessage(evt.message.contentRaw)
         if (evt.author.isBot) return null
         if (tokens[0] != config.prefix + name) return null
         if (parameterTypes.size != tokens.size - 1) return null
