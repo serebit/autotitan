@@ -35,7 +35,6 @@ class Entertainment : Module(isOptional = true) {
     )
     fun deterministicEightBall(evt: MessageReceivedEvent, question: String) {
         deterministicRandom.setSeed(question.normalize()
-                .removeSuffix("?")
                 .hashCode()
                 .toLong()
         )
@@ -58,7 +57,7 @@ class Entertainment : Module(isOptional = true) {
 
     private fun String.normalize(): String = this
             .toLowerCase()
-            .replace("\\s".toRegex(), "")
+            .filter { it.isLetterOrDigit() }
 
     private fun Random.next(bound: Int = 10) = (nextFloat() * bound).roundToInt()
 }
