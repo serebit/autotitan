@@ -43,7 +43,7 @@ class Entertainment : Module(isOptional = true) {
     }
 
     @Command(name = "8", description = "Answers questions in 8-ball fashion.", splitLastParameter = false)
-    fun eightBall(evt: MessageReceivedEvent, question: String) {
+    fun eightBall(evt: MessageReceivedEvent, @Suppress("UNUSED_PARAMETER") question: String) {
         val responseIndex = random.next(eightBallResponses.size - 1)
         evt.channel.sendMessage(eightBallResponses[responseIndex]).complete()
     }
