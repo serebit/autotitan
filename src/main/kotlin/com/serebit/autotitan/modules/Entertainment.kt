@@ -33,9 +33,7 @@ class Entertainment : Module(isOptional = true) {
             splitLastParameter = false
     )
     fun deterministicEightBall(evt: MessageReceivedEvent, question: String) {
-        deterministicRandom.setSeed(question
-                .toLowerCase()
-                .replace("\\s".toRegex(), "")
+        deterministicRandom.setSeed(question.normalize()
                 .removeSuffix("?")
                 .hashCode()
                 .toLong()
@@ -49,4 +47,15 @@ class Entertainment : Module(isOptional = true) {
         val responseIndex = random.nextInt(eightBallResponses.size - 1)
         evt.channel.sendMessage(eightBallResponses[responseIndex]).complete()
     }
+
+    @Command(description = "Rates the given thing on a scale of 0 to 10.", splitLastParameter = false)
+    fun rate(evt: MessageReceivedEvent, thingToRate: String) {
+        deterministicRandom.setSeed(thingToRate.normalize().hashCode().toLong())
+        val rating = deterministicRandom.nextInt(10)
+        evt.channel.sendMessage("I'd give $thingToRate a `$rating/10`.").complete()
+    }
+
+    private fun String.normalize(): String = this
+            .toLowerCase()
+            .replace("\\s".toRegex(), "")
 }
