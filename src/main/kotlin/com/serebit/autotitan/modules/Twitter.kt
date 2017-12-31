@@ -108,18 +108,24 @@ class Twitter : Module(isOptional = true) {
 
             twitter = TwitterFactory(cb.build()).instance
             scheduler = timer(daemon = true, period = 60000, initialDelay = 60000) {
-                if (tweetQueue.isNotEmpty()) {
-                    val tweetEvent = tweetQueue.removeAt(0)
-                    val status = twitter.updateStatus(tweetEvent.message)
+                try {
+                    if (tweetQueue.isNotEmpty()) {
+                        val tweetEvent = tweetQueue.removeAt(0)
+                        val status = twitter.updateStatus(tweetEvent.message)
 
-                    tweetEvent.channel.sendEmbed {
-                        setAuthor(
-                                "Tweet by ${tweetEvent.user.name}#${tweetEvent.user.discriminator}",
-                                "https://twitter.com/${status.user.screenName}/status/${status.id}",
-                                tweetEvent.user.effectiveAvatarUrl
-                        )
-                        setDescription(tweetEvent.message)
-                    }.queue()
+                        tweetEvent.channel.sendEmbed {
+                            setAuthor(
+                                    "Tweet by ${tweetEvent.user.name}#${tweetEvent.user.discriminator}",
+                                    "https://twitter.com/${status.user.screenName}/status/${status.id}",
+                                    tweetEvent.user.effectiveAvatarUrl
+                            )
+                            setDescription(tweetEvent.message)
+                        }.queue()
+                    }
+                } catch (ex: Exception) {
+                    // I hate myself for this, but it needs to stay running. plus I'll be able to check what errors are
+                    // causing it to fail
+                    ex.printStackTrace()
                 }
             }
         }
