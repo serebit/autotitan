@@ -1,9 +1,9 @@
-package com.serebit.autotitan.modules.standard
+package com.serebit.autotitan.modules
 
+import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.api.meta.Locale
 import com.serebit.autotitan.api.meta.annotations.Command
 import com.serebit.autotitan.api.meta.annotations.Listener
-import com.serebit.autotitan.api.meta.annotations.Module
 import com.serebit.autotitan.data.DataManager
 import net.dv8tion.jda.core.JDA
 import net.dv8tion.jda.core.Permission
@@ -14,8 +14,7 @@ import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 
-@Module
-class Moderation {
+class Moderation : Module() {
     private val dataManager = DataManager(this::class.java)
     private val map: GuildRoleMap = dataManager.read("rolemap.json") ?: GuildRoleMap()
 
@@ -78,7 +77,7 @@ class Moderation {
 
     @Command(
             memberPermissions = [Permission.MANAGE_ROLES],
-            delimitFinalParameter = false
+            splitLastParameter = false
     )
     fun setAutoRole(evt: MessageReceivedEvent, roleName: String) {
         evt.run {
@@ -136,17 +135,17 @@ class Moderation {
             }
         }
     }
-}
 
-private class GuildRoleMap {
-    private val map = mutableMapOf<Long, Long>()
+    private class GuildRoleMap {
+        private val map = mutableMapOf<Long, Long>()
 
-    operator fun contains(key: Guild) = map.contains(key.idLong)
+        operator fun contains(key: Guild) = map.contains(key.idLong)
 
-    operator fun get(jda: JDA, key: Guild): Role? {
-        val value = map[key.idLong]
-        return if (value != null) jda.getRoleById(value) else null
+        operator fun get(jda: JDA, key: Guild): Role? {
+            val value = map[key.idLong]
+            return if (value != null) jda.getRoleById(value) else null
+        }
+
+        fun put(key: Guild, value: Role) = map.put(key.idLong, value.idLong)
     }
-
-    fun put(key: Guild, value: Role) = map.put(key.idLong, value.idLong)
 }

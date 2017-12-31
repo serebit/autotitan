@@ -1,4 +1,4 @@
-package com.serebit.autotitan.modules.standard.audio
+package com.serebit.autotitan.modules
 
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
@@ -11,10 +11,10 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
 import com.sedmelluq.discord.lavaplayer.track.playback.AudioFrame
+import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.api.meta.Locale
 import com.serebit.autotitan.api.meta.annotations.Command
 import com.serebit.autotitan.api.meta.annotations.Listener
-import com.serebit.autotitan.api.meta.annotations.Module
 import com.serebit.extensions.jda.sendEmbed
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.audio.AudioSendHandler
@@ -26,10 +26,8 @@ import net.dv8tion.jda.core.events.guild.voice.GuildVoiceMoveEvent
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import net.dv8tion.jda.core.managers.AudioManager
 import org.apache.commons.validator.routines.UrlValidator
-import java.time.OffsetDateTime
 
-@Module
-class Audio {
+class Audio : Module() {
     private val urlValidator = UrlValidator(arrayOf("http", "https"))
     private val playerManager = DefaultAudioPlayerManager()
     private val musicManagers = mutableMapOf<Long, GuildMusicManager>()
@@ -74,7 +72,7 @@ class Audio {
     @Command(
             description = "Plays a URL, or searches YouTube for the given search terms.",
             locale = Locale.GUILD,
-            delimitFinalParameter = false
+            splitLastParameter = false
     )
     fun play(evt: MessageReceivedEvent, query: String) {
         evt.run {
@@ -195,7 +193,6 @@ class Audio {
             channel.sendEmbed {
                 setAuthor(guild.selfMember.effectiveName, null, jda.selfUser.effectiveAvatarUrl)
                 setTitle("Music Queue", null)
-                setColor(guild.getMember(jda.selfUser).color)
                 val playingTrack = audioManager.player.playingTrack
                 val position = toHumanReadableDuration(playingTrack.position)
                 val duration = toHumanReadableDuration(playingTrack.duration)
@@ -214,7 +211,6 @@ class Audio {
                         } else "",
                         false
                 )
-                setTimestamp(OffsetDateTime.now())
             }.complete()
         }
     }
@@ -276,96 +272,99 @@ class Audio {
             }
         }
     }
-}
 
-private enum class VoiceStatus(val errorMessage: String?) {
-    SELF_NOT_CONNECTED("I need to be in a voice channel to do that."),
-    USER_NOT_CONNECTED("You need to be in a voice channel for me to do that."),
-    CONNECTED_DIFFERENT_CHANNEL("We need to be in the same voice channel for you to do that."),
-    CONNECTED_SAME_CHANNEL(null);
+    private enum class VoiceStatus(val errorMessage: String?) {
+        SELF_NOT_CONNECTED("I need to be in a voice channel to do that."),
+        USER_NOT_CONNECTED("You need to be in a voice channel for me to do that."),
+        CONNECTED_DIFFERENT_CHANNEL("We need to be in the same voice channel for you to do that."),
+        CONNECTED_SAME_CHANNEL(null);
 
-    fun sendErrorMessage(channel: MessageChannel) {
-        errorMessage?.let { channel.sendMessage(it).complete() }
-    }
-}
-
-private fun toHumanReadableDuration(millis: Long): String {
-    val totalSeconds = millis / 1000
-    val hours = (totalSeconds / 3600).toInt()
-    val minutes = (totalSeconds % 3600 / 60).toInt()
-    val seconds = (totalSeconds % 60).toInt()
-    return when (hours) {
-        0 -> String.format("%d:%02d", minutes, seconds)
-        else -> String.format("%d:%02d:%02d", hours, minutes, seconds)
-    }
-}
-
-private class GuildMusicManager(manager: AudioPlayerManager) {
-    val player: AudioPlayer = manager.createPlayer()
-    val scheduler = TrackScheduler()
-    val sendHandler by lazy {
-        AudioPlayerSendHandler()
+        fun sendErrorMessage(channel: MessageChannel) {
+            errorMessage?.let { channel.sendMessage(it).complete() }
+        }
     }
 
-    init {
-        player.addListener(scheduler)
-    }
+    private class GuildMusicManager(manager: AudioPlayerManager) {
 
-    inner class TrackScheduler : AudioEventAdapter() {
-        val queue = mutableListOf<AudioTrack>()
-
-        fun addToQueue(track: AudioTrack) {
-            if (player.playingTrack == null) {
-                player.playTrack(track)
-            } else {
-                queue.add(track)
-            }
+        val player: AudioPlayer = manager.createPlayer()
+        val scheduler = TrackScheduler()
+        val sendHandler by lazy {
+            AudioPlayerSendHandler()
         }
 
-        fun skipTrack() {
-            if (player.playingTrack != null) {
+        init {
+            player.addListener(scheduler)
+        }
+
+        inner class TrackScheduler : AudioEventAdapter() {
+
+            val queue = mutableListOf<AudioTrack>()
+            fun addToQueue(track: AudioTrack) {
+                if (player.playingTrack == null) {
+                    player.playTrack(track)
+                } else {
+                    queue.add(track)
+                }
+            }
+
+            fun skipTrack() {
+                if (player.playingTrack != null) {
+                    player.stopTrack()
+                    if (queue.isNotEmpty()) player.playTrack(queue.removeAt(0))
+                }
+            }
+
+            fun pause() = if (!player.isPaused) {
+                player.isPaused = true
+                true
+            } else false
+
+            fun resume() = if (player.isPaused) {
+                player.isPaused = false
+                true
+            } else false
+
+            fun stop() {
                 player.stopTrack()
-                if (queue.isNotEmpty()) player.playTrack(queue.removeAt(0))
+                queue.clear()
             }
+
+            override fun onTrackEnd(player: AudioPlayer, track: AudioTrack, endReason: AudioTrackEndReason) {
+                if (queue.isNotEmpty() && endReason == AudioTrackEndReason.FINISHED) {
+                    player.playTrack(queue.removeAt(0))
+                }
+            }
+
         }
 
-        fun pause() = if (!player.isPaused) {
-            player.isPaused = true
-            true
-        } else false
+        inner class AudioPlayerSendHandler : AudioSendHandler {
 
-        fun resume() = if (player.isPaused) {
-            player.isPaused = false
-            true
-        } else false
-
-        fun stop() {
-            player.stopTrack()
-            queue.clear()
-        }
-
-        override fun onTrackEnd(player: AudioPlayer, track: AudioTrack, endReason: AudioTrackEndReason) {
-            if (queue.isNotEmpty() && endReason == AudioTrackEndReason.FINISHED) {
-                player.playTrack(queue.removeAt(0))
+            private var lastFrame: AudioFrame? = null
+            override fun canProvide(): Boolean {
+                if (lastFrame == null) lastFrame = player.provide()
+                return lastFrame != null
             }
+
+            override fun provide20MsAudio(): ByteArray? {
+                if (lastFrame == null) lastFrame = player.provide()
+                val data = if (lastFrame != null) lastFrame?.data else null
+                lastFrame = null
+                return data
+            }
+
+            override fun isOpus() = true
+
         }
     }
 
-    inner class AudioPlayerSendHandler : AudioSendHandler {
-        private var lastFrame: AudioFrame? = null
-
-        override fun canProvide(): Boolean {
-            if (lastFrame == null) lastFrame = player.provide()
-            return lastFrame != null
+    private fun toHumanReadableDuration(millis: Long): String {
+        val totalSeconds = millis / 1000
+        val hours = (totalSeconds / 3600).toInt()
+        val minutes = (totalSeconds % 3600 / 60).toInt()
+        val seconds = (totalSeconds % 60).toInt()
+        return when (hours) {
+            0 -> String.format("%d:%02d", minutes, seconds)
+            else -> String.format("%d:%02d:%02d", hours, minutes, seconds)
         }
-
-        override fun provide20MsAudio(): ByteArray? {
-            if (lastFrame == null) lastFrame = player.provide()
-            val data = if (lastFrame != null) lastFrame?.data else null
-            lastFrame = null
-            return data
-        }
-
-        override fun isOpus() = true
     }
 }

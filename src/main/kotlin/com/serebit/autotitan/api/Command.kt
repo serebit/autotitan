@@ -3,34 +3,36 @@ package com.serebit.autotitan.api
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.meta.Locale
 import com.serebit.autotitan.config
+import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Channel
 import net.dv8tion.jda.core.entities.Member
+import net.dv8tion.jda.core.entities.MessageEmbed
 import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
-import java.lang.reflect.Method
+import kotlin.reflect.KClass
+import kotlin.reflect.KFunction
+import kotlin.reflect.full.valueParameters
+import kotlin.reflect.jvm.jvmErasure
 import com.serebit.autotitan.api.meta.annotations.Command as CommandAnnotation
 
 class Command(
+        private val function: KFunction<Unit>,
         private val instance: Any,
-        internal val method: Method,
-        info: CommandAnnotation
+        val name: String,
+        description: String,
+        private val access: Access,
+        private val locale: Locale,
+        private val splitLastParameter: Boolean = true,
+        val isHidden: Boolean,
+        private val memberPermissions: List<Permission> = emptyList()
 ) {
-    private val parameterTypes: List<Class<out Any>> = method.parameterTypes.drop(1).toList()
-    val name = if (info.name.isNotEmpty()) {
-        info.name
-    } else {
-        method.name
-    }.toLowerCase()
-    private val description = if (info.description.isNotBlank()) info.description else ""
-    private val access = info.access
-    private val locale = info.locale
-    private val delimitFinalParameter = info.delimitFinalParameter
-    private val hidden = info.hidden
-    private val memberPermissions = info.memberPermissions.toList()
-    val helpMessage = if (hidden) "" else "`$name`" + if (description.isNotEmpty()) "- $description" else ""
+    private val parameterTypes: List<KClass<out Any>> = function.valueParameters.map { it.type.jvmErasure }.drop(1)
+    val isNotHidden get() = !isHidden
+    val summary = "`$name ${parameterTypes.joinToString(" ") { "<${it.simpleName}>" }}`"
+    val helpField = MessageEmbed.Field(summary, description, false)
 
     operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>): Any? =
-            method.invoke(instance, evt, *parameters.toTypedArray())
+            function.call(instance, evt, *parameters.toTypedArray())
 
     fun looselyMatches(rawMessageContent: String): Boolean = rawMessageContent.split(" ")[0] == config.prefix + name
 
@@ -64,7 +66,7 @@ class Command(
 
     private fun tokenizeMessage(message: String): List<String> {
         val splitParameters = message.split(" ").filter(String::isNotBlank)
-        return if (delimitFinalParameter) {
+        return if (splitLastParameter) {
             splitParameters
         } else {
             listOf(
@@ -82,67 +84,37 @@ class Command(
 
     private fun castParameter(
             evt: MessageReceivedEvent,
-            type: Class<out Any>,
+            type: KClass<out Any>,
             string: String
     ): Any? = when (type) {
-        String::class.java -> string
-        Int::class.java -> string.toIntOrNull()
-        Long::class.java -> string.toLongOrNull()
-        Double::class.java -> string.toDoubleOrNull()
-        Float::class.java -> string.toFloatOrNull()
-        Short::class.java -> string.toShortOrNull()
-        Byte::class.java -> string.toByteOrNull()
-        Boolean::class.java -> {
+        String::class -> string
+        Int::class -> string.toIntOrNull()
+        Long::class -> string.toLongOrNull()
+        Double::class -> string.toDoubleOrNull()
+        Float::class -> string.toFloatOrNull()
+        Short::class -> string.toShortOrNull()
+        Byte::class -> string.toByteOrNull()
+        Boolean::class -> {
             if (string == "true" || string == "false") string.toBoolean() else null
         }
-        Char::class.java -> if (string.length == 1) string[0] else null
-        User::class.java -> {
+        Char::class -> if (string.length == 1) string[0] else null
+        User::class -> {
             evt.jda.getUserById(string
                     .removeSurrounding("<@", ">")
                     .removePrefix("!")
             )
         }
-        Member::class.java -> {
+        Member::class -> {
             evt.guild.getMemberById(string
                     .removeSurrounding("<@", ">")
                     .removePrefix("!")
             )
         }
-        Channel::class.java -> {
+        Channel::class -> {
             evt.guild.getTextChannelById(
                     string.removeSurrounding("<#", ">")
             )
         }
         else -> null
-    }
-
-    companion object {
-        private val validParameterTypes = setOf(
-                Int::class.java,
-                Long::class.java,
-                Double::class.java,
-                Float::class.java,
-                User::class.java,
-                Member::class.java,
-                Channel::class.java,
-                String::class.java
-        )
-
-        internal fun generate(instance: Any, method: Method): Command? {
-            return if (isValid(method)) Command(
-                    instance,
-                    method,
-                    method.getAnnotation(CommandAnnotation::class.java)
-            ) else null
-        }
-
-        internal fun isValid(method: Method): Boolean {
-            if (method.parameterTypes.isEmpty()) return false
-            if (!method.isAnnotationPresent(CommandAnnotation::class.java)) return false
-            if (method.parameterTypes[0] != MessageReceivedEvent::class.java) return false
-            return method.parameterTypes
-                    .drop(1)
-                    .all { it in validParameterTypes }
-        }
     }
 }

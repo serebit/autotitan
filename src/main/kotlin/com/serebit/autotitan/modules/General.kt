@@ -1,8 +1,8 @@
-package com.serebit.autotitan.modules.standard
+package com.serebit.autotitan.modules
 
+import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.api.meta.Locale
 import com.serebit.autotitan.api.meta.annotations.Command
-import com.serebit.autotitan.api.meta.annotations.Module
 import com.serebit.extensions.jda.sendEmbed
 import net.dv8tion.jda.core.OnlineStatus
 import net.dv8tion.jda.core.Permission
@@ -10,11 +10,11 @@ import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import oshi.SystemInfo
 import java.time.format.DateTimeFormatter
-import kotlin.math.ln
+import kotlin.math.ceil
+import kotlin.math.log
 import kotlin.math.pow
 
-@Module
-class General {
+class General : Module() {
     private val dateFormat = DateTimeFormatter.ofPattern("d MMM, yyyy")
     private val systemInfo by lazy {
         SystemInfo().run {
@@ -57,7 +57,6 @@ class General {
     fun systemInfo(evt: MessageReceivedEvent) {
         evt.run {
             channel.sendEmbed {
-                setColor(guild?.getMember(jda.selfUser)?.color)
                 systemInfo.forEach { key, value ->
                     addField(key, value, true)
                 }
@@ -77,11 +76,11 @@ class General {
                 setTitle(guild.name, null)
                 setDescription("Created on ${guild.creationTime.format(dateFormat)}")
                 setThumbnail(guild.iconUrl)
-                setColor(guild.owner.color)
                 addField("Owner", guild.owner.asMention, true)
                 addField("Region", guild.region.toString(), true)
                 addField("Online Members", onlineMemberCount.toString(), true)
                 addField("Total Members", guild.members.size.toString(), true)
+                addField("Bots", guild.members.count { it.user.isBot }.toString(), true)
                 addField("Text Channels", guild.textChannels.size.toString(), true)
                 addField("Voice Channels", guild.voiceChannels.size.toString(), true)
                 addField("Hoisted Roles", hoistedRoles, true)
@@ -125,20 +124,20 @@ class General {
                 setThumbnail(member.user.effectiveAvatarUrl)
                 addField("Joined Discord", member.user.creationTime.format(dateFormat), true)
                 addField("Joined this Server", member.joinDate.format(dateFormat), true)
-                if (roles != null) addField("Roles", roles, true)
                 addField("Do they own the server?", member.isOwner.asYesNo.capitalize(), true)
                 addField("Are they a bot?", member.user.isBot.asYesNo.capitalize(), true)
+                if (roles != null) addField("Roles", roles, true)
                 setFooter("User ID: ${member.user.id}", null)
             }.complete()
         }
     }
+
+    private val Long.asHumanReadableByteCount: String
+        get() {
+            val exponent = ceil(log(this.toDouble(), 1000.0)).toInt() - 1
+            val unit = listOf("B", "kB", "MB", "GB", "TB", "PB", "EB")[exponent]
+            return "%.1f $unit".format(this / 1000.0.pow(exponent))
+        }
+
+    private val Boolean.asYesNo get() = if (this) "yes" else "no"
 }
-
-private val Long.asHumanReadableByteCount: String
-    get() {
-        val exponent = (ln(this.toDouble()) / 6.908).toInt()
-        val unit = listOf("B", "kB", "MB", "GB", "TB", "PB", "EB")[exponent]
-        return "%.1f $unit".format(this / 1000.0.pow(exponent))
-    }
-
-private val Boolean.asYesNo get() = if (this) "yes" else "no"

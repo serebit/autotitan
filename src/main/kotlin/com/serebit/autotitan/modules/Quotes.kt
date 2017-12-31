@@ -1,19 +1,18 @@
-package com.serebit.autotitan.modules.extra
+package com.serebit.autotitan.modules
 
+import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.api.meta.Locale
 import com.serebit.autotitan.api.meta.annotations.Command
-import com.serebit.autotitan.api.meta.annotations.Module
 import com.serebit.autotitan.data.DataManager
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import java.util.*
 
-@Module
-class Quotes {
+class Quotes : Module(isOptional = true) {
     private val dataManager = DataManager(this::class.java)
     private val quoteMap: QuoteMap = dataManager.read("quotes.json") ?: QuoteMap()
     private val random = Random()
 
-    @Command(locale = Locale.GUILD, delimitFinalParameter = false)
+    @Command(locale = Locale.GUILD, splitLastParameter = false)
     fun addQuote(evt: MessageReceivedEvent, quote: String) {
         evt.message.run {
             if (mentionedUsers.isNotEmpty() || mentionedRoles.isNotEmpty() || mentionsEveryone()) {
@@ -80,8 +79,8 @@ class Quotes {
             evt.channel.sendMessage(quote).complete()
         }
     }
-}
 
-private class QuoteMap : MutableMap<Long, MutableMap<Int, String>> by mutableMapOf() {
-    fun getOrPutDefault(key: Long): MutableMap<Int, String> = getOrPut(key, { mutableMapOf() })
+    private class QuoteMap : MutableMap<Long, MutableMap<Int, String>> by mutableMapOf() {
+        fun getOrPutDefault(key: Long): MutableMap<Int, String> = getOrPut(key, { mutableMapOf() })
+    }
 }

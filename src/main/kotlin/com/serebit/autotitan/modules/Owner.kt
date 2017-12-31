@@ -1,18 +1,17 @@
-package com.serebit.autotitan.modules.standard
+package com.serebit.autotitan.modules
 
+import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.meta.annotations.Command
-import com.serebit.autotitan.api.meta.annotations.Module
 import com.serebit.autotitan.config
+import com.serebit.autotitan.listeners.EventListener
 import com.serebit.autotitan.resetJda
 import com.serebit.extensions.jda.sendEmbed
 import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
-import java.time.OffsetDateTime
 import kotlin.system.exitProcess
 
-@Module
-class Owner {
+class Owner : Module() {
     @Command(
             description = "Shuts down the bot with an exit code of 0.",
             access = Access.BOT_OWNER
@@ -40,7 +39,7 @@ class Owner {
 
     @Command(
             description = "Renames the bot.",
-            delimitFinalParameter = false,
+            splitLastParameter = false,
             access = Access.BOT_OWNER
     )
     fun setName(evt: MessageReceivedEvent, name: String) {
@@ -134,9 +133,7 @@ class Owner {
     )
     fun serverList(evt: MessageReceivedEvent) {
         evt.run {
-            val color = guild?.selfMember?.color
             channel.sendEmbed {
-                setColor(color)
                 jda.guilds.forEach {
                     addField(
                             it.name + "(${it.id})",
@@ -144,7 +141,6 @@ class Owner {
                             true
                     )
                 }
-                setTimestamp(OffsetDateTime.now())
             }.complete()
         }
     }
@@ -158,5 +154,39 @@ class Owner {
             channel.sendMessage("Leaving the server.").complete()
             guild.leave().complete()
         }
+    }
+
+    @Command(description = "Sends a list of all the modules.", access = Access.BOT_OWNER)
+    fun moduleList(evt: MessageReceivedEvent) {
+        evt.channel.sendEmbed {
+            setTitle("Modules")
+            setDescription(EventListener.allModules.joinToString("\n") {
+                it.name + if (it.isOptional) " (Optional)" else ""
+            })
+        }.complete()
+    }
+
+    @Command(description = "Enables the given optional module.", access = Access.BOT_OWNER)
+    fun enableModule(evt: MessageReceivedEvent, moduleName: String) {
+        if (EventListener.allModules.filter { it.isOptional }.none { it.name == moduleName }) return
+        if (moduleName in config.enabledModules) {
+            evt.channel.sendMessage("Module `$moduleName` is already enabled.").complete()
+            return
+        }
+        config.enabledModules.add(moduleName)
+        config.serialize()
+        evt.channel.sendMessage("Enabled the `$moduleName` module.").complete()
+    }
+
+    @Command(description = "Disables the given optional module.", access = Access.BOT_OWNER)
+    fun disableModule(evt: MessageReceivedEvent, moduleName: String) {
+        if (EventListener.allModules.filter { it.isOptional }.none { it.name == moduleName }) return
+        if (moduleName !in config.enabledModules) {
+            evt.channel.sendMessage("Module `$moduleName` is already disabled.").complete()
+            return
+        }
+        config.enabledModules.remove(moduleName)
+        config.serialize()
+        evt.channel.sendMessage("Disabled the `$moduleName` module.").complete()
     }
 }
