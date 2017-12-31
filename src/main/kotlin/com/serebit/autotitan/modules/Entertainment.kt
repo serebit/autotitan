@@ -4,6 +4,7 @@ import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.api.meta.annotations.Command
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import java.util.*
+import kotlin.math.roundToInt
 
 class Entertainment : Module(isOptional = true) {
     private val deterministicRandom = Random()
@@ -44,18 +45,20 @@ class Entertainment : Module(isOptional = true) {
 
     @Command(name = "8", description = "Answers questions in 8-ball fashion.", splitLastParameter = false)
     fun eightBall(evt: MessageReceivedEvent, question: String) {
-        val responseIndex = random.nextInt(eightBallResponses.size - 1)
+        val responseIndex = random.next(eightBallResponses.size - 1)
         evt.channel.sendMessage(eightBallResponses[responseIndex]).complete()
     }
 
     @Command(description = "Rates the given thing on a scale of 0 to 10.", splitLastParameter = false)
     fun rate(evt: MessageReceivedEvent, thingToRate: String) {
         deterministicRandom.setSeed(thingToRate.normalize().hashCode().toLong())
-        val rating = deterministicRandom.nextInt(10)
+        val rating = deterministicRandom.next(10)
         evt.channel.sendMessage("I'd give $thingToRate a `$rating/10`.").complete()
     }
 
     private fun String.normalize(): String = this
             .toLowerCase()
             .replace("\\s".toRegex(), "")
+
+    private fun Random.next(bound: Int = 10) = (nextFloat() * bound).roundToInt()
 }
