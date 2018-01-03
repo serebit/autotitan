@@ -1,7 +1,7 @@
 plugins {
     id "org.jetbrains.kotlin.jvm" version "1.2.10"
     id "com.github.johnrengelman.shadow" version "2.0.2"
-    id 'com.github.ben-manes.versions' version '0.17.0'
+    id "com.github.ben-manes.versions" version "0.17.0"
 }
 
 group = "com.serebit"
@@ -17,9 +17,9 @@ repositories {
 dependencies {
     compile group: "org.jetbrains.kotlin", name: "kotlin-stdlib-jdk8"
     compile group: "org.jetbrains.kotlin", name: "kotlin-reflect"
-    compile group: "org.jetbrains.kotlinx", name: "kotlinx-coroutines-core", version: "0.21-alpha-2"
+    compile group: "org.jetbrains.kotlinx", name: "kotlinx-coroutines-core", version: "0.21"
     compile group: "commons-validator", name: "commons-validator", version: "1.6"
-    compile group: "net.dv8tion", name: "JDA", version: "3.4.0_317"
+    compile group: "net.dv8tion", name: "JDA", version: "3.4.0_322"
     compile group: "com.sedmelluq", name: "lavaplayer", version: "1.2.45"
     compile group: "com.github.salomonbrys.kotson", name: "kotson", version: "2.5.0"
     compile group: "com.google.guava", name: "guava", version: "23.6-jre"
@@ -27,6 +27,7 @@ dependencies {
     compile group: "com.github.oshi", name: "oshi-core", version: "3.4.4"
     compile group: "org.twitter4j", name: "twitter4j-core", version: "4.0.6"
     compile group: "org.twitter4j", name: "twitter4j-async", version: "4.0.6"
+    compile group: "net.jeremybrooks", name: "knicker", version: "2.4.1"
     testCompile group: "io.kotlintest", name: "kotlintest", version: "2.0.7"
 }
 
