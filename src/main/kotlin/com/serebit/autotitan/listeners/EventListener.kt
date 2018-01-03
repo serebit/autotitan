@@ -62,7 +62,8 @@ object EventListener : ListenerAdapter() {
         @CommandAnnotation(description = "Sends an embed with information about the requested command.")
         fun help(evt: MessageReceivedEvent, commandName: String) {
             val matchingCommands = loadedModules
-                    .mapNotNull { it.findCommandByName(commandName) }
+                    .mapNotNull { it.findCommandsByName(commandName) }
+                    .flatten()
                     .filter { it.isNotHidden }
             if (matchingCommands.isNotEmpty()) {
                 evt.channel.sendEmbed {

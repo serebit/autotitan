@@ -89,7 +89,7 @@ abstract class Module(name: String = "", val isOptional: Boolean = false) {
         }
     }
 
-    fun findCommandByName(name: String): Command? = commands.find { it.name == name }
+    fun findCommandsByName(name: String): List<Command>? = commands.filter { it.name == name }
 
     private val KFunction<Unit>.isValidListener: Boolean
         get() {
