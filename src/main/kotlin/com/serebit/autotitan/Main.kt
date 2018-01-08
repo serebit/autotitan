@@ -9,7 +9,7 @@ import net.dv8tion.jda.core.events.Event
 import kotlin.reflect.full.createInstance
 
 const val NAME = "AutoTitan"
-const val VERSION = "0.3.3"
+const val VERSION = "0.4.0"
 val config: Configuration = Configuration.generate()
 private val modules: List<Module>
     get() = ClassPath
