@@ -8,9 +8,8 @@ import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.events.Event
 
 const val NAME = "AutoTitan"
-const val VERSION = "0.3.3"
-lateinit var config: Configuration
-    private set
+const val VERSION = "0.4.0"
+val config: Configuration = Configuration.generate()
 private val modules: List<Module>
     get() = ClassPath
             .from(Thread.currentThread().contextClassLoader)
@@ -19,11 +18,12 @@ private val modules: List<Module>
             .filter { it.constructors.any { it.parameterCount == 0 } }
             .map { it.getConstructor().newInstance() as Module }
 
+
 fun main(args: Array<String>) {
-    config = Configuration.generate()
+    EventListener.init(modules)
     jda(AccountType.BOT) {
         setToken(config.token)
-        addEventListener(EventListener(modules))
+        addEventListener(EventListener)
     }.let {
         println()
         println("$NAME v$VERSION")
@@ -31,12 +31,10 @@ fun main(args: Array<String>) {
         println("Ping:        ${it.ping}ms")
         println("Invite link: ${it.asBot().getInviteUrl()}")
     }
-
 }
 
 fun resetJda(evt: Event) {
-    evt.run {
-        jda.registeredListeners.forEach { jda.removeEventListener(it) }
-        jda.addEventListener(EventListener(modules))
-    }
+    evt.jda.removeEventListener(EventListener)
+    EventListener.init(modules)
+    evt.jda.addEventListener(EventListener)
 }

@@ -6,10 +6,14 @@ import com.serebit.autotitan.config
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Channel
 import net.dv8tion.jda.core.entities.Member
+import net.dv8tion.jda.core.entities.MessageEmbed
 import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
+import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
+import kotlin.reflect.full.valueParameters
 import kotlin.reflect.jvm.jvmErasure
+import com.serebit.autotitan.api.meta.annotations.Command as CommandAnnotation
 
 class Command(
         private val function: KFunction<Unit>,
@@ -17,20 +21,22 @@ class Command(
         description: String,
         private val access: Access,
         private val locale: Locale,
-        private val delimitLastString: Boolean,
-        hidden: Boolean,
-        private val memberPermissions: List<Permission>
+        private val splitLastParameter: Boolean = true,
+        private val isHidden: Boolean,
+        private val memberPermissions: List<Permission> = emptyList()
 ) {
-    private val parameterTypes: List<Class<out Any>> = function.parameters.map { it.type.jvmErasure.java }
-    val helpMessage = if (hidden) "" else "`$name`" + if (description.isNotEmpty()) "- $description" else ""
+    private val parameterTypes: List<KClass<out Any>> = function.valueParameters.map { it.type.jvmErasure }
+    val isNotHidden get() = !isHidden
+    val summary = "`$name ${parameterTypes.joinToString(" ") { "<${it.simpleName}>" }}`"
+    val helpField = MessageEmbed.Field(summary, description, false)
 
-    operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>): Any? =
-            function.call(evt, *parameters.toTypedArray())
+    operator fun invoke(instance: Module, evt: MessageReceivedEvent, parameters: List<Any>): Any? =
+            function.call(instance, evt, *parameters.toTypedArray())
 
     fun looselyMatches(rawMessageContent: String): Boolean = rawMessageContent.split(" ")[0] == config.prefix + name
 
     fun parseTokensOrNull(evt: MessageReceivedEvent): List<Any>? {
-        val tokens = tokenizeMessage(evt.message.rawContent)
+        val tokens = tokenizeMessage(evt.message.contentRaw)
         if (evt.author.isBot) return null
         if (tokens[0] != config.prefix + name) return null
         if (parameterTypes.size != tokens.size) return null
@@ -59,7 +65,7 @@ class Command(
 
     private fun tokenizeMessage(message: String): List<String> {
         val splitParameters = message.split(" ").filter(String::isNotBlank)
-        return if (delimitLastString) {
+        return if (splitLastParameter) {
             splitParameters
         } else {
             listOf(
@@ -77,33 +83,33 @@ class Command(
 
     private fun castParameter(
             evt: MessageReceivedEvent,
-            type: Class<out Any>,
+            type: KClass<out Any>,
             string: String
     ): Any? = when (type) {
-        String::class.java -> string
-        Int::class.java -> string.toIntOrNull()
-        Long::class.java -> string.toLongOrNull()
-        Double::class.java -> string.toDoubleOrNull()
-        Float::class.java -> string.toFloatOrNull()
-        Short::class.java -> string.toShortOrNull()
-        Byte::class.java -> string.toByteOrNull()
-        Boolean::class.java -> {
+        String::class -> string
+        Int::class -> string.toIntOrNull()
+        Long::class -> string.toLongOrNull()
+        Double::class -> string.toDoubleOrNull()
+        Float::class -> string.toFloatOrNull()
+        Short::class -> string.toShortOrNull()
+        Byte::class -> string.toByteOrNull()
+        Boolean::class -> {
             if (string == "true" || string == "false") string.toBoolean() else null
         }
-        Char::class.java -> if (string.length == 1) string[0] else null
-        User::class.java -> {
+        Char::class -> if (string.length == 1) string[0] else null
+        User::class -> {
             evt.jda.getUserById(string
                     .removeSurrounding("<@", ">")
                     .removePrefix("!")
             )
         }
-        Member::class.java -> {
+        Member::class -> {
             evt.guild.getMemberById(string
                     .removeSurrounding("<@", ">")
                     .removePrefix("!")
             )
         }
-        Channel::class.java -> {
+        Channel::class -> {
             evt.guild.getTextChannelById(
                     string.removeSurrounding("<#", ">")
             )

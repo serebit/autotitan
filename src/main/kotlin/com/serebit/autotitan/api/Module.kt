@@ -3,14 +3,48 @@ package com.serebit.autotitan.api
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.meta.Locale
 import net.dv8tion.jda.core.Permission
+import net.dv8tion.jda.core.entities.MessageEmbed
 import net.dv8tion.jda.core.events.Event
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import kotlin.reflect.KFunction
 import kotlin.reflect.jvm.reflect
+import com.serebit.autotitan.api.meta.annotations.Command as CommandAnnotation
+import com.serebit.autotitan.api.meta.annotations.Listener as ListenerAnnotation
 
-abstract class Module {
-    val commands = mutableListOf<Command>()
-    val listeners = mutableListOf<Listener>()
+abstract class Module(name: String = "", val isOptional: Boolean = false) {
+    var name: String = name
+        private set
+    private val commands = mutableListOf<Command>()
+    private val listeners = mutableListOf<Listener>()
+    val commandListField: MessageEmbed.Field
+        get() = MessageEmbed.Field(
+                name,
+                commands.filter { it.isNotHidden }.joinToString("\n") { it.summary },
+                false
+        )
+    val isStandard get() = !isOptional
+
+    init {
+        safeNameSet(name)
+    }
+
+    private fun safeNameSet(name: String) {
+        this.name = if (name.isNotBlank()) name else this::class.simpleName ?: name
+    }
+
+    fun runCommands(evt: MessageReceivedEvent) {
+        val (command, parameters) = commands.asSequence()
+                .filter { it.looselyMatches(evt.message.contentRaw) }
+                .associate { it to it.parseTokensOrNull(evt) }.entries
+                .firstOrNull { it.value != null } ?: return
+        command(this, evt, parameters!!)
+    }
+
+    fun runListeners(evt: Event) {
+        listeners.filter { it.eventType == evt::class }.forEach { it.invoke(evt) }
+    }
+
+    fun findCommandsByName(name: String): List<Command>? = commands.filter { it.name == name }
 
     private fun addCommand(
             function: KFunction<Unit>?,
