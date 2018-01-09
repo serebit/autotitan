@@ -74,7 +74,7 @@ class Dictionary : Module(isOptional = true) {
 
     @Command(description = "Gets the Nth definition of the given word or phrase.", splitLastParameter = false)
     fun define(evt: MessageReceivedEvent, index: Int, wordOrPhrase: String) {
-        if (!AccountApi.apiTokenStatus().isValid) {
+        if (AccountApi.apiTokenStatus().isInvalid) {
             evt.channel.sendMessage(
                     "The Dictionary module is not initialized. Initialize it with the command `initdictionary`."
             ).complete()
@@ -112,7 +112,7 @@ class Dictionary : Module(isOptional = true) {
 
     @Command(description = "Gets synonyms and antonyms for the given word or phrase.", splitLastParameter = false)
     fun related(evt: MessageReceivedEvent, wordOrPhrase: String) {
-        if (!AccountApi.apiTokenStatus().isValid) {
+        if (AccountApi.apiTokenStatus().isInvalid) {
             evt.channel.sendMessage(
                     "The Dictionary module is not initialized. Initialize it with the command `initdictionary`."
             ).complete()
@@ -133,7 +133,7 @@ class Dictionary : Module(isOptional = true) {
 
         evt.channel.sendEmbed {
             setTitle("Words related to $wordOrPhrase", "https://www.wordnik.com/words/$wordOrPhrase")
-            setDescription(related.joinToString("\n") {
+            setDescription(related.sortedByDescending { it.first }.joinToString("\n") {
                 // example: "Antonyms: *wet, moisten, soak, water*"
                 "${it.first.capitalize()}s: *${it.second.joinToString(", ")}*"
             })

@@ -5,7 +5,6 @@ import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.meta.annotations.Command
 import com.serebit.autotitan.config
 import com.serebit.autotitan.listeners.EventListener
-import com.serebit.autotitan.resetJda
 import com.serebit.extensions.jda.sendEmbed
 import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
@@ -32,7 +31,7 @@ class Owner : Module() {
     fun reset(evt: MessageReceivedEvent) {
         evt.run {
             val message = channel.sendMessage("Resetting...").complete()
-            resetJda(evt)
+            EventListener.resetModules()
             message.editMessage("Reset commands and listeners.").complete()
         }
     }
