@@ -37,7 +37,11 @@ abstract class Module(name: String = "", val isOptional: Boolean = false) {
     lateinit var commandListField: MessageEmbed.Field
     val isStandard get() = !isOptional
 
-    fun init() {
+    init {
+        init()
+    }
+
+    private fun init() {
         this::class.declaredMemberFunctions.forEach { addFunction(it) }
         name = if (name.isNotBlank()) name else this::class.simpleName ?: name
         commandListField = MessageEmbed.Field(
