@@ -110,8 +110,8 @@ class Dictionary : Module(isOptional = true) {
         }.complete()
     }
 
-    @Command(description = "Gets synonyms and antonyms for the given word.")
-    fun related(evt: MessageReceivedEvent, word: String) {
+    @Command(description = "Gets synonyms and antonyms for the given word or phrase.", splitLastParameter = false)
+    fun related(evt: MessageReceivedEvent, wordOrPhrase: String) {
         if (!AccountApi.apiTokenStatus().isValid) {
             evt.channel.sendMessage(
                     "The Dictionary module is not initialized. Initialize it with the command `initdictionary`."
@@ -119,19 +119,20 @@ class Dictionary : Module(isOptional = true) {
             return
         }
 
-        val related = relatedWordsCache.getOrPut(word) {
-            WordApi.related(word)
+        val related = relatedWordsCache.getOrPut(wordOrPhrase) {
+            WordApi.related(wordOrPhrase)
                     .filter { it.relType in setOf("synonym", "antonym") }
         }.map { it.relType to it.words }
 
         if (related.isEmpty()) {
             evt.channel.sendMessage(
-                    "No words related to `$word` were found. Make sure it's spelled correctly."
+                    "No words related to `$wordOrPhrase` were found. Make sure it's spelled correctly."
             ).complete()
             return
         }
+
         evt.channel.sendEmbed {
-            setTitle("Words related to $word", "https://www.wordnik.com/words/$word")
+            setTitle("Words related to $wordOrPhrase", "https://www.wordnik.com/words/$wordOrPhrase")
             setDescription(related.joinToString("\n") {
                 // example: "Antonyms: *wet, moisten, soak, water*"
                 "${it.first.capitalize()}s: *${it.second.joinToString(", ")}*"
