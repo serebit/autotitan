@@ -57,6 +57,16 @@ class Entertainment : Module(isOptional = true) {
         evt.channel.sendMessage("I'd give $thingToRate a `$rating/10`.").complete()
     }
 
+    @Command(description = "Hotel? Trivago.", splitLastParameter = false)
+    fun hotel(evt: MessageRecivedEvent) {
+        evt.channel.sendMessage("Trivago.").complete()
+    }
+    
+        @Command(description = "My name Jeff", splitLastParameter = false)
+    fun myName(evt: MessageRecivedEvent) {
+        evt.channel.sendMessage("Jeff.").complete()
+    }
+    
     private fun String.normalize(): String = this
             .toLowerCase()
             .filter { it.isLetterOrDigit() }
