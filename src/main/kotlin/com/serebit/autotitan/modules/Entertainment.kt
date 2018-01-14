@@ -57,13 +57,13 @@ class Entertainment : Module(isOptional = true) {
         evt.channel.sendMessage("I'd give $thingToRate a `$rating/10`.").complete()
     }
 
-    @Command(description = "Hotel? Trivago.", splitLastParameter = false)
-    fun hotel() {
+    @Command(description = "Hotel? Trivago.", hidden = true, splitLastParameter = false)
+    fun hotel(evt: MessageReceivedEvent) {
         evt.channel.sendMessage("Trivago.").complete()
     }
     
-        @Command(description = "My name Jeff", splitLastParameter = false)
-    fun myName() {
+        @Command(description = "My name Jeff", hidden = true, splitLastParameter = false)
+    fun myName(evt: MessageReceivedEvent) {
         evt.channel.sendMessage("Jeff.").complete()
     }
     
