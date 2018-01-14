@@ -24,8 +24,8 @@ class Entertainment : Module(isOptional = true) {
             "My reply is no.",
             "My sources say no.",
             "Outlook not so good.",
-            "Very doubtful."
-            "Nope."
+            "Very doubtful.",
+            "Nope.",
             "No."
     )
 
