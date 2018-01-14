@@ -67,6 +67,11 @@ class Entertainment : Module(isOptional = true) {
         evt.channel.sendMessage("Jeff.").complete()
     }
     
+    @Command(description = "N U T", hidden = true, splitLastParameter = false)
+    fun nut(evt: MessageReceivedEvent) {
+        evt.channel.sendMessage("Busted").complete()
+    }
+    
     private fun String.normalize(): String = this
             .toLowerCase()
             .filter { it.isLetterOrDigit() }
