@@ -25,6 +25,8 @@ class Entertainment : Module(isOptional = true) {
             "My sources say no.",
             "Outlook not so good.",
             "Very doubtful."
+            "Nope."
+            "No."
     )
 
     @Command(
