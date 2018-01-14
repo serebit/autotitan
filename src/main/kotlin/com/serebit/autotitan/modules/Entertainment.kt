@@ -58,12 +58,12 @@ class Entertainment : Module(isOptional = true) {
     }
 
     @Command(description = "Hotel? Trivago.", splitLastParameter = false)
-    fun hotel(evt: MessageRecivedEvent) {
+    fun hotel() {
         evt.channel.sendMessage("Trivago.").complete()
     }
     
         @Command(description = "My name Jeff", splitLastParameter = false)
-    fun myName(evt: MessageRecivedEvent) {
+    fun myName() {
         evt.channel.sendMessage("Jeff.").complete()
     }
     
