@@ -150,6 +150,16 @@ class Audio : Module() {
         }
     }
 
+    @Command(description = "Clears the current music queue.", 
+             locale = Locale.GUILD, 
+             memberPermissions = [Permission.VOICE_MUTE_OTHERS]
+    )
+    fun clearQueue(evt: MessageReceivedEvent) {
+        evt.run {
+            channel.sendMessage("Cleared the music queue.").complete()
+        }
+    }
+    
     @Command(description = "Pauses the currently playing song.", locale = Locale.GUILD)
     fun pause(evt: MessageReceivedEvent) {
         evt.run {
