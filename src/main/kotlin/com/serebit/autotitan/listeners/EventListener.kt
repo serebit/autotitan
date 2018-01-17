@@ -4,8 +4,8 @@ import com.google.common.reflect.ClassPath
 import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.config
 import com.serebit.extensions.jda.sendEmbed
+import com.serebit.loggerkt.Logger
 import kotlinx.coroutines.experimental.launch
-import mu.KotlinLogging
 import net.dv8tion.jda.core.events.Event
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import net.dv8tion.jda.core.hooks.ListenerAdapter
@@ -21,12 +21,11 @@ object EventListener : ListenerAdapter() {
                 .getTopLevelClassesRecursive("com.serebit.autotitan.modules")
                 .mapNotNull { it.load().kotlin.createInstance() as Module }
     private val loadedModules get() = allModules.filter { it.isStandard || it.name in config.enabledModules }
-    private val logger = KotlinLogging.logger(this::class.java.simpleName)
 
     fun resetModules() {
-        logger.debug("Reloading modules from classpath...")
+        Logger.debug("Reloading modules from classpath...")
         allModules = classpathModules
-        logger.debug("Done.")
+        Logger.debug("Done.")
     }
 
     override fun onGenericEvent(evt: Event) {

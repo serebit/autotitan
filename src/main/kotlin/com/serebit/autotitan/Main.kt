@@ -2,9 +2,9 @@ package com.serebit.autotitan
 
 import com.serebit.autotitan.listeners.EventListener
 import com.serebit.extensions.jda.jda
+import com.serebit.loggerkt.LogLevel
+import com.serebit.loggerkt.Logger
 import net.dv8tion.jda.core.AccountType
-import org.slf4j.event.Level
-import org.slf4j.simple.SimpleLogger
 
 const val NAME = "AutoTitan"
 const val VERSION = "0.4.0"
@@ -12,7 +12,8 @@ val config: Configuration = Configuration.generate()
 
 fun main(args: Array<String>) {
     args.find { it in setOf("-d", "--debug") }?.let {
-        setLoggingLevel(Level.DEBUG)
+        Logger.level = LogLevel.DEBUG
+        Logger.debug("Starting in DEBUG mode.")
     }
 
     jda(AccountType.BOT) {
@@ -25,8 +26,4 @@ fun main(args: Array<String>) {
         println("Ping:        ${it.ping}ms")
         println("Invite link: ${it.asBot().getInviteUrl()}")
     }
-}
-
-fun setLoggingLevel(level: Level) {
-    System.setProperty(SimpleLogger.DEFAULT_LOG_LEVEL_KEY, level.toString())
 }
