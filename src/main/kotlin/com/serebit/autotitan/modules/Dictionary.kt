@@ -23,8 +23,8 @@ class Dictionary : Module(isOptional = true) {
     }
 
     @Command(
-            description = "Initializes the module. The only argument is a Wordnik API key, which can be obtained on https://www.wordnik.com.",
-            access = Access.BOT_OWNER
+        description = "Initializes the module. The only argument is a Wordnik API key, which can be obtained on https://www.wordnik.com.",
+        access = Access.BOT_OWNER
     )
     fun initDictionary(evt: MessageReceivedEvent, apiKey: String) {
         System.setProperty("WORDNIK_API_KEY", apiKey)
@@ -44,7 +44,7 @@ class Dictionary : Module(isOptional = true) {
     fun define(evt: MessageReceivedEvent, wordOrPhrase: String) {
         if (AccountApi.apiTokenStatus().isInvalid) {
             evt.channel.sendMessage(
-                    "The Dictionary module is not initialized. Initialize it with the command `initdictionary`."
+                "The Dictionary module is not initialized. Initialize it with the command `initdictionary`."
             ).complete()
             return
         }
@@ -55,7 +55,7 @@ class Dictionary : Module(isOptional = true) {
 
         if (definitions.isEmpty()) {
             evt.channel.sendMessage(
-                    "No definitions were found for `$wordOrPhrase`. Make sure it's spelled correctly."
+                "No definitions were found for `$wordOrPhrase`. Make sure it's spelled correctly."
             ).complete()
             return
         }
@@ -63,8 +63,8 @@ class Dictionary : Module(isOptional = true) {
         evt.channel.sendEmbed {
             definitions[0].let {
                 setTitle(
-                        "${it.word} (Definition 1 of ${definitions.size})",
-                        "https://www.wordnik.com/words/$wordOrPhrase"
+                    "${it.word} (Definition 1 of ${definitions.size})",
+                    "https://www.wordnik.com/words/$wordOrPhrase"
                 )
                 setDescription("*${it.partOfSpeech}*\n${it.text}")
             }
@@ -76,7 +76,7 @@ class Dictionary : Module(isOptional = true) {
     fun define(evt: MessageReceivedEvent, index: Int, wordOrPhrase: String) {
         if (AccountApi.apiTokenStatus().isInvalid) {
             evt.channel.sendMessage(
-                    "The Dictionary module is not initialized. Initialize it with the command `initdictionary`."
+                "The Dictionary module is not initialized. Initialize it with the command `initdictionary`."
             ).complete()
             return
         }
@@ -87,13 +87,13 @@ class Dictionary : Module(isOptional = true) {
 
         if (definitions.isEmpty()) {
             evt.channel.sendMessage(
-                    "No definitions were found for `$wordOrPhrase`. Make sure it's spelled correctly."
+                "No definitions were found for `$wordOrPhrase`. Make sure it's spelled correctly."
             ).complete()
             return
         }
         if (index - 1 !in definitions.indices) {
             evt.channel.sendMessage(
-                    "There is no definition for `$wordOrPhrase` with the given index."
+                "There is no definition for `$wordOrPhrase` with the given index."
             ).complete()
             return
         }
@@ -101,8 +101,8 @@ class Dictionary : Module(isOptional = true) {
         evt.channel.sendEmbed {
             definitions[index - 1].let {
                 setTitle(
-                        "${it.word} (Definition $index of ${definitions.size})",
-                        "https://www.wordnik.com/words/$wordOrPhrase"
+                    "${it.word} (Definition $index of ${definitions.size})",
+                    "https://www.wordnik.com/words/$wordOrPhrase"
                 )
                 setDescription("*${it.partOfSpeech}*\n${it.text}")
             }
@@ -114,19 +114,19 @@ class Dictionary : Module(isOptional = true) {
     fun related(evt: MessageReceivedEvent, wordOrPhrase: String) {
         if (AccountApi.apiTokenStatus().isInvalid) {
             evt.channel.sendMessage(
-                    "The Dictionary module is not initialized. Initialize it with the command `initdictionary`."
+                "The Dictionary module is not initialized. Initialize it with the command `initdictionary`."
             ).complete()
             return
         }
 
         val related = relatedWordsCache.getOrPut(wordOrPhrase) {
             WordApi.related(wordOrPhrase)
-                    .filter { it.relType in setOf("synonym", "antonym") }
+                .filter { it.relType in setOf("synonym", "antonym") }
         }.map { it.relType to it.words }
 
         if (related.isEmpty()) {
             evt.channel.sendMessage(
-                    "No words related to `$wordOrPhrase` were found. Make sure it's spelled correctly."
+                "No words related to `$wordOrPhrase` were found. Make sure it's spelled correctly."
             ).complete()
             return
         }

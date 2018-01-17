@@ -23,9 +23,9 @@ class Moderation : Module() {
     }
 
     @Command(
-            description = "Kicks a member.",
-            locale = Locale.GUILD,
-            memberPermissions = [Permission.KICK_MEMBERS]
+        description = "Kicks a member.",
+        locale = Locale.GUILD,
+        memberPermissions = [Permission.KICK_MEMBERS]
     )
     fun kick(evt: MessageReceivedEvent, member: Member) {
         evt.run {
@@ -35,9 +35,9 @@ class Moderation : Module() {
     }
 
     @Command(
-            description = "Bans a user.",
-            locale = Locale.GUILD,
-            memberPermissions = [Permission.BAN_MEMBERS]
+        description = "Bans a user.",
+        locale = Locale.GUILD,
+        memberPermissions = [Permission.BAN_MEMBERS]
     )
     fun ban(evt: MessageReceivedEvent, user: User) {
         evt.run {
@@ -47,9 +47,9 @@ class Moderation : Module() {
     }
 
     @Command(
-            description = "Unbans a banned user from the current server.",
-            locale = Locale.GUILD,
-            memberPermissions = [Permission.BAN_MEMBERS]
+        description = "Unbans a banned user from the current server.",
+        locale = Locale.GUILD,
+        memberPermissions = [Permission.BAN_MEMBERS]
     )
     fun unBan(evt: MessageReceivedEvent, user: User) {
         evt.run {
@@ -59,9 +59,9 @@ class Moderation : Module() {
     }
 
     @Command(
-            description = "Deletes the last N messages in the channel. N must be in the range of 1..99.",
-            locale = Locale.GUILD,
-            memberPermissions = [Permission.MESSAGE_MANAGE]
+        description = "Deletes the last N messages in the channel. N must be in the range of 1..99.",
+        locale = Locale.GUILD,
+        memberPermissions = [Permission.MESSAGE_MANAGE]
     )
     fun cleanUp(evt: MessageReceivedEvent, number: Int) {
         evt.run {
@@ -76,8 +76,8 @@ class Moderation : Module() {
     }
 
     @Command(
-            memberPermissions = [Permission.MANAGE_ROLES],
-            splitLastParameter = false
+        memberPermissions = [Permission.MANAGE_ROLES],
+        splitLastParameter = false
     )
     fun setAutoRole(evt: MessageReceivedEvent, roleName: String) {
         evt.run {
@@ -93,7 +93,7 @@ class Moderation : Module() {
     }
 
     @Command(
-            memberPermissions = [Permission.MANAGE_ROLES]
+        memberPermissions = [Permission.MANAGE_ROLES]
     )
     fun getAutoRole(evt: MessageReceivedEvent) {
         evt.run {
@@ -106,7 +106,7 @@ class Moderation : Module() {
     }
 
     @Command(
-            memberPermissions = [Permission.MANAGE_SERVER]
+        memberPermissions = [Permission.MANAGE_SERVER]
     )
     fun smartPrune(evt: MessageReceivedEvent) {
         evt.run {

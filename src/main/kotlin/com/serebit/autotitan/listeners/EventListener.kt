@@ -17,9 +17,9 @@ object EventListener : ListenerAdapter() {
         private set
     private val classpathModules
         get() = ClassPath
-                .from(Thread.currentThread().contextClassLoader)
-                .getTopLevelClassesRecursive("com.serebit.autotitan.modules")
-                .mapNotNull { it.load().kotlin.createInstance() as Module }
+            .from(Thread.currentThread().contextClassLoader)
+            .getTopLevelClassesRecursive("com.serebit.autotitan.modules")
+            .mapNotNull { it.load().kotlin.createInstance() as Module }
     private val loadedModules get() = allModules.filter { it.isStandard || it.name in config.enabledModules }
 
     fun resetModules() {
@@ -58,13 +58,13 @@ object EventListener : ListenerAdapter() {
         fun help(evt: MessageReceivedEvent) {
             evt.channel.sendEmbed {
                 addField(
-                        "Help",
-                        """
+                    "Help",
+                    """
                             My prefix is `${config.prefix}`.
                             For a list of commands, enter `${config.prefix}commands`.
                             For information on a certain command, enter `${config.prefix}help <command name>`.
                         """.trimIndent(),
-                        false
+                    false
                 )
             }.complete()
         }
@@ -72,9 +72,9 @@ object EventListener : ListenerAdapter() {
         @CommandAnnotation(description = "Sends an embed with information about the requested command.")
         fun help(evt: MessageReceivedEvent, commandName: String) {
             val matchingCommands = loadedModules
-                    .mapNotNull { it.findCommandsByName(commandName) }
-                    .flatten()
-                    .filter { it.isNotHidden }
+                .mapNotNull { it.findCommandsByName(commandName) }
+                .flatten()
+                .filter { it.isNotHidden }
             if (matchingCommands.isNotEmpty()) {
                 evt.channel.sendEmbed {
                     matchingCommands.forEach { command ->

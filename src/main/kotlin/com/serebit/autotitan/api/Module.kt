@@ -21,18 +21,18 @@ abstract class Module(name: String = "", val isOptional: Boolean = false) {
     private val commands: MutableList<Command> = mutableListOf()
     private val listeners: MutableList<Listener> = mutableListOf()
     private val validParameterTypes = setOf(
-            Boolean::class,
-            Byte::class,
-            Short::class,
-            Int::class,
-            Long::class,
-            Float::class,
-            Double::class,
-            User::class,
-            Member::class,
-            Channel::class,
-            Char::class,
-            String::class
+        Boolean::class,
+        Byte::class,
+        Short::class,
+        Int::class,
+        Long::class,
+        Float::class,
+        Double::class,
+        User::class,
+        Member::class,
+        Channel::class,
+        Char::class,
+        String::class
     )
     lateinit var commandListField: MessageEmbed.Field
     val isStandard get() = !isOptional
@@ -45,9 +45,9 @@ abstract class Module(name: String = "", val isOptional: Boolean = false) {
         this::class.declaredMemberFunctions.forEach { addFunction(it) }
         name = if (name.isNotBlank()) name else this::class.simpleName ?: name
         commandListField = MessageEmbed.Field(
-                name,
-                commands.filter { it.isNotHidden }.joinToString("\n") { it.summary },
-                false
+            name,
+            commands.filter { it.isNotHidden }.joinToString("\n") { it.summary },
+            false
         )
     }
 
@@ -57,9 +57,9 @@ abstract class Module(name: String = "", val isOptional: Boolean = false) {
 
     fun runCommands(evt: MessageReceivedEvent) {
         val (command, parameters) = commands.asSequence()
-                .filter { it.looselyMatches(evt.message.contentRaw) }
-                .associate { it to it.parseTokensOrNull(evt) }.entries
-                .firstOrNull { it.value != null } ?: return
+            .filter { it.looselyMatches(evt.message.contentRaw) }
+            .associate { it to it.parseTokensOrNull(evt) }.entries
+            .firstOrNull { it.value != null } ?: return
         command(evt, parameters!!)
     }
 
@@ -71,7 +71,8 @@ abstract class Module(name: String = "", val isOptional: Boolean = false) {
         return when {
             specificFunction.isValidCommand -> {
                 val annotation = specificFunction.findAnnotation<CommandAnnotation>() ?: return false
-                commands.add(Command(
+                commands.add(
+                    Command(
                         specificFunction,
                         this,
                         (if (annotation.name.isNotBlank()) annotation.name else specificFunction.name).toLowerCase(),
@@ -81,13 +82,16 @@ abstract class Module(name: String = "", val isOptional: Boolean = false) {
                         annotation.splitLastParameter,
                         annotation.hidden,
                         annotation.memberPermissions.toList()
-                ))
+                    )
+                )
             }
             specificFunction.isValidListener -> {
-                listeners.add(Listener(
+                listeners.add(
+                    Listener(
                         function,
                         this
-                ))
+                    )
+                )
             }
             else -> false
         }
@@ -109,9 +113,9 @@ abstract class Module(name: String = "", val isOptional: Boolean = false) {
             if (findAnnotation<CommandAnnotation>() == null) return false
             if (valueParameters[0].type.jvmErasure != MessageReceivedEvent::class) return false
             return valueParameters
-                    .drop(1)
-                    .all {
-                        it.type.jvmErasure in validParameterTypes
-                    }
+                .drop(1)
+                .all {
+                    it.type.jvmErasure in validParameterTypes
+                }
         }
 }

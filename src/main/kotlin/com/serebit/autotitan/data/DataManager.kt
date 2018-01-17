@@ -20,6 +20,6 @@ class DataManager(type: Class<*>) {
     }
 
     fun write(fileName: String, obj: Any) = File("$dataFolder/$fileName")
-            .apply { createNewFile() }
-            .writeText(serializer.toJson(obj))
+        .apply { createNewFile() }
+        .writeText(serializer.toJson(obj))
 }

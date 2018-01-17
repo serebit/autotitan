@@ -16,15 +16,15 @@ import kotlin.reflect.jvm.jvmErasure
 import com.serebit.autotitan.api.meta.annotations.Command as CommandAnnotation
 
 class Command(
-        private val function: KFunction<Unit>,
-        private val instance: Any,
-        val name: String,
-        description: String,
-        private val access: Access,
-        private val locale: Locale,
-        private val splitLastParameter: Boolean = true,
-        private val isHidden: Boolean,
-        private val memberPermissions: List<Permission> = emptyList()
+    private val function: KFunction<Unit>,
+    private val instance: Any,
+    val name: String,
+    description: String,
+    private val access: Access,
+    private val locale: Locale,
+    private val splitLastParameter: Boolean = true,
+    private val isHidden: Boolean,
+    private val memberPermissions: List<Permission> = emptyList()
 ) {
     private val parameterTypes: List<KClass<out Any>> = function.valueParameters.map { it.type.jvmErasure }.drop(1)
     val isNotHidden get() = !isHidden
@@ -32,7 +32,7 @@ class Command(
     val helpField = MessageEmbed.Field(summary, description, false)
 
     operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>): Any? =
-            function.call(instance, evt, *parameters.toTypedArray())
+        function.call(instance, evt, *parameters.toTypedArray())
 
     fun looselyMatches(rawMessageContent: String): Boolean = rawMessageContent.split(" ")[0] == config.prefix + name
 
@@ -70,8 +70,8 @@ class Command(
             splitParameters
         } else {
             listOf(
-                    *splitParameters.slice(0..(parameterTypes.size - 1)).toTypedArray(),
-                    splitParameters.drop(parameterTypes.size).joinToString(" ")
+                *splitParameters.slice(0..(parameterTypes.size - 1)).toTypedArray(),
+                splitParameters.drop(parameterTypes.size).joinToString(" ")
             )
         }.filter(String::isNotBlank)
     }
@@ -83,9 +83,9 @@ class Command(
     }
 
     private fun castParameter(
-            evt: MessageReceivedEvent,
-            type: KClass<out Any>,
-            string: String
+        evt: MessageReceivedEvent,
+        type: KClass<out Any>,
+        string: String
     ): Any? = when (type) {
         String::class -> string
         Int::class -> string.toIntOrNull()
@@ -99,20 +99,22 @@ class Command(
         }
         Char::class -> if (string.length == 1) string[0] else null
         User::class -> {
-            evt.jda.getUserById(string
+            evt.jda.getUserById(
+                string
                     .removeSurrounding("<@", ">")
                     .removePrefix("!")
             )
         }
         Member::class -> {
-            evt.guild.getMemberById(string
+            evt.guild.getMemberById(
+                string
                     .removeSurrounding("<@", ">")
                     .removePrefix("!")
             )
         }
         Channel::class -> {
             evt.guild.getTextChannelById(
-                    string.removeSurrounding("<#", ">")
+                string.removeSurrounding("<#", ">")
             )
         }
         else -> null

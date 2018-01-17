@@ -19,12 +19,12 @@ import net.dv8tion.jda.core.Permission
  */
 @Target(AnnotationTarget.FUNCTION)
 annotation class Command(
-        val name: String = "",
-        val description: String = "",
-        val locale: Locale = Locale.ALL,
-        val access: Access = Access.ALL,
-        val hidden: Boolean = false,
-        val splitLastParameter: Boolean = true,
-        val botPermissions: Array<Permission> = [],
-        val memberPermissions: Array<Permission> = []
+    val name: String = "",
+    val description: String = "",
+    val locale: Locale = Locale.ALL,
+    val access: Access = Access.ALL,
+    val hidden: Boolean = false,
+    val splitLastParameter: Boolean = true,
+    val botPermissions: Array<Permission> = [],
+    val memberPermissions: Array<Permission> = []
 )

@@ -70,9 +70,9 @@ class Audio : Module() {
     }
 
     @Command(
-            description = "Plays a URL, or searches YouTube for the given search terms.",
-            locale = Locale.GUILD,
-            splitLastParameter = false
+        description = "Plays a URL, or searches YouTube for the given search terms.",
+        locale = Locale.GUILD,
+        splitLastParameter = false
     )
     fun play(evt: MessageReceivedEvent, query: String) {
         evt.run {
@@ -103,7 +103,8 @@ class Audio : Module() {
                         audioManager.scheduler.addToQueue(track)
                         channel.sendMessage("Adding ${track.info.title} to queue.").complete()
                     } else {
-                        channel.sendMessage("Adding ${playlist.tracks.size} songs from ${playlist.name} to queue.").complete()
+                        channel.sendMessage("Adding ${playlist.tracks.size} songs from ${playlist.name} to queue.")
+                            .complete()
                         playlist.tracks.forEach { audioManager.scheduler.addToQueue(it) }
                     }
                 }
@@ -139,9 +140,9 @@ class Audio : Module() {
     }
 
     @Command(
-            description = "Stops playing music and clears the queue.",
-            locale = Locale.GUILD,
-            memberPermissions = [Permission.VOICE_MUTE_OTHERS]
+        description = "Stops playing music and clears the queue.",
+        locale = Locale.GUILD,
+        memberPermissions = [Permission.VOICE_MUTE_OTHERS]
     )
     fun stop(evt: MessageReceivedEvent) {
         evt.run {
@@ -200,16 +201,16 @@ class Audio : Module() {
                     "${it.info.title} (${toHumanReadableDuration(it.duration)})"
                 }
                 addField(
-                        "Now Playing",
-                        "${playingTrack.info.title} ($position/$duration)",
-                        false
+                    "Now Playing",
+                    "${playingTrack.info.title} ($position/$duration)",
+                    false
                 )
                 if (audioManager.scheduler.queue.isNotEmpty()) addField(
-                        "Up Next",
-                        upNextList + if (audioManager.scheduler.queue.size > 8) {
-                            "\n plus ${audioManager.scheduler.queue.drop(8).size} more..."
-                        } else "",
-                        false
+                    "Up Next",
+                    upNextList + if (audioManager.scheduler.queue.size > 8) {
+                        "\n plus ${audioManager.scheduler.queue.drop(8).size} more..."
+                    } else "",
+                    false
                 )
             }.complete()
         }

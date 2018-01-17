@@ -12,8 +12,8 @@ import kotlin.system.exitProcess
 
 class Owner : Module() {
     @Command(
-            description = "Shuts down the bot with an exit code of 0.",
-            access = Access.BOT_OWNER
+        description = "Shuts down the bot with an exit code of 0.",
+        access = Access.BOT_OWNER
     )
     fun shutdown(evt: MessageReceivedEvent) {
         evt.run {
@@ -25,8 +25,8 @@ class Owner : Module() {
     }
 
     @Command(
-            description = "Resets the command and listener classes of the bot, effectively restarting it.",
-            access = Access.BOT_OWNER
+        description = "Resets the command and listener classes of the bot, effectively restarting it.",
+        access = Access.BOT_OWNER
     )
     fun reset(evt: MessageReceivedEvent) {
         evt.run {
@@ -37,9 +37,9 @@ class Owner : Module() {
     }
 
     @Command(
-            description = "Renames the bot.",
-            splitLastParameter = false,
-            access = Access.BOT_OWNER
+        description = "Renames the bot.",
+        splitLastParameter = false,
+        access = Access.BOT_OWNER
     )
     fun setName(evt: MessageReceivedEvent, name: String) {
         evt.run {
@@ -49,8 +49,8 @@ class Owner : Module() {
     }
 
     @Command(
-            description = "Changes the bot's command prefix.",
-            access = Access.BOT_OWNER
+        description = "Changes the bot's command prefix.",
+        access = Access.BOT_OWNER
     )
     fun setPrefix(evt: MessageReceivedEvent, prefix: String) {
         evt.run {
@@ -65,8 +65,8 @@ class Owner : Module() {
     }
 
     @Command(
-            description = "Adds a user to the blacklist.",
-            access = Access.BOT_OWNER
+        description = "Adds a user to the blacklist.",
+        access = Access.BOT_OWNER
     )
     fun blackListAdd(evt: MessageReceivedEvent, user: User) {
         evt.run {
@@ -81,8 +81,8 @@ class Owner : Module() {
     }
 
     @Command(
-            description = "Removes a user from the blacklist.",
-            access = Access.BOT_OWNER
+        description = "Removes a user from the blacklist.",
+        access = Access.BOT_OWNER
     )
     fun blackListRemove(evt: MessageReceivedEvent, user: User) {
         evt.run {
@@ -97,8 +97,8 @@ class Owner : Module() {
     }
 
     @Command(
-            description = "Sends the blacklist.",
-            access = Access.BOT_OWNER
+        description = "Sends the blacklist.",
+        access = Access.BOT_OWNER
     )
     fun blackList(evt: MessageReceivedEvent) {
         evt.run {
@@ -115,29 +115,29 @@ class Owner : Module() {
     }
 
     @Command(
-            description = "Sends the bot's invite link to the command invoker.",
-            access = Access.BOT_OWNER
+        description = "Sends the bot's invite link to the command invoker.",
+        access = Access.BOT_OWNER
     )
     fun getInvite(evt: MessageReceivedEvent) {
         evt.run {
             author.openPrivateChannel().complete().sendMessage(
-                    "Invite link: ${jda.asBot().getInviteUrl()}"
+                "Invite link: ${jda.asBot().getInviteUrl()}"
             ).complete()
         }
     }
 
     @Command(
-            description = "Gets the list of servers that the bot is currently in.",
-            access = Access.BOT_OWNER
+        description = "Gets the list of servers that the bot is currently in.",
+        access = Access.BOT_OWNER
     )
     fun serverList(evt: MessageReceivedEvent) {
         evt.run {
             channel.sendEmbed {
                 jda.guilds.forEach {
                     addField(
-                            it.name + "(${it.id})",
-                            "**Text Channels**: ${it.textChannels.size}\n**Members**: ${it.members.size}\n",
-                            true
+                        it.name + "(${it.id})",
+                        "**Text Channels**: ${it.textChannels.size}\n**Members**: ${it.members.size}\n",
+                        true
                     )
                 }
             }.complete()
@@ -145,8 +145,8 @@ class Owner : Module() {
     }
 
     @Command(
-            description = "Leaves the server.",
-            access = Access.BOT_OWNER
+        description = "Leaves the server.",
+        access = Access.BOT_OWNER
     )
     fun leaveServer(evt: MessageReceivedEvent) {
         evt.run {
