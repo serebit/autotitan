@@ -60,10 +60,10 @@ object EventListener : ListenerAdapter() {
                 addField(
                     "Help",
                     """
-                            My prefix is `${config.prefix}`.
-                            For a list of commands, enter `${config.prefix}commands`.
-                            For information on a certain command, enter `${config.prefix}help <command name>`.
-                        """.trimIndent(),
+                        My prefix is `${config.prefix}`.
+                        For a list of commands, enter `${config.prefix}commands`.
+                        For information on a certain command, enter `${config.prefix}help <command name>`.
+                    """.trimIndent(),
                     false
                 )
             }.complete()

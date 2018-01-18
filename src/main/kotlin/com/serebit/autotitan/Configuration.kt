@@ -27,7 +27,7 @@ class Configuration private constructor(
             ).also(Configuration::serialize)
         }
 
-        private fun generateDummy(): Configuration = Configuration(
+        private fun generateDummy() = Configuration(
             "",
             "!"
         )

@@ -6,6 +6,7 @@ import com.serebit.autotitan.api.meta.annotations.Command
 import com.serebit.autotitan.config
 import com.serebit.autotitan.listeners.EventListener
 import com.serebit.extensions.jda.sendEmbed
+import com.serebit.loggerkt.Logger
 import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import kotlin.system.exitProcess
@@ -16,6 +17,7 @@ class Owner : Module() {
         access = Access.BOT_OWNER
     )
     fun shutdown(evt: MessageReceivedEvent) {
+        Logger.info("Shutting down...")
         evt.run {
             channel.sendMessage("Shutting down.").complete()
             jda.shutdown()
