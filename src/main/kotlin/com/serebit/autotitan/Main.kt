@@ -7,7 +7,7 @@ import com.serebit.loggerkt.Logger
 import net.dv8tion.jda.core.AccountType
 
 const val NAME = "AutoTitan"
-const val VERSION = "0.4.0"
+const val VERSION = "0.4.1"
 val config: Configuration = Configuration.generate()
 
 fun main(args: Array<String>) {
