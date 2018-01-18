@@ -51,7 +51,7 @@ class Audio : Module() {
     fun joinVoice(evt: MessageReceivedEvent) {
         evt.run {
             voiceStatus(evt).let {
-                when(it) {
+                when (it) {
                     VoiceStatus.USER_NOT_CONNECTED -> it.sendErrorMessage(evt.channel)
                     VoiceStatus.CONNECTED_DIFFERENT_CHANNEL, VoiceStatus.CONNECTED_SAME_CHANNEL -> {
                         channel.sendMessage("I'm already in a voice channel.").complete()
@@ -79,43 +79,43 @@ class Audio : Module() {
             when (voiceStatus) {
                 VoiceStatus.CONNECTED_DIFFERENT_CHANNEL, VoiceStatus.USER_NOT_CONNECTED -> {
                     voiceStatus.sendErrorMessage(channel)
+                    return
                 }
                 VoiceStatus.SELF_NOT_CONNECTED -> connectToVoiceChannel(guild.audioManager, member.voiceState.channel)
-                VoiceStatus.CONNECTED_SAME_CHANNEL -> {
-                    val audioManager = guild.musicManager
-                    val formattedQuery = if (urlValidator.isValid(query)) {
-                        query
-                    } else {
-                        "ytsearch:$query"
-                    }
-                    playerManager.loadItemOrdered(audioManager, formattedQuery, object : AudioLoadResultHandler {
-                        override fun trackLoaded(track: AudioTrack) {
-                            channel.sendMessage("Adding ${track.info.title} to queue.").complete()
-                            audioManager.scheduler.addToQueue(track)
-                        }
-
-                        override fun playlistLoaded(playlist: AudioPlaylist) {
-                            if (playlist.isSearchResult) {
-                                val track = playlist.tracks[0]
-                                audioManager.scheduler.addToQueue(track)
-                                channel.sendMessage("Adding ${track.info.title} to queue.").complete()
-                            } else {
-                                channel.sendMessage("Adding ${playlist.tracks.size} songs from ${playlist.name} to queue.")
-                                    .complete()
-                                playlist.tracks.forEach { audioManager.scheduler.addToQueue(it) }
-                            }
-                        }
-
-                        override fun noMatches() {
-                            channel.sendMessage("Nothing found.").complete()
-                        }
-
-                        override fun loadFailed(exception: FriendlyException) {
-                            channel.sendMessage("Could not queue: ${exception.message}").complete()
-                        }
-                    })
-                }
+                VoiceStatus.CONNECTED_SAME_CHANNEL -> Unit
             }
+            val audioManager = guild.musicManager
+            val formattedQuery = if (urlValidator.isValid(query)) {
+                query
+            } else {
+                "ytsearch:$query"
+            }
+            playerManager.loadItemOrdered(audioManager, formattedQuery, object : AudioLoadResultHandler {
+                override fun trackLoaded(track: AudioTrack) {
+                    channel.sendMessage("Adding ${track.info.title} to queue.").complete()
+                    audioManager.scheduler.addToQueue(track)
+                }
+
+                override fun playlistLoaded(playlist: AudioPlaylist) {
+                    if (playlist.isSearchResult) {
+                        val track = playlist.tracks[0]
+                        audioManager.scheduler.addToQueue(track)
+                        channel.sendMessage("Adding ${track.info.title} to queue.").complete()
+                    } else {
+                        channel.sendMessage("Adding ${playlist.tracks.size} songs from ${playlist.name} to queue.")
+                            .complete()
+                        playlist.tracks.forEach { audioManager.scheduler.addToQueue(it) }
+                    }
+                }
+
+                override fun noMatches() {
+                    channel.sendMessage("Nothing found.").complete()
+                }
+
+                override fun loadFailed(exception: FriendlyException) {
+                    channel.sendMessage("Could not queue: ${exception.message}").complete()
+                }
+            })
         }
     }
 
