@@ -45,13 +45,11 @@ object EventListener : ListenerAdapter() {
     class Help : Module() {
         @CommandAnnotation(description = "Sends an embed with a list of commands.")
         fun commands(evt: MessageReceivedEvent) {
-            evt.run {
-                channel.sendEmbed {
-                    loadedModules.sortedBy { it.name }.forEach { module ->
-                        addField(module.commandListField)
-                    }
-                }.complete()
-            }
+            evt.channel.sendEmbed {
+                loadedModules.sortedBy { it.name }.forEach { module ->
+                    addField(module.commandListField)
+                }
+            }.complete()
         }
 
         @CommandAnnotation(description = "Sends an embed with general information on how to use the bot.")

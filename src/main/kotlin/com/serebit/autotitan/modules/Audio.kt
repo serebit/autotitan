@@ -93,18 +93,18 @@ class Audio : Module() {
             playerManager.loadItemOrdered(audioManager, formattedQuery, object : AudioLoadResultHandler {
                 override fun trackLoaded(track: AudioTrack) {
                     channel.sendMessage("Adding ${track.info.title} to queue.").complete()
-                    audioManager.scheduler.addToQueue(track)
+                    audioManager.addToQueue(track)
                 }
 
                 override fun playlistLoaded(playlist: AudioPlaylist) {
                     if (playlist.isSearchResult) {
                         val track = playlist.tracks[0]
-                        audioManager.scheduler.addToQueue(track)
+                        audioManager.addToQueue(track)
                         channel.sendMessage("Adding ${track.info.title} to queue.").complete()
                     } else {
                         channel.sendMessage("Adding ${playlist.tracks.size} songs from ${playlist.name} to queue.")
                             .complete()
-                        playlist.tracks.forEach { audioManager.scheduler.addToQueue(it) }
+                        playlist.tracks.forEach { audioManager.addToQueue(it) }
                     }
                 }
 
@@ -129,11 +129,11 @@ class Audio : Module() {
                 }
             }
             val audioManager = guild.musicManager
-            if (audioManager.scheduler.queue.isEmpty() && audioManager.player.playingTrack == null) {
+            if (audioManager.queue.isEmpty() && audioManager.player.playingTrack == null) {
                 channel.sendMessage("Cannot skip. Nothing is playing.").complete()
                 return
             }
-            audioManager.scheduler.skipTrack()
+            audioManager.skipTrack()
             channel.sendMessage("Skipped to next track.").complete()
         }
     }
@@ -145,7 +145,7 @@ class Audio : Module() {
     )
     fun stop(evt: MessageReceivedEvent) {
         evt.run {
-            guild.musicManager.scheduler.stop()
+            guild.musicManager.stop()
             channel.sendMessage("Cleared the music queue.").complete()
         }
     }
@@ -160,24 +160,22 @@ class Audio : Module() {
                 }
             }
             val audioManager = guild.musicManager
-            if (audioManager.scheduler.pause()) {
+            if (audioManager.pause()) {
                 channel.sendMessage("Paused.").complete()
             }
         }
     }
 
     @Command(description = "Resumes the currently playing song.", locale = Locale.GUILD)
-    fun resume(evt: MessageReceivedEvent) {
-        evt.run {
-            voiceStatus(evt).let {
-                if (it != VoiceStatus.CONNECTED_SAME_CHANNEL) {
-                    it.sendErrorMessage(channel)
-                    return
-                }
+    fun unPause(evt: MessageReceivedEvent) {
+        voiceStatus(evt).let {
+            if (it != VoiceStatus.CONNECTED_SAME_CHANNEL) {
+                it.sendErrorMessage(evt.channel)
+                return
             }
-            if (guild.musicManager.scheduler.resume()) {
-                channel.sendMessage("Resumed.").complete()
-            }
+        }
+        if (evt.guild.musicManager.resume()) {
+            evt.channel.sendMessage("Resumed.").complete()
         }
     }
 
@@ -188,26 +186,23 @@ class Audio : Module() {
                 channel.sendMessage("No songs are queued.").complete()
                 return
             }
-            val audioManager = guild.musicManager
 
             channel.sendEmbed {
-                setAuthor(guild.selfMember.effectiveName, null, jda.selfUser.effectiveAvatarUrl)
-                setTitle("Music Queue", null)
-                val playingTrack = audioManager.player.playingTrack
-                val position = toHumanReadableDuration(playingTrack.position)
-                val duration = toHumanReadableDuration(playingTrack.duration)
-                val upNextList = audioManager.scheduler.queue.take(8).joinToString("\n") {
-                    "${it.info.title} (${toHumanReadableDuration(it.duration)})"
+                val playingTrack = guild.musicManager.player.playingTrack
+                val position = playingTrack.position.toHumanReadableTimestamp
+                val duration = playingTrack.duration.toHumanReadableTimestamp
+                val upNextList = guild.musicManager.queue.take(8).joinToString("\n") {
+                    "${it.info.title} (${it.duration.toHumanReadableTimestamp})"
                 }
                 addField(
                     "Now Playing",
                     "${playingTrack.info.title} ($position/$duration)",
                     false
                 )
-                if (audioManager.scheduler.queue.isNotEmpty()) addField(
+                if (guild.musicManager.queue.isNotEmpty()) addField(
                     "Up Next",
-                    upNextList + if (audioManager.scheduler.queue.size > 8) {
-                        "\n plus ${audioManager.scheduler.queue.drop(8).size} more..."
+                    upNextList + if (guild.musicManager.queue.size > 8) {
+                        "\n plus ${guild.musicManager.queue.drop(8).size} more..."
                     } else "",
                     false
                 )
@@ -217,41 +212,36 @@ class Audio : Module() {
 
     @Command(description = "Sets the volume.", locale = Locale.GUILD)
     fun setVolume(evt: MessageReceivedEvent, volume: Int) {
-        evt.run {
-            voiceStatus(evt).let {
-                if (it != VoiceStatus.CONNECTED_SAME_CHANNEL) {
-                    it.sendErrorMessage(channel)
-                    return
-                }
+        voiceStatus(evt).let {
+            if (it != VoiceStatus.CONNECTED_SAME_CHANNEL) {
+                it.sendErrorMessage(evt.channel)
+                return
             }
-            guild.musicManager.player.volume = volume.coerceIn(0..100)
-            channel.sendMessage("Set volume to ${guild.musicManager.player.volume}%.").complete()
         }
+        evt.guild.musicManager.player.volume = volume.coerceIn(0..100)
+        evt.channel.sendMessage("Set volume to ${evt.guild.musicManager.player.volume}%.").complete()
     }
 
     @Listener
     fun leaveVoiceAutomatically(evt: GuildVoiceLeaveEvent) {
-        evt.run {
-            if (guild.audioManager.connectedChannel != channelLeft) return
-            if (guild.audioManager.connectedChannel.members.any { !it.user.isBot }) return
-            leaveVoiceChannel(guild)
+        if (evt.guild.audioManager.connectedChannel != evt.channelLeft) return
+        if (evt.guild.audioManager.connectedChannel.members.all { it.user.isBot }) {
+            leaveVoiceChannel(evt.guild)
         }
+
     }
 
     @Listener
     fun leaveVoiceAutomatically(evt: GuildVoiceMoveEvent) {
-        evt.run {
-            if (guild.audioManager.connectedChannel != channelLeft) return
-            if (guild.audioManager.connectedChannel.members.any { !it.user.isBot }) return
-            leaveVoiceChannel(guild)
+        if (evt.guild.audioManager.connectedChannel != evt.channelLeft) return
+        if (evt.guild.audioManager.connectedChannel.members.all { it.user.isBot }) {
+            leaveVoiceChannel(evt.guild)
         }
     }
 
     private fun leaveVoiceChannel(guild: Guild) {
         if (guild.audioManager.isConnected) {
-            guild.musicManager.scheduler.resume()
-            guild.musicManager.scheduler.stop()
-            guild.musicManager.player.volume = 100
+            guild.musicManager.reset()
             guild.audioManager.closeAudioConnection()
         }
     }
@@ -284,60 +274,61 @@ class Audio : Module() {
         CONNECTED_SAME_CHANNEL(null);
 
         fun sendErrorMessage(channel: MessageChannel) {
-            errorMessage?.let { channel.sendMessage(it).complete() }
+            errorMessage?.let {
+                channel.sendMessage(it).complete()
+            }
         }
     }
 
-    private class GuildMusicManager(manager: AudioPlayerManager) {
-        val player: AudioPlayer = manager.createPlayer()
-        val scheduler = TrackScheduler()
+    private class GuildMusicManager(manager: AudioPlayerManager) : AudioEventAdapter() {
+        val player: AudioPlayer = manager.createPlayer().also {
+            it.addListener(this)
+        }
+        val queue = mutableListOf<AudioTrack>()
         val sendHandler by lazy {
             AudioPlayerSendHandler()
         }
 
-        init {
-            player.addListener(scheduler)
+        fun reset() {
+            resume()
+            stop()
+            player.volume = 100
         }
 
-        inner class TrackScheduler : AudioEventAdapter() {
-
-            val queue = mutableListOf<AudioTrack>()
-            fun addToQueue(track: AudioTrack) {
-                if (player.playingTrack == null) {
-                    player.playTrack(track)
-                } else {
-                    queue.add(track)
-                }
+        fun addToQueue(track: AudioTrack) {
+            if (player.playingTrack == null) {
+                player.playTrack(track)
+            } else {
+                queue.add(track)
             }
+        }
 
-            fun skipTrack() {
-                if (player.playingTrack != null) {
-                    player.stopTrack()
-                    if (queue.isNotEmpty()) player.playTrack(queue.removeAt(0))
-                }
-            }
-
-            fun pause() = if (!player.isPaused) {
-                player.isPaused = true
-                true
-            } else false
-
-            fun resume() = if (player.isPaused) {
-                player.isPaused = false
-                true
-            } else false
-
-            fun stop() {
+        fun skipTrack() {
+            if (player.playingTrack != null) {
                 player.stopTrack()
-                queue.clear()
+                if (queue.isNotEmpty()) player.playTrack(queue.removeAt(0))
             }
+        }
 
-            override fun onTrackEnd(player: AudioPlayer, track: AudioTrack, endReason: AudioTrackEndReason) {
-                if (queue.isNotEmpty() && endReason == AudioTrackEndReason.FINISHED) {
-                    player.playTrack(queue.removeAt(0))
-                }
+        fun pause() = if (!player.isPaused) {
+            player.isPaused = true
+            true
+        } else false
+
+        fun resume() = if (player.isPaused) {
+            player.isPaused = false
+            true
+        } else false
+
+        fun stop() {
+            player.stopTrack()
+            queue.clear()
+        }
+
+        override fun onTrackEnd(player: AudioPlayer, track: AudioTrack, endReason: AudioTrackEndReason) {
+            if (queue.isNotEmpty() && endReason == AudioTrackEndReason.FINISHED) {
+                player.playTrack(queue.removeAt(0))
             }
-
         }
 
         inner class AudioPlayerSendHandler : AudioSendHandler {
@@ -355,18 +346,18 @@ class Audio : Module() {
             }
 
             override fun isOpus() = true
-
         }
     }
 
-    private fun toHumanReadableDuration(millis: Long): String {
-        val totalSeconds = millis / 1000
-        val hours = (totalSeconds / 3600).toInt()
-        val minutes = (totalSeconds % 3600 / 60).toInt()
-        val seconds = (totalSeconds % 60).toInt()
-        return when (hours) {
-            0 -> String.format("%d:%02d", minutes, seconds)
-            else -> String.format("%d:%02d:%02d", hours, minutes, seconds)
+    private val Long.toHumanReadableTimestamp: String
+        get() {
+            val totalSeconds = this / 1000
+            val hours = (totalSeconds / 3600).toInt()
+            val minutes = (totalSeconds % 3600 / 60).toInt()
+            val seconds = (totalSeconds % 60).toInt()
+            return when (hours) {
+                0 -> "%d:%02d".format(minutes, seconds)
+                else -> "%d:%02d:%02d".format(hours, minutes, seconds)
+            }
         }
-    }
 }
