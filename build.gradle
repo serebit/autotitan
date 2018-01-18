@@ -1,11 +1,11 @@
 plugins {
-    id "org.jetbrains.kotlin.jvm" version "1.2.10"
+    id "org.jetbrains.kotlin.jvm" version "1.2.20"
     id "com.github.johnrengelman.shadow" version "2.0.2"
     id "com.github.ben-manes.versions" version "0.17.0"
 }
 
 group = "com.serebit"
-version = "0.4.0"
+version = "0.4.1"
 
 description = """AutoTitan is a modular, self-hosted Discord bot built in Kotlin using the Java Discord API."""
 
@@ -17,9 +17,10 @@ repositories {
 dependencies {
     compile group: "org.jetbrains.kotlin", name: "kotlin-stdlib-jdk8"
     compile group: "org.jetbrains.kotlin", name: "kotlin-reflect"
-    compile group: "org.jetbrains.kotlinx", name: "kotlinx-coroutines-core", version: "0.21"
+    compile group: "org.jetbrains.kotlinx", name: "kotlinx-coroutines-core", version: "0.21.2"
+    compile group: "com.serebit", name: "loggerkt", version: "0.1.0"
     compile group: "commons-validator", name: "commons-validator", version: "1.6"
-    compile group: "net.dv8tion", name: "JDA", version: "3.4.0_322"
+    compile group: "net.dv8tion", name: "JDA", version: "3.5.0_327"
     compile group: "com.sedmelluq", name: "lavaplayer", version: "1.2.45"
     compile group: "com.github.salomonbrys.kotson", name: "kotson", version: "2.5.0"
     compile group: "com.google.guava", name: "guava", version: "23.6-jre"

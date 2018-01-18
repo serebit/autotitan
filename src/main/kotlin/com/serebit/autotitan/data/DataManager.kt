@@ -19,7 +19,7 @@ class DataManager(type: Class<*>) {
         return if (file.exists()) serializer.fromJson(file.readText(), type) else null
     }
 
-    fun write(fileName: String, obj: Any) {
-        File("$dataFolder/$fileName").apply { createNewFile() }.writeText(serializer.toJson(obj))
-    }
+    fun write(fileName: String, obj: Any) = File("$dataFolder/$fileName")
+        .apply { createNewFile() }
+        .writeText(serializer.toJson(obj))
 }

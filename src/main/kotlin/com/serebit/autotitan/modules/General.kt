@@ -22,25 +22,25 @@ class General : Module() {
             }
             val format = { it: String ->
                 it.replace('_', ' ')
-                        .replace("(R)", "\u00AE")
-                        .replace("(TM)", "\u2122")
+                    .replace("(R)", "\u00AE")
+                    .replace("(TM)", "\u2122")
             }
 
             mapOf(
-                    "Hardware" to mapOf(
-                            "Processor" to format(hardware.processor.name),
-                            "Motherboard" to format(hardware.computerSystem.baseboard.model),
-                            "Disk" to format(hardware.diskStores[0].model),
-                            "Total Memory" to hardware.memory.total.asHumanReadableByteCount
-                    ).asIterable().joinToString("\n", transform = formatKeyValuePair),
-                    "Operating System" to mapOf(
-                            "Name" to operatingSystem.family,
-                            "Version" to operatingSystem.version.toString()
-                    ).asIterable().joinToString("\n", transform = formatKeyValuePair),
-                    "Java" to mapOf(
-                            "Vendor" to System.getProperty("java.vendor"),
-                            "Version" to System.getProperty("java.version")
-                    ).asIterable().joinToString("\n", transform = formatKeyValuePair)
+                "Hardware" to mapOf(
+                    "Processor" to format(hardware.processor.name),
+                    "Motherboard" to format(hardware.computerSystem.baseboard.model),
+                    "Disk" to format(hardware.diskStores[0].model),
+                    "Total Memory" to hardware.memory.total.asHumanReadableByteCount
+                ).asIterable().joinToString("\n", transform = formatKeyValuePair),
+                "Operating System" to mapOf(
+                    "Name" to operatingSystem.family,
+                    "Version" to operatingSystem.version.toString()
+                ).asIterable().joinToString("\n", transform = formatKeyValuePair),
+                "Java" to mapOf(
+                    "Vendor" to System.getProperty("java.vendor"),
+                    "Version" to System.getProperty("java.version")
+                ).asIterable().joinToString("\n", transform = formatKeyValuePair)
             )
         }
     }
@@ -62,8 +62,8 @@ class General : Module() {
             evt.run {
                 val onlineMemberCount = guild.members.count { it.onlineStatus != OnlineStatus.OFFLINE }
                 val hoistedRoles = guild.roles
-                        .filter { it.name != "@everyone" && it.isHoisted }
-                        .joinToString(", ") { it.name }
+                    .filter { it.name != "@everyone" && it.isHoisted }
+                    .joinToString(", ") { it.name }
 
                 channel.sendEmbed {
                     setTitle(guild.name, null)
@@ -80,9 +80,9 @@ class General : Module() {
                     if (guild.selfMember.hasPermission(Permission.MANAGE_SERVER)) {
                         val permanentInvites = guild.invites.complete().filter { !it.isTemporary }
                         if (permanentInvites.isNotEmpty()) addField(
-                                "Invite Link",
-                                permanentInvites.first().url,
-                                false
+                            "Invite Link",
+                            permanentInvites.first().url,
+                            false
                         )
                     }
                     setFooter("Server ID: ${guild.id}", null)
@@ -97,7 +97,6 @@ class General : Module() {
         command("memberInfo") { evt, member: Member ->
             evt.channel.sendMessage(member.info).complete()
         }
-
     }
 
     private val Member.info: MessageEmbed
@@ -108,10 +107,10 @@ class General : Module() {
                 ""
             }
             val status = onlineStatus.name
-                    .toLowerCase()
-                    .replace("_", " ")
-                    .capitalize()
-                    .plus(if (game != null) " - Playing ${game?.name}" else "")
+                .toLowerCase()
+                .replace("_", " ")
+                .capitalize()
+                .plus(if (game != null) " - Playing ${game?.name}" else "")
             val roles = if (roles.isNotEmpty()) {
                 roles.joinToString(", ") { it.name }
             } else null

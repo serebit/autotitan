@@ -12,9 +12,6 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
 import com.sedmelluq.discord.lavaplayer.track.playback.AudioFrame
 import com.serebit.autotitan.api.Module
-import com.serebit.autotitan.api.meta.Locale
-import com.serebit.autotitan.api.meta.annotations.Command
-import com.serebit.autotitan.api.meta.annotations.Listener
 import com.serebit.extensions.jda.sendEmbed
 import net.dv8tion.jda.core.audio.AudioSendHandler
 import net.dv8tion.jda.core.entities.Guild
@@ -34,7 +31,7 @@ class Audio : Module() {
         get() {
             val musicManager = musicManagers.getOrElse(idLong, {
                 val newManager = GuildMusicManager(playerManager)
-                musicManagers.put(idLong, newManager)
+                musicManagers[idLong] = newManager
                 newManager
             })
             audioManager.sendingHandler = musicManager.sendHandler
@@ -46,66 +43,73 @@ class Audio : Module() {
         AudioSourceManagers.registerLocalSource(playerManager)
 
         command("joinVoice") { evt ->
-            if (evt.member.voiceState.inVoiceChannel()) {
-                connectToVoiceChannel(evt.guild.audioManager, evt.member.voiceState.channel)
-                evt.channel.sendMessage("Now connected to ${evt.member.voiceState.channel.name}.").complete()
-            } else {
-                evt.channel.sendMessage("You need to be in a voice channel for me to do that.").complete()
+            evt.run {
+                voiceStatus(evt).let {
+                    when (it) {
+                        VoiceStatus.USER_NOT_CONNECTED -> it.sendErrorMessage(evt.channel)
+                        VoiceStatus.CONNECTED_DIFFERENT_CHANNEL, VoiceStatus.CONNECTED_SAME_CHANNEL -> {
+                            channel.sendMessage("I'm already in a voice channel.").complete()
+                        }
+                        VoiceStatus.SELF_NOT_CONNECTED -> {
+                            connectToVoiceChannel(guild.audioManager, member.voiceState.channel)
+                            channel.sendMessage("Now connected to ${member.voiceState.channel.name}.").complete()
+                        }
+                    }
+                }
             }
         }
 
         command("leaveVoice") { evt ->
-            if (evt.guild.audioManager.isConnected) {
-                evt.guild.musicManager.scheduler.stop()
-                evt.guild.audioManager.closeAudioConnection()
-            }
+            leaveVoiceChannel(evt.guild)
         }
 
         command("play") { evt, query: String ->
-            val voiceStatus = voiceStatus(evt)
-            when (voiceStatus) {
-                VoiceStatus.CONNECTED_DIFFERENT_CHANNEL, VoiceStatus.USER_NOT_CONNECTED -> {
-                    voiceStatus.sendErrorMessage(evt.channel)
-                    return@command
-                }
-                VoiceStatus.SELF_NOT_CONNECTED -> {
-                    connectToVoiceChannel(evt.guild.audioManager, evt.member.voiceState.channel)
-                }
-                else -> Unit
-            }
-            val audioManager = evt.guild.musicManager
-            val formattedQuery = if (urlValidator.isValid(query)) {
-                query
-            } else {
-                "ytsearch:$query"
-            }
-            playerManager.loadItemOrdered(audioManager, formattedQuery, object : AudioLoadResultHandler {
-                override fun trackLoaded(track: AudioTrack) {
-                    evt.channel.sendMessage("Adding ${track.info.title} to queue.").complete()
-                    audioManager.scheduler.addToQueue(track)
-                }
+            evt.run {
+                val voiceStatus = voiceStatus(evt)
+                when (voiceStatus) {
+                    VoiceStatus.CONNECTED_DIFFERENT_CHANNEL, VoiceStatus.USER_NOT_CONNECTED -> {
+                        voiceStatus.sendErrorMessage(channel)
+                    }
+                    VoiceStatus.SELF_NOT_CONNECTED -> connectToVoiceChannel(
+                        guild.audioManager,
+                        member.voiceState.channel
+                    )
+                    VoiceStatus.CONNECTED_SAME_CHANNEL -> {
+                        val audioManager = guild.musicManager
+                        val formattedQuery = if (urlValidator.isValid(query)) {
+                            query
+                        } else {
+                            "ytsearch:$query"
+                        }
+                        playerManager.loadItemOrdered(audioManager, formattedQuery, object : AudioLoadResultHandler {
+                            override fun trackLoaded(track: AudioTrack) {
+                                channel.sendMessage("Adding ${track.info.title} to queue.").complete()
+                                audioManager.scheduler.addToQueue(track)
+                            }
 
-                override fun playlistLoaded(playlist: AudioPlaylist) {
-                    if (playlist.isSearchResult) {
-                        val track = playlist.tracks[0]
-                        audioManager.scheduler.addToQueue(track)
-                        evt.channel.sendMessage("Adding ${track.info.title} to queue.").complete()
-                    } else {
-                        evt.channel.sendMessage(
-                                "Adding ${playlist.tracks.size} songs from ${playlist.name} to queue."
-                        ).complete()
-                        playlist.tracks.forEach { audioManager.scheduler.addToQueue(it) }
+                            override fun playlistLoaded(playlist: AudioPlaylist) {
+                                if (playlist.isSearchResult) {
+                                    val track = playlist.tracks[0]
+                                    audioManager.scheduler.addToQueue(track)
+                                    channel.sendMessage("Adding ${track.info.title} to queue.").complete()
+                                } else {
+                                    channel.sendMessage("Adding ${playlist.tracks.size} songs from ${playlist.name} to queue.")
+                                        .complete()
+                                    playlist.tracks.forEach { audioManager.scheduler.addToQueue(it) }
+                                }
+                            }
+
+                            override fun noMatches() {
+                                channel.sendMessage("Nothing found.").complete()
+                            }
+
+                            override fun loadFailed(exception: FriendlyException) {
+                                channel.sendMessage("Could not queue: ${exception.message}").complete()
+                            }
+                        })
                     }
                 }
-
-                override fun noMatches() {
-                    evt.channel.sendMessage("Nothing found.").complete()
-                }
-
-                override fun loadFailed(exception: FriendlyException) {
-                    evt.channel.sendMessage("Could not queue: ${exception.message}").complete()
-                }
-            })
+            }
         }
 
         command("skip") { evt ->
@@ -172,16 +176,16 @@ class Audio : Module() {
                         "${it.info.title} (${toHumanReadableDuration(it.duration)})"
                     }
                     addField(
-                            "Now Playing",
-                            "${playingTrack.info.title} ($position/$duration)",
-                            false
+                        "Now Playing",
+                        "${playingTrack.info.title} ($position/$duration)",
+                        false
                     )
                     if (audioManager.scheduler.queue.isNotEmpty()) addField(
-                            "Up Next",
-                            upNextList + if (audioManager.scheduler.queue.size > 8) {
-                                "\n plus ${audioManager.scheduler.queue.drop(8).size} more..."
-                            } else "",
-                            false
+                        "Up Next",
+                        upNextList + if (audioManager.scheduler.queue.size > 8) {
+                            "\n plus ${audioManager.scheduler.queue.drop(8).size} more..."
+                        } else "",
+                        false
                     )
                 }.complete()
             }
@@ -202,10 +206,7 @@ class Audio : Module() {
             evt.run {
                 if (guild.audioManager.connectedChannel != channelLeft) return@listener
                 if (guild.audioManager.connectedChannel.members.any { !it.user.isBot }) return@listener
-                if (guild.audioManager.isConnected) {
-                    guild.musicManager.scheduler.stop()
-                    guild.audioManager.closeAudioConnection()
-                }
+                leaveVoiceChannel(guild)
             }
         }
 
@@ -213,11 +214,17 @@ class Audio : Module() {
             evt.run {
                 if (guild.audioManager.connectedChannel != channelLeft) return@listener
                 if (guild.audioManager.connectedChannel.members.any { !it.user.isBot }) return@listener
-                if (guild.audioManager.isConnected) {
-                    guild.musicManager.scheduler.stop()
-                    guild.audioManager.closeAudioConnection()
-                }
+                leaveVoiceChannel(guild)
             }
+        }
+    }
+
+    private fun leaveVoiceChannel(guild: Guild) {
+        if (guild.audioManager.isConnected) {
+            guild.musicManager.scheduler.resume()
+            guild.musicManager.scheduler.stop()
+            guild.musicManager.player.volume = 100
+            guild.audioManager.closeAudioConnection()
         }
     }
 
@@ -231,11 +238,12 @@ class Audio : Module() {
         evt.run {
             val selfIsConnected = guild.audioManager.isConnected
             val userIsConnected = member.voiceState.inVoiceChannel()
-            val sameChannel = member.voiceState.channel == guild.audioManager.connectedChannel
+            val differentChannel =
+                userIsConnected && selfIsConnected && member.voiceState.channel != guild.audioManager.connectedChannel
             return when {
                 !userIsConnected -> VoiceStatus.USER_NOT_CONNECTED
                 !selfIsConnected -> VoiceStatus.SELF_NOT_CONNECTED
-                !sameChannel -> VoiceStatus.CONNECTED_DIFFERENT_CHANNEL
+                differentChannel -> VoiceStatus.CONNECTED_DIFFERENT_CHANNEL
                 else -> VoiceStatus.CONNECTED_SAME_CHANNEL
             }
         }
@@ -253,7 +261,6 @@ class Audio : Module() {
     }
 
     private class GuildMusicManager(manager: AudioPlayerManager) {
-
         val player: AudioPlayer = manager.createPlayer()
         val scheduler = TrackScheduler()
         val sendHandler by lazy {
@@ -306,7 +313,6 @@ class Audio : Module() {
         }
 
         inner class AudioPlayerSendHandler : AudioSendHandler {
-
             private var lastFrame: AudioFrame? = null
             override fun canProvide(): Boolean {
                 if (lastFrame == null) lastFrame = player.provide()

@@ -10,31 +10,32 @@ class Entertainment : Module(isOptional = true) {
     private val deterministicRandom = Random()
     private val random = Random()
     private val eightBallResponses = listOf(
-            "It is certain.",
-            "It is decidedly so.",
-            "Without a doubt.",
-            "Yes, definitely.",
-            "You may rely on it.",
-            "As I see it, yes.",
-            "Most likely.",
-            "Outlook good.",
-            "Yes.",
-            "Signs point to yes.",
-            "Don't count on it.",
-            "My reply is no.",
-            "My sources say no.",
-            "Outlook not so good.",
-            "Very doubtful."
+        "It is certain.",
+        "It is decidedly so.",
+        "Without a doubt.",
+        "Yes, definitely.",
+        "You may rely on it.",
+        "As I see it, yes.",
+        "Most likely.",
+        "Outlook good.",
+        "Yes.",
+        "Signs point to yes.",
+        "Don't count on it.",
+        "My reply is no.",
+        "My sources say no.",
+        "Outlook not so good.",
+        "Very doubtful."
     )
 
     @Command(
-            name = "magic8",
-            description = "A deterministic version of the 8-ball command.",
-            hidden = true,
-            splitLastParameter = false
+        name = "magic8",
+        description = "A deterministic version of the 8-ball command.",
+        hidden = true,
+        splitLastParameter = false
     )
     fun deterministicEightBall(evt: MessageReceivedEvent, question: String) {
-        deterministicRandom.setSeed(question.normalize()
+        deterministicRandom.setSeed(
+            question.normalize()
                 .hashCode()
                 .toLong()
         )
@@ -56,8 +57,8 @@ class Entertainment : Module(isOptional = true) {
     }
 
     private fun String.normalize(): String = this
-            .toLowerCase()
-            .filter { it.isLetterOrDigit() }
+        .toLowerCase()
+        .filter { it.isLetterOrDigit() }
 
     private fun Random.next(bound: Int = 10) = (nextFloat() * bound).roundToInt()
 }

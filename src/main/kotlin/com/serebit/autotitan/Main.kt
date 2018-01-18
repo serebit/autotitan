@@ -1,26 +1,21 @@
 package com.serebit.autotitan
 
-import com.google.common.reflect.ClassPath
-import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.listeners.EventListener
 import com.serebit.extensions.jda.jda
+import com.serebit.loggerkt.LogLevel
+import com.serebit.loggerkt.Logger
 import net.dv8tion.jda.core.AccountType
-import net.dv8tion.jda.core.events.Event
 
 const val NAME = "AutoTitan"
-const val VERSION = "0.4.0"
+const val VERSION = "0.4.1"
 val config: Configuration = Configuration.generate()
-private val modules: List<Module>
-    get() = ClassPath
-            .from(Thread.currentThread().contextClassLoader)
-            .getTopLevelClassesRecursive("com.serebit.autotitan.modules")
-            .map { it.load() }
-            .filter { it.constructors.any { it.parameterCount == 0 } }
-            .map { it.getConstructor().newInstance() as Module }
-
 
 fun main(args: Array<String>) {
-    EventListener.init(modules)
+    args.find { it in setOf("-d", "--debug") }?.let {
+        Logger.level = LogLevel.DEBUG
+        Logger.debug("Starting in debug mode.")
+    }
+
     jda(AccountType.BOT) {
         setToken(config.token)
         addEventListener(EventListener)
@@ -31,10 +26,4 @@ fun main(args: Array<String>) {
         println("Ping:        ${it.ping}ms")
         println("Invite link: ${it.asBot().getInviteUrl()}")
     }
-}
-
-fun resetJda(evt: Event) {
-    evt.jda.removeEventListener(EventListener)
-    EventListener.init(modules)
-    evt.jda.addEventListener(EventListener)
 }
