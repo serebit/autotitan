@@ -19,7 +19,7 @@ object EventListener : ListenerAdapter() {
         get() = ClassPath
             .from(Thread.currentThread().contextClassLoader)
             .getTopLevelClassesRecursive("com.serebit.autotitan.modules")
-            .mapNotNull { it.load().kotlin.createInstance() as Module }
+            .mapNotNull { it.load().kotlin.createInstance() as Module } + Help()
     private val loadedModules get() = allModules.filter { it.isStandard || it.name in config.enabledModules }
 
     fun resetModules() {
