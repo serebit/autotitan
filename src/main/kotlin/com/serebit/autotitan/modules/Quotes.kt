@@ -26,7 +26,7 @@ class Quotes : Module(isOptional = true) {
         }
         quoteMap.getOrPutDefault(evt.guild.idLong).let {
             val quoteIndex = it.keys.max()?.plus(1) ?: 0
-            it.put(quoteIndex, quote)
+            it[quoteIndex] = quote
             evt.channel.sendMessage("Added ${evt.member.asMention}'s quote as number `$quoteIndex`.").complete()
         }
         dataManager.write("quotes.json", quoteMap)
