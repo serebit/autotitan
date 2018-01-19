@@ -9,6 +9,7 @@ import kotlin.math.roundToInt
 class Entertainment : Module(isOptional = true) {
     private val deterministicRandom = Random()
     private val random = Random()
+    //private val countOfSucc //TODO
     private val eightBallResponses = listOf(
         "It is certain.",
         "It is decidedly so.",
