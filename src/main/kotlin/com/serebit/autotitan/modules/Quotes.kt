@@ -7,6 +7,7 @@ import com.serebit.autotitan.data.DataManager
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import java.util.*
 
+@Suppress("UNUSED")
 class Quotes : Module(isOptional = true) {
     private val dataManager = DataManager(this::class.java)
     private val quoteMap = dataManager.read("quotes.json") ?: QuoteMap()

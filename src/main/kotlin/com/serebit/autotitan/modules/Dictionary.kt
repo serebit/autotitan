@@ -12,6 +12,7 @@ import net.jeremybrooks.knicker.dto.Definition
 import net.jeremybrooks.knicker.dto.Related
 import net.jeremybrooks.knicker.dto.TokenStatus
 
+@Suppress("UNUSED")
 class Dictionary : Module(isOptional = true) {
     private val dataManager = DataManager(this::class.java)
     private val config = dataManager.read("config.json") ?: WordnikConfig()

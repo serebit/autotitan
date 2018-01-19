@@ -85,14 +85,7 @@ abstract class Module(name: String = "", val isOptional: Boolean = false) {
                     )
                 )
             }
-            specificFunction.isValidListener -> {
-                listeners.add(
-                    Listener(
-                        function,
-                        this
-                    )
-                )
-            }
+            specificFunction.isValidListener -> listeners.add(Listener(function, this))
             else -> false
         }
     }

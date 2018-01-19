@@ -14,6 +14,7 @@ import kotlin.math.ceil
 import kotlin.math.log
 import kotlin.math.pow
 
+@Suppress("UNUSED")
 class General : Module() {
     private val dateFormat = DateTimeFormatter.ofPattern("d MMM, yyyy")
     private val systemInfo by lazy {

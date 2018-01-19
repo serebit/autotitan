@@ -6,6 +6,7 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import java.util.*
 import kotlin.math.roundToInt
 
+@Suppress("UNUSED")
 class Entertainment : Module(isOptional = true) {
     private val deterministicRandom = Random()
     private val random = Random()
@@ -51,7 +52,11 @@ class Entertainment : Module(isOptional = true) {
 
     @Command(description = "Rates the given thing on a scale of 0 to 10.", splitLastParameter = false)
     fun rate(evt: MessageReceivedEvent, thingToRate: String) {
-        deterministicRandom.setSeed(thingToRate.normalize().hashCode().toLong())
+        deterministicRandom.setSeed(
+            thingToRate.normalize()
+                .hashCode()
+                .toLong()
+        )
         val rating = deterministicRandom.next(10)
         evt.channel.sendMessage("I'd give $thingToRate a `$rating/10`.").complete()
     }

@@ -11,6 +11,7 @@ import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import kotlin.system.exitProcess
 
+@Suppress("UNUSED")
 class Owner : Module() {
     @Command(
         description = "Shuts down the bot with an exit code of 0.",

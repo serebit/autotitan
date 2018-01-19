@@ -27,6 +27,7 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import net.dv8tion.jda.core.managers.AudioManager
 import org.apache.commons.validator.routines.UrlValidator
 
+@Suppress("UNUSED")
 class Audio : Module() {
     private val urlValidator = UrlValidator(arrayOf("http", "https"))
     private val playerManager = DefaultAudioPlayerManager()
