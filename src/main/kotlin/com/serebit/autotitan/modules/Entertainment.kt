@@ -9,7 +9,7 @@ import kotlin.math.roundToInt
 class Entertainment : Module(isOptional = true) {
     private val deterministicRandom = Random()
     private val random = Random()
-    //private val countOfSucc //TODO
+    private val countOfSucc = 0
     private val eightBallResponses = listOf(
         "It is certain.",
         "It is decidedly so.",
@@ -59,7 +59,13 @@ class Entertainment : Module(isOptional = true) {
 
         @Command(description = "N U T", hidden = true)
     fun nut(evt: MessageReceivedEvent) {
+        countOfSucc++;
         evt.channel.sendMessage("B U S T A  N U T").complete()
+    }
+    
+            @Command(description = "N U T", hidden = true)
+    fun nutCount(evt: MessageReceivedEvent) {
+        evt.channel.sendMessage("The nut command has been called $countOfSucc times").complete()
     }
     
         @Command(description = "MY NAMA JEFF", hidden = true)
