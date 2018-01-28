@@ -9,7 +9,7 @@ import kotlin.math.roundToInt
 class Entertainment : Module(isOptional = true) {
     private val deterministicRandom = Random()
     private val random = Random()
-    val countOfSucc = 0
+    var countOfSucc = 0
     private val eightBallResponses = listOf(
         "It is certain.",
         "It is decidedly so.",
