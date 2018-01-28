@@ -9,6 +9,11 @@ import com.serebit.extensions.jda.sendEmbed
 import com.serebit.loggerkt.Logger
 import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
+import oshi.SystemInfo
+import kotlin.math.ceil
+import kotlin.math.log
+import kotlin.math.pow
+import kotlin.math.roundToInt
 import kotlin.system.exitProcess
 
 @Suppress("UNUSED")
@@ -40,6 +45,53 @@ class Owner : Module() {
     }
 
     @Command(
+        description = "Gets information about the system that the bot is running on.",
+        access = Access.BOT_OWNER
+    )
+    fun systemInfo(evt: MessageReceivedEvent) {
+        val info = SystemInfo()
+        val process = info.operatingSystem.getProcess(info.operatingSystem.processId)
+        val processorModel = info.hardware.processor.name.replace("(\\(R\\)|\\(TM\\)|@ .+)".toRegex(), "")
+        val processorCores = info.hardware.processor.physicalProcessorCount
+        val processorFrequency = info.hardware.processor.vendorFreq
+        val totalMemory = info.hardware.memory.total
+        val usedMemory = info.hardware.memory.total - info.hardware.memory.available
+        val usedMemoryPercentage = usedMemory.asPercentageOf(totalMemory)
+        val processMemory = process.residentSetSize
+        val processMemoryPercentage = processMemory.asPercentageOf(totalMemory)
+        val systemUptime = info.hardware.processor.systemUptime
+        val processUptime = process.upTime / 1000
+        evt.channel.sendEmbed {
+            addField(
+                "Processor",
+                """
+                    Model: `$processorModel`
+                    Cores: `$processorCores`
+                    Frequency: `${processorFrequency.asMetricUnit("Hz")}`
+                """.trimIndent(),
+                false
+            )
+            addField(
+                "Memory",
+                """
+                    Total: `${totalMemory.asMetricUnit("B")}`
+                    Used: `${usedMemory.asMetricUnit("B")} ($usedMemoryPercentage%)`
+                    Process: `${processMemory.asMetricUnit("B")} ($processMemoryPercentage%)`
+                """.trimIndent(),
+                false
+            )
+            addField(
+                "Uptime",
+                """
+                    System: `${systemUptime.asVerboseTimestamp}`
+                    Process: `${processUptime.asVerboseTimestamp}`
+                """.trimIndent(),
+                false
+            )
+        }.complete()
+    }
+
+    @Command(
         description = "Renames the bot.",
         splitLastParameter = false,
         access = Access.BOT_OWNER
@@ -56,15 +108,13 @@ class Owner : Module() {
         access = Access.BOT_OWNER
     )
     fun setPrefix(evt: MessageReceivedEvent, prefix: String) {
-        evt.run {
-            if (prefix.isBlank() || prefix.contains("\\s".toRegex())) {
-                channel.sendMessage("Invalid prefix. Prefix must not be empty, and may not contain whitespace.")
-                return
-            }
-            config.prefix = prefix
-            config.serialize()
-            channel.sendMessage("Set prefix to `${config.prefix}`.").complete()
+        if (prefix.isBlank() || prefix.contains("\\s".toRegex())) {
+            evt.channel.sendMessage("Invalid prefix. Prefix must not be empty, and may not contain whitespace.")
+            return
         }
+        config.prefix = prefix
+        config.serialize()
+        evt.channel.sendMessage("Set prefix to `${config.prefix}`.").complete()
     }
 
     @Command(
@@ -88,15 +138,13 @@ class Owner : Module() {
         access = Access.BOT_OWNER
     )
     fun blackListRemove(evt: MessageReceivedEvent, user: User) {
-        evt.run {
-            if (user.idLong !in config.blackList) {
-                channel.sendMessage("${user.name} is not in the blacklist.").complete()
-                return
-            }
-            config.blackList.remove(user.idLong)
-            channel.sendMessage("Removed ${user.name} from the blacklist.").complete()
-            config.serialize()
+        if (user.idLong !in config.blackList) {
+            evt.channel.sendMessage("${user.name} is not in the blacklist.").complete()
+            return
         }
+        config.blackList.remove(user.idLong)
+        evt.channel.sendMessage("Removed ${user.name} from the blacklist.").complete()
+        config.serialize()
     }
 
     @Command(
@@ -104,17 +152,15 @@ class Owner : Module() {
         access = Access.BOT_OWNER
     )
     fun blackList(evt: MessageReceivedEvent) {
-        evt.run {
-            if (config.blackList.isEmpty()) {
-                channel.sendMessage("The blacklist is empty.").complete()
-                return
-            }
-            channel.sendEmbed {
-                addField("Blacklisted Users", config.blackList.joinToString("\n") {
-                    jda.getUserById(it).asMention
-                }, true)
-            }.complete()
+        if (config.blackList.isEmpty()) {
+            evt.channel.sendMessage("The blacklist is empty.").complete()
+            return
         }
+        evt.channel.sendEmbed {
+            addField("Blacklisted Users", config.blackList.joinToString("\n") {
+                evt.jda.getUserById(it).asMention
+            }, true)
+        }.complete()
     }
 
     @Command(
@@ -122,11 +168,9 @@ class Owner : Module() {
         access = Access.BOT_OWNER
     )
     fun getInvite(evt: MessageReceivedEvent) {
-        evt.run {
-            author.openPrivateChannel().complete().sendMessage(
-                "Invite link: ${jda.asBot().getInviteUrl()}"
-            ).complete()
-        }
+        evt.author.openPrivateChannel().complete().sendMessage(
+            "Invite link: ${evt.jda.asBot().getInviteUrl()}"
+        ).complete()
     }
 
     @Command(
@@ -191,4 +235,26 @@ class Owner : Module() {
         config.serialize()
         evt.channel.sendMessage("Disabled the `$moduleName` module.").complete()
     }
+
+    private fun Long.asMetricUnit(unit: String, base: Double = 1000.0): String {
+        val exponent = ceil(log(this.toDouble(), base)).toInt() - 1
+        val unitPrefix = listOf("", "k", "M", "G", "T", "P", "E")[exponent]
+        return "%.1f $unitPrefix$unit".format(this / base.pow(exponent))
+    }
+
+    private val Long.asVerboseTimestamp: String
+        get() {
+            val days = "${this / 86400} day" + if (this / 86400 != 1L) "s" else ""
+            val hours = "${this % 86400 / 3600} hour" + if (this % 86400 / 3600 != 1L) "s" else ""
+            val minutes = "${this % 3600 / 60} minute" + if (this % 3600 / 60 != 1L) "s" else ""
+            val seconds = "${this % 60} second" + if (this % 60 != 1L) "s" else ""
+            return when (this) {
+                in 0L..59L -> seconds
+                in 60L..3599L -> "$minutes and $seconds"
+                in 3600L..86399L -> "$hours, $minutes, and $seconds"
+                else -> "$days, $hours, $minutes, and $seconds"
+            }
+        }
+
+    private fun Long.asPercentageOf(total: Long): Int = (this.toDouble() / total.toDouble() * 100).roundToInt()
 }
