@@ -5,6 +5,7 @@ import com.serebit.extensions.jda.jda
 import com.serebit.loggerkt.LogLevel
 import com.serebit.loggerkt.Logger
 import net.dv8tion.jda.core.AccountType
+import net.dv8tion.jda.core.entities.Game
 
 const val NAME = "AutoTitan"
 const val VERSION = "0.4.1"
@@ -19,6 +20,7 @@ fun main(args: Array<String>) {
     jda(AccountType.BOT) {
         setToken(config.token)
         addEventListener(EventListener)
+        setGame(Game.playing(config.prefix))
     }.let {
         println()
         println("$NAME v$VERSION")

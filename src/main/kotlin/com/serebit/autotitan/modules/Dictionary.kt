@@ -14,13 +14,13 @@ import net.jeremybrooks.knicker.dto.TokenStatus
 
 @Suppress("UNUSED")
 class Dictionary : Module(isOptional = true) {
-    private val dataManager = DataManager(this::class.java)
+    private val dataManager = DataManager(this::class)
     private val config = dataManager.read("config.json") ?: WordnikConfig()
     private val definitionCache: MutableMap<String, List<Definition>> = mutableMapOf()
     private val relatedWordsCache: MutableMap<String, List<Related>> = mutableMapOf()
 
     init {
-        if (config.apiKey != null) System.setProperty("WORDNIK_API_KEY", config.apiKey)
+        if (config.apiKey != null) java.lang.System.setProperty("WORDNIK_API_KEY", config.apiKey)
     }
 
     @Command(

@@ -9,7 +9,7 @@ import java.util.*
 
 @Suppress("UNUSED")
 class Quotes : Module(isOptional = true) {
-    private val dataManager = DataManager(this::class.java)
+    private val dataManager = DataManager(this::class)
     private val quoteMap = dataManager.read("quotes.json") ?: QuoteMap()
     private val random = Random()
 

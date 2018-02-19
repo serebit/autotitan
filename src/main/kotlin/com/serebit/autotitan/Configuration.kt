@@ -14,17 +14,19 @@ class Configuration private constructor(
     fun serialize() = file.also { it.createNewFile() }.writeText(Gson().toJson(this))
 
     companion object {
-        private val file: File = File(this::class.java.protectionDomain.codeSource.location.toURI()).parentFile.let {
+        private val file = File(this::class.java.protectionDomain.codeSource.location.toURI()).parentFile.let {
             File("$it/.config")
         }
 
         fun generate(): Configuration = when {
             System.getenv("AUTOTITAN_TEST_MODE_FLAG") == "true" -> generateDummy()
             file.exists() -> Gson().fromJson(file.readText())
-            else -> Configuration(
-                token = prompt("Enter new token:") { !it.contains("\\s".toRegex()) },
-                prefix = prompt("Enter new command prefix:") { !it.contains("\\s".toRegex()) }
-            ).also(Configuration::serialize)
+            else -> Scanner(System.`in`).use { scanner ->
+                Configuration(
+                    token = prompt(scanner, "Enter new token:") { !it.contains("\\s".toRegex()) },
+                    prefix = prompt(scanner, "Enter new command prefix:") { !it.contains("\\s".toRegex()) }
+                ).also(Configuration::serialize)
+            }
         }
 
         private fun generateDummy() = Configuration(
@@ -32,11 +34,11 @@ class Configuration private constructor(
             "!"
         )
 
-        private tailrec fun prompt(text: String, condition: (String) -> Boolean): String {
+        private tailrec fun prompt(scanner: Scanner, text: String, condition: (String) -> Boolean): String {
             print("$text\n> ")
-            val input = Scanner(System.`in`).nextLine().trim()
+            val input = scanner.nextLine().trim()
             return if (input.isBlank() || !condition(input)) {
-                prompt(text, condition)
+                prompt(scanner, text, condition)
             } else input
         }
     }

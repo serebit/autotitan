@@ -16,10 +16,8 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 
 @Suppress("UNUSED")
 class Moderation : Module() {
-    private val dataManager = DataManager(this::class.java)
-    private val memberRoleMap: GuildRoleMap = dataManager.read("rolemap.json") ?: GuildRoleMap().also {
-        dataManager.write("rolemap.json", it)
-    }
+    private val dataManager = DataManager(this::class)
+    private val memberRoleMap: GuildRoleMap = dataManager.read("rolemap.json") ?: GuildRoleMap()
 
     @Command(
         description = "Kicks a member.",
@@ -60,10 +58,9 @@ class Moderation : Module() {
         if (number !in 1..99) {
             evt.channel.sendMessage("The number has to be in the range of `1..99`.").complete()
             return
-        } else {
-            val messages = evt.textChannel.history.retrievePast(number + 1).complete()
-            evt.textChannel.deleteMessages(messages).complete()
         }
+        val messages = evt.textChannel.history.retrievePast(number + 1).complete()
+        evt.textChannel.deleteMessages(messages).complete()
     }
 
     @Command(
@@ -71,14 +68,13 @@ class Moderation : Module() {
         splitLastParameter = false
     )
     fun setMemberRole(evt: MessageReceivedEvent, roleName: String) {
-        val role = evt.guild.roles.findLast { it.name.toLowerCase() == roleName.toLowerCase() }
-        if (role != null) {
-            evt.channel.sendMessage("Set the member role to `$roleName`.").complete()
-            memberRoleMap.put(evt.guild, role)
-            dataManager.write("rolemap.json", memberRoleMap)
-        } else {
+        val role = evt.guild.roles.findLast { it.name.toLowerCase() == roleName.toLowerCase() } ?: run {
             evt.channel.sendMessage("`$roleName` does not exist.").complete()
+            return
         }
+        evt.channel.sendMessage("Set the member role to `$roleName`.").complete()
+        memberRoleMap.put(evt.guild, role)
+        dataManager.write("rolemap.json", memberRoleMap)
     }
 
     @Command(memberPermissions = [Permission.MANAGE_ROLES])
@@ -94,22 +90,18 @@ class Moderation : Module() {
         memberPermissions = [Permission.MANAGE_SERVER]
     )
     fun smartPrune(evt: MessageReceivedEvent) {
-        evt.run {
-            memberRoleMap[jda, guild].let { baseRole ->
-                if (baseRole != null) {
-                    val membersWithBaseRole = guild.getMembersWithRoles(baseRole)
-                    membersWithBaseRole.forEach { guild.controller.removeSingleRoleFromMember(it, baseRole).queue() }
-                    val prunableMemberCount = guild.getPrunableMemberCount(30).complete()
-                    guild.controller.prune(30).complete()
-                    val membersWithoutBaseRole = guild.members.filter { it.roles.isEmpty() }
-                    membersWithoutBaseRole.forEach { guild.controller.addSingleRoleToMember(it, baseRole).queue() }
-                    channel.sendMessage("Pruned $prunableMemberCount members.").complete()
-                } else {
-                    val prunableMemberCount = guild.getPrunableMemberCount(30).complete()
-                    guild.controller.prune(30).complete()
-                    channel.sendMessage("Pruned $prunableMemberCount members.").complete()
-                }
-            }
+        memberRoleMap[evt.jda, evt.guild]?.let { memberRole ->
+            val membersWithBaseRole = evt.guild.getMembersWithRoles(memberRole)
+            membersWithBaseRole.forEach { evt.guild.controller.removeSingleRoleFromMember(it, memberRole).queue() }
+            val prunableMemberCount = evt.guild.getPrunableMemberCount(30).complete()
+            evt.guild.controller.prune(30).complete()
+            val membersWithoutBaseRole = evt.guild.members.filter { it.roles.isEmpty() }
+            membersWithoutBaseRole.forEach { evt.guild.controller.addSingleRoleToMember(it, memberRole).queue() }
+            evt.channel.sendMessage("Pruned $prunableMemberCount members.").complete()
+        } ?: run {
+            val prunableMemberCount = evt.guild.getPrunableMemberCount(30).complete()
+            evt.guild.controller.prune(30).complete()
+            evt.channel.sendMessage("Pruned $prunableMemberCount members.").complete()
         }
     }
 

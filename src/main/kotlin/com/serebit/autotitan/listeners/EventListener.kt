@@ -23,9 +23,8 @@ object EventListener : ListenerAdapter() {
     private val loadedModules get() = allModules.filter { it.isStandard || it.name in config.enabledModules }
 
     fun resetModules() {
-        Logger.debug("Reloading modules from classpath...")
         allModules = classpathModules
-        Logger.debug("Done.")
+        Logger.info("Reloaded modules from classpath.")
     }
 
     override fun onGenericEvent(evt: Event) {
