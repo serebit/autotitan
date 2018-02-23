@@ -15,6 +15,7 @@ import com.serebit.autotitan.api.meta.Locale
 import com.serebit.autotitan.api.meta.annotations.Command
 import com.serebit.autotitan.api.meta.annotations.Listener
 import com.serebit.extensions.jda.sendEmbed
+import com.serebit.extensions.jda.toBasicTimestamp
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.audio.AudioSendHandler
 import net.dv8tion.jda.core.entities.Guild
@@ -49,17 +50,15 @@ class Audio : Module() {
 
     @Command(description = "Joins the voice channel that the invoker is in.", locale = Locale.GUILD)
     fun joinVoice(evt: MessageReceivedEvent) {
-        evt.run {
-            voiceStatus(evt).let {
-                when (it) {
-                    VoiceStatus.USER_NOT_CONNECTED -> it.sendErrorMessage(evt.channel)
-                    VoiceStatus.CONNECTED_DIFFERENT_CHANNEL, VoiceStatus.CONNECTED_SAME_CHANNEL -> {
-                        channel.sendMessage("I'm already in a voice channel.").complete()
-                    }
-                    VoiceStatus.SELF_NOT_CONNECTED -> {
-                        connectToVoiceChannel(guild.audioManager, member.voiceState.channel)
-                        channel.sendMessage("Now connected to ${member.voiceState.channel.name}.").complete()
-                    }
+        voiceStatus(evt).let {
+            when (it) {
+                VoiceStatus.USER_NOT_CONNECTED -> it.sendErrorMessage(evt.channel)
+                VoiceStatus.CONNECTED_DIFFERENT_CHANNEL, VoiceStatus.CONNECTED_SAME_CHANNEL -> {
+                    evt.channel.sendMessage("I'm already in a voice channel.").complete()
+                }
+                VoiceStatus.SELF_NOT_CONNECTED -> {
+                    connectToVoiceChannel(evt.guild.audioManager, evt.member.voiceState.channel)
+                    evt.channel.sendMessage("Now connected to ${evt.member.voiceState.channel.name}.").complete()
                 }
             }
         }
@@ -89,11 +88,12 @@ class Audio : Module() {
                 VoiceStatus.CONNECTED_SAME_CHANNEL -> Unit
             }
         }
-        val formattedQuery = if (urlValidator.isValid(query)) {
-            query
-        } else {
-            "ytsearch:$query"
-        }
+        val formattedQuery = StringBuilder().apply {
+            if (urlValidator.isValid(query)) {
+                append("ytsearch:")
+            }
+            append(query)
+        }.toString()
         playerManager.loadItemOrdered(evt.guild.musicManager, formattedQuery, object : AudioLoadResultHandler {
             override fun trackLoaded(track: AudioTrack) {
                 evt.channel.sendMessage("Adding ${track.info.title} to queue.").complete()
@@ -179,10 +179,10 @@ class Audio : Module() {
 
         evt.channel.sendEmbed {
             val playingTrack = evt.guild.musicManager.player.playingTrack
-            val position = playingTrack.position.toHumanReadableTimestamp
-            val duration = playingTrack.duration.toHumanReadableTimestamp
+            val position = playingTrack.position.toBasicTimestamp()
+            val duration = playingTrack.duration.toBasicTimestamp()
             val upNextList = evt.guild.musicManager.queue.take(8).joinToString("\n") {
-                "${it.info.title} (${it.duration.toHumanReadableTimestamp})"
+                "${it.info.title} (${it.duration.toBasicTimestamp()})"
             }
             addField(
                 "Now Playing",
@@ -241,18 +241,15 @@ class Audio : Module() {
     }
 
     private fun voiceStatus(evt: MessageReceivedEvent): VoiceStatus {
-        evt.run {
-            val selfIsConnected = guild.audioManager.isConnected
-            val userIsConnected = member.voiceState.inVoiceChannel()
-            val differentChannel =
-                userIsConnected && selfIsConnected && member.voiceState.channel != guild.audioManager.connectedChannel
+            val selfIsConnected = evt.guild.audioManager.isConnected
+            val userIsConnected = evt.member.voiceState.inVoiceChannel()
+            val differentChannel = evt.member.voiceState.channel != evt.guild.audioManager.connectedChannel
             return when {
                 !userIsConnected -> VoiceStatus.USER_NOT_CONNECTED
                 !selfIsConnected -> VoiceStatus.SELF_NOT_CONNECTED
                 differentChannel -> VoiceStatus.CONNECTED_DIFFERENT_CHANNEL
                 else -> VoiceStatus.CONNECTED_SAME_CHANNEL
             }
-        }
     }
 
     private enum class VoiceStatus(val errorMessage: String?) {
@@ -288,7 +285,7 @@ class Audio : Module() {
         }
 
         fun skipTrack() {
-            if (player.playingTrack != null) {
+            player.playingTrack?.let {
                 player.stopTrack()
                 if (queue.isNotEmpty()) player.playTrack(queue.removeAt(0))
             }
@@ -322,16 +319,4 @@ class Audio : Module() {
             override fun isOpus() = true
         }
     }
-
-    private val Long.toHumanReadableTimestamp: String
-        get() {
-            val totalSeconds = this / 1000
-            val hours = (totalSeconds / 3600).toInt()
-            val minutes = (totalSeconds % 3600 / 60).toInt()
-            val seconds = (totalSeconds % 60).toInt()
-            return when (hours) {
-                0 -> "%d:%02d".format(minutes, seconds)
-                else -> "%d:%02d:%02d".format(hours, minutes, seconds)
-            }
-        }
 }

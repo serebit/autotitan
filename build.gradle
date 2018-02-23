@@ -2,6 +2,7 @@ plugins {
     id "org.jetbrains.kotlin.jvm" version "1.2.21"
     id "com.github.johnrengelman.shadow" version "2.0.2"
     id "com.github.ben-manes.versions" version "0.17.0"
+    id "io.gitlab.arturbosch.detekt" version "1.0.0.RC6-3"
 }
 
 group = "com.serebit"
@@ -11,7 +12,6 @@ description = """AutoTitan is a modular, self-hosted Discord bot built in Kotlin
 
 repositories {
     jcenter()
-    mavenCentral()
 }
 
 dependencies {
@@ -53,8 +53,4 @@ build {
 
 test {
     environment "AUTOTITAN_TEST_MODE_FLAG", "true"
-}
-
-task wrapper(type: Wrapper) {
-    gradleVersion = "4.5.1"
 }

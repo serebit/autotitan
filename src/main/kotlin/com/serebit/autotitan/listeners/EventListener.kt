@@ -12,7 +12,7 @@ import net.dv8tion.jda.core.hooks.ListenerAdapter
 import kotlin.reflect.full.createInstance
 import com.serebit.autotitan.api.meta.annotations.Command as CommandAnnotation
 
-object EventListener : ListenerAdapter() {
+internal object EventListener : ListenerAdapter() {
     var allModules: List<Module> = classpathModules
         private set
     private val classpathModules

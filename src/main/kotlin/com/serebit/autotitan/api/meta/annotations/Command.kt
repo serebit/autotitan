@@ -18,7 +18,7 @@ import net.dv8tion.jda.core.Permission
  * @param memberPermissions The memberPermissions a Guild member must have in order to use the command.
  */
 @Target(AnnotationTarget.FUNCTION)
-annotation class Command(
+internal annotation class Command(
     val name: String = "",
     val description: String = "",
     val locale: Locale = Locale.ALL,

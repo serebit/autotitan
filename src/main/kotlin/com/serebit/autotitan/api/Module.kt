@@ -51,11 +51,11 @@ abstract class Module(name: String = "", val isOptional: Boolean = false) {
         )
     }
 
-    fun runListeners(evt: Event) {
+    internal fun runListeners(evt: Event) {
         listeners.filter { it.eventType == evt::class }.forEach { it.invoke(evt) }
     }
 
-    fun runCommands(evt: MessageReceivedEvent) {
+    internal fun runCommands(evt: MessageReceivedEvent) {
         val (command, parameters) = commands.asSequence()
             .filter { it.looselyMatches(evt.message.contentRaw) }
             .associate { it to it.parseTokensOrNull(evt) }.entries
@@ -90,7 +90,7 @@ abstract class Module(name: String = "", val isOptional: Boolean = false) {
         }
     }
 
-    fun findCommandsByName(name: String): List<Command>? = commands.filter { it.name == name }
+    internal fun findCommandsByName(name: String): List<Command>? = commands.filter { it.name == name }
 
     private val KFunction<Unit>.isValidListener: Boolean
         get() {

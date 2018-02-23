@@ -15,7 +15,7 @@ import kotlin.reflect.full.valueParameters
 import kotlin.reflect.jvm.jvmErasure
 import com.serebit.autotitan.api.meta.annotations.Command as CommandAnnotation
 
-class Command(
+internal class Command(
     private val function: KFunction<Unit>,
     private val instance: Any,
     val name: String,
@@ -34,34 +34,18 @@ class Command(
     operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>): Any? =
         function.call(instance, evt, *parameters.toTypedArray())
 
-    fun looselyMatches(rawMessageContent: String): Boolean = rawMessageContent.split(" ")[0] == config.prefix + name
+    internal fun looselyMatches(rawMessageContent: String): Boolean {
+        return rawMessageContent.split(" ")[0] == config.prefix + name
+    }
 
-    fun parseTokensOrNull(evt: MessageReceivedEvent): List<Any>? {
+    internal fun parseTokensOrNull(evt: MessageReceivedEvent): List<Any>? {
+        if (!evt.isInvalidCommandInvocation) return null
         val tokens = tokenizeMessage(evt.message.contentRaw)
-        if (evt.author.isBot) return null
         if (tokens[0] != config.prefix + name) return null
         if (parameterTypes.size != tokens.size - 1) return null
-        if (evt.author.idLong in config.blackList) return null
-        if (evt.guild != null && !evt.member.hasPermission(memberPermissions.toMutableList())) return null
 
-        val correctLocale = when (locale) {
-            Locale.ALL -> true
-            Locale.GUILD -> evt.guild != null
-            Locale.PRIVATE_CHANNEL -> evt.guild == null
-        }
-        val hasAccess = when (access) {
-            Access.ALL -> true
-            Access.GUILD_OWNER -> evt.member == evt.guild?.owner
-            Access.BOT_OWNER -> evt.author == evt.jda.asBot().applicationInfo.complete().owner
-            Access.RANK_ABOVE -> TODO("Not yet implemented.")
-            Access.RANK_SAME -> TODO("Not yet implemented.")
-            Access.RANK_BELOW -> TODO("Not yet implemented.")
-        }
-
-        return if (correctLocale && hasAccess) {
-            val parsedTokens = parseTokens(evt, tokens)
-            if (parsedTokens.any { it == null }) null else parsedTokens.filterNotNull()
-        } else null
+        val parsedTokens = parseTokens(evt, tokens)
+        return if (parsedTokens.any { it == null }) null else parsedTokens.filterNotNull()
     }
 
     private fun tokenizeMessage(message: String): List<String> {
@@ -94,29 +78,54 @@ class Command(
         Float::class -> string.toFloatOrNull()
         Short::class -> string.toShortOrNull()
         Byte::class -> string.toByteOrNull()
-        Boolean::class -> {
-            if (string == "true" || string == "false") string.toBoolean() else null
-        }
-        Char::class -> if (string.length == 1) string[0] else null
-        User::class -> {
-            evt.jda.getUserById(
-                string
-                    .removeSurrounding("<@", ">")
-                    .removePrefix("!")
-            )
-        }
-        Member::class -> {
-            evt.guild.getMemberById(
-                string
-                    .removeSurrounding("<@", ">")
-                    .removePrefix("!")
-            )
-        }
-        Channel::class -> {
-            evt.guild.getTextChannelById(
-                string.removeSurrounding("<#", ">")
-            )
-        }
+        Boolean::class -> string.toBooleanOrNull()
+        Char::class -> string.toCharOrNull()
+        User::class -> evt.jda.getUserById(
+            string
+                .removeSurrounding("<@", ">")
+                .removePrefix("!")
+        )
+        Member::class -> evt.guild.getMemberById(
+            string
+                .removeSurrounding("<@", ">")
+                .removePrefix("!")
+        )
+        Channel::class -> evt.guild.getTextChannelById(
+            string.removeSurrounding("<#", ">")
+        )
         else -> null
     }
+
+//    operator fun Role.compareTo(other: Role) = guild.roles.indexOf(this).compareTo(guild.roles.indexOf(other))
+
+    private val MessageReceivedEvent.isValidCommandInvocation: Boolean
+        get() {
+            val hasAccess = when (access) {
+                Access.ALL -> true
+                Access.GUILD_OWNER -> member == guild?.owner
+                Access.BOT_OWNER -> author == jda.asBot().applicationInfo.complete().owner
+                Access.RANK_ABOVE -> member.roles[0] > guild.selfMember.roles[0]
+                Access.RANK_SAME -> member.roles[0].compareTo(guild.selfMember.roles[0]) == 0
+                Access.RANK_BELOW -> member.roles[0] < guild.selfMember.roles[0]
+            }
+
+            val correctLocale = when (locale) {
+                Locale.ALL -> true
+                Locale.GUILD -> guild != null
+                Locale.PRIVATE_CHANNEL -> guild == null
+            }
+
+            return when {
+                author.isBot -> false
+                author.idLong in config.blackList -> false
+                guild != null && !member.hasPermission(memberPermissions.toMutableList()) -> false
+                else -> hasAccess && correctLocale
+            }
+        }
+
+    private val MessageReceivedEvent.isInvalidCommandInvocation: Boolean get() = !isValidCommandInvocation
+
+    private fun String.toBooleanOrNull() = if (this == "true" || this == "false") toBoolean() else null
+
+    private fun String.toCharOrNull() = if (length == 1) this[0] else null
 }

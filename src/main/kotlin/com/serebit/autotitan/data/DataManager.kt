@@ -5,7 +5,7 @@ import com.google.gson.GsonBuilder
 import java.io.File
 import kotlin.reflect.KClass
 
-class DataManager(type: KClass<out Any>) {
+internal class DataManager(type: KClass<out Any>) {
     private val serializer: Gson = GsonBuilder().apply {
         serializeNulls()
     }.create()

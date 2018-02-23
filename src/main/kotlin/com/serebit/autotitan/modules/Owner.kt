@@ -5,15 +5,14 @@ import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.meta.annotations.Command
 import com.serebit.autotitan.config
 import com.serebit.autotitan.listeners.EventListener
+import com.serebit.extensions.jda.asMetricUnit
+import com.serebit.extensions.jda.asPercentageOf
 import com.serebit.extensions.jda.sendEmbed
+import com.serebit.extensions.jda.toVerboseTimestamp
 import com.serebit.loggerkt.Logger
 import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import oshi.SystemInfo
-import kotlin.math.ceil
-import kotlin.math.log
-import kotlin.math.pow
-import kotlin.math.roundToInt
 import kotlin.system.exitProcess
 
 @Suppress("UNUSED")
@@ -24,12 +23,10 @@ class Owner : Module() {
     )
     fun shutdown(evt: MessageReceivedEvent) {
         Logger.info("Shutting down...")
-        evt.run {
-            channel.sendMessage("Shutting down.").complete()
-            jda.shutdown()
-            config.serialize()
-            exitProcess(0)
-        }
+        evt.channel.sendMessage("Shutting down.").complete()
+        evt.jda.shutdown()
+        config.serialize()
+        exitProcess(0)
     }
 
     @Command(
@@ -83,8 +80,8 @@ class Owner : Module() {
             addField(
                 "Uptime",
                 """
-                    System: `${systemUptime.asVerboseTimestamp}`
-                    Process: `${processUptime.asVerboseTimestamp}`
+                    System: `${systemUptime.toVerboseTimestamp()}`
+                    Process: `${processUptime.toVerboseTimestamp()}`
                 """.trimIndent(),
                 false
             )
@@ -97,10 +94,8 @@ class Owner : Module() {
         access = Access.BOT_OWNER
     )
     fun setName(evt: MessageReceivedEvent, name: String) {
-        evt.run {
-            jda.selfUser.manager.setName(name).complete()
-            channel.sendMessage("Renamed to $name.").complete()
-        }
+        evt.jda.selfUser.manager.setName(name).complete()
+        evt.channel.sendMessage("Renamed to $name.").complete()
     }
 
     @Command(
@@ -122,15 +117,13 @@ class Owner : Module() {
         access = Access.BOT_OWNER
     )
     fun blackListAdd(evt: MessageReceivedEvent, user: User) {
-        evt.run {
-            if (user.idLong in config.blackList) {
-                channel.sendMessage("${user.name} is already in the blacklist.").complete()
-                return
-            }
-            config.blackList.add(user.idLong)
-            channel.sendMessage("Added ${user.name} to the blacklist.").complete()
-            config.serialize()
+        if (user.idLong in config.blackList) {
+            evt.channel.sendMessage("${user.name} is already in the blacklist.").complete()
+            return
         }
+        config.blackList.add(user.idLong)
+        evt.channel.sendMessage("Added ${user.name} to the blacklist.").complete()
+        config.serialize()
     }
 
     @Command(
@@ -178,17 +171,15 @@ class Owner : Module() {
         access = Access.BOT_OWNER
     )
     fun serverList(evt: MessageReceivedEvent) {
-        evt.run {
-            channel.sendEmbed {
-                jda.guilds.forEach {
-                    addField(
-                        it.name + "(${it.id})",
-                        "**Text Channels**: ${it.textChannels.size}\n**Members**: ${it.members.size}\n",
-                        true
-                    )
-                }
-            }.complete()
-        }
+        evt.channel.sendEmbed {
+            evt.jda.guilds.forEach {
+                addField(
+                    it.name + "(${it.id})",
+                    "**Text Channels**: ${it.textChannels.size}\n**Members**: ${it.members.size}\n",
+                    true
+                )
+            }
+        }.complete()
     }
 
     @Command(
@@ -196,10 +187,8 @@ class Owner : Module() {
         access = Access.BOT_OWNER
     )
     fun leaveServer(evt: MessageReceivedEvent) {
-        evt.run {
-            channel.sendMessage("Leaving the server.").complete()
-            guild.leave().complete()
-        }
+        evt.channel.sendMessage("Leaving the server.").complete()
+        evt.guild.leave().complete()
     }
 
     @Command(description = "Sends a list of all the modules.", access = Access.BOT_OWNER)
@@ -235,26 +224,4 @@ class Owner : Module() {
         config.serialize()
         evt.channel.sendMessage("Disabled the `$moduleName` module.").complete()
     }
-
-    private fun Long.asMetricUnit(unit: String, base: Double = 1000.0): String {
-        val exponent = ceil(log(this.toDouble(), base)).toInt() - 1
-        val unitPrefix = listOf("", "k", "M", "G", "T", "P", "E")[exponent]
-        return "%.1f $unitPrefix$unit".format(this / base.pow(exponent))
-    }
-
-    private val Long.asVerboseTimestamp: String
-        get() {
-            val days = "${this / 86400} day" + if (this / 86400 != 1L) "s" else ""
-            val hours = "${this % 86400 / 3600} hour" + if (this % 86400 / 3600 != 1L) "s" else ""
-            val minutes = "${this % 3600 / 60} minute" + if (this % 3600 / 60 != 1L) "s" else ""
-            val seconds = "${this % 60} second" + if (this % 60 != 1L) "s" else ""
-            return when (this) {
-                in 0L..59L -> seconds
-                in 60L..3599L -> "$minutes and $seconds"
-                in 3600L..86399L -> "$hours, $minutes, and $seconds"
-                else -> "$days, $hours, $minutes, and $seconds"
-            }
-        }
-
-    private fun Long.asPercentageOf(total: Long): Int = (this.toDouble() / total.toDouble() * 100).roundToInt()
 }

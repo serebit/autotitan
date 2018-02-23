@@ -7,7 +7,7 @@ import kotlin.reflect.full.valueParameters
 import kotlin.reflect.jvm.jvmErasure
 import com.serebit.autotitan.api.meta.annotations.Listener as ListenerAnnotation
 
-class Listener(
+internal class Listener(
     private val function: KFunction<Unit>,
     private val instance: Any
 ) {
