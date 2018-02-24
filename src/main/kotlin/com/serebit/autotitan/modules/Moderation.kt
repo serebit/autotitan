@@ -14,7 +14,7 @@ import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 
-@Suppress("UNUSED")
+@Suppress("UNUSED", "TooManyFunctions")
 class Moderation : Module() {
     private val dataManager = DataManager(this::class)
     private val memberRoleMap: GuildRoleMap = dataManager.read("rolemap.json") ?: GuildRoleMap()
@@ -50,13 +50,13 @@ class Moderation : Module() {
     }
 
     @Command(
-        description = "Deletes the last N messages in the channel. N must be in the range of 1..99.",
+        description = "Deletes the last N messages in the channel. N must be in the range of 1..$maximumCleanupCount.",
         locale = Locale.GUILD,
         memberPermissions = [Permission.MESSAGE_MANAGE]
     )
     fun cleanUp(evt: MessageReceivedEvent, number: Int) {
-        if (number !in 1..99) {
-            evt.channel.sendMessage("The number has to be in the range of `1..99`.").complete()
+        if (number !in 1..maximumCleanupCount) {
+            evt.channel.sendMessage("The number has to be in the range of `1..$maximumCleanupCount`.").complete()
             return
         }
         val messages = evt.textChannel.history.retrievePast(number + 1).complete()
@@ -93,14 +93,14 @@ class Moderation : Module() {
         memberRoleMap[evt.jda, evt.guild]?.let { memberRole ->
             val membersWithBaseRole = evt.guild.getMembersWithRoles(memberRole)
             membersWithBaseRole.forEach { evt.guild.controller.removeSingleRoleFromMember(it, memberRole).queue() }
-            val prunableMemberCount = evt.guild.getPrunableMemberCount(30).complete()
-            evt.guild.controller.prune(30).complete()
+            val prunableMemberCount = evt.guild.getPrunableMemberCount(daysOfInactivity).complete()
+            evt.guild.controller.prune(daysOfInactivity).complete()
             val membersWithoutBaseRole = evt.guild.members.filter { it.roles.isEmpty() }
             membersWithoutBaseRole.forEach { evt.guild.controller.addSingleRoleToMember(it, memberRole).queue() }
             evt.channel.sendMessage("Pruned $prunableMemberCount members.").complete()
         } ?: run {
-            val prunableMemberCount = evt.guild.getPrunableMemberCount(30).complete()
-            evt.guild.controller.prune(30).complete()
+            val prunableMemberCount = evt.guild.getPrunableMemberCount(daysOfInactivity).complete()
+            evt.guild.controller.prune(daysOfInactivity).complete()
             evt.channel.sendMessage("Pruned $prunableMemberCount members.").complete()
         }
     }
@@ -120,5 +120,10 @@ class Moderation : Module() {
         operator fun get(jda: JDA, key: Guild): Role? = jda.getRoleById(map[key.idLong] ?: -1L)
 
         fun put(key: Guild, value: Role) = map.put(key.idLong, value.idLong)
+    }
+
+    companion object {
+        private const val daysOfInactivity = 30
+        private const val maximumCleanupCount = 99
     }
 }

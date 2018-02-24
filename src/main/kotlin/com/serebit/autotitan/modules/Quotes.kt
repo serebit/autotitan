@@ -7,7 +7,7 @@ import com.serebit.autotitan.data.DataManager
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import java.util.*
 
-@Suppress("UNUSED")
+@Suppress("UNUSED", "TooManyFunctions")
 class Quotes : Module(isOptional = true) {
     private val dataManager = DataManager(this::class)
     private val quoteMap = dataManager.read("quotes.json") ?: QuoteMap()
@@ -74,21 +74,18 @@ class Quotes : Module(isOptional = true) {
 
     @Command(description = "Gets the quote at the given index.", locale = Locale.GUILD)
     fun quote(evt: MessageReceivedEvent, index: Int) {
-        quoteMap.getOrElse(evt.guild.idLong) {
-            evt.channel.sendMessage("No quotes are available.").complete()
-            return
-        }.let { quotes ->
-                if (quotes.isEmpty() || quotes.all { it.value.isBlank() }) {
+        quoteMap[evt.guild.idLong]?.let { quotes ->
+            val quote = quotes[index]
+            when {
+                quotes.isEmpty() || quotes.all { it.value.isBlank() } -> {
                     evt.channel.sendMessage("No quotes are available.").complete()
-                    return
                 }
-                val quote = quotes[index]
-                if (quote.isNullOrBlank()) {
+                quote.isNullOrBlank() -> {
                     evt.channel.sendMessage("A quote with that index could not be found.").complete()
-                    return
                 }
-                evt.channel.sendMessage(quote).complete()
+                else -> evt.channel.sendMessage(quote).complete()
             }
+        } ?: evt.channel.sendMessage("No quotes are available.").complete()
     }
 
     private class QuoteMap : MutableMap<Long, MutableMap<Int, String>> by mutableMapOf() {

@@ -12,7 +12,7 @@ import net.jeremybrooks.knicker.dto.Definition
 import net.jeremybrooks.knicker.dto.Related
 import net.jeremybrooks.knicker.dto.TokenStatus
 
-@Suppress("UNUSED")
+@Suppress("UNUSED", "TooManyFunctions")
 class Dictionary : Module(isOptional = true) {
     private val dataManager = DataManager(this::class)
     private val config = dataManager.read("config.json") ?: WordnikConfig()
@@ -24,7 +24,7 @@ class Dictionary : Module(isOptional = true) {
     }
 
     @Command(
-        description = "Initializes the module. The only argument is a Wordnik API key, which can be obtained on https://www.wordnik.com.",
+        description = "Initializes the module with a Wordnik API key, which can be obtained on https://wordnik.com.",
         access = Access.BOT_OWNER
     )
     fun initDictionary(evt: MessageReceivedEvent, apiKey: String) {
@@ -86,29 +86,24 @@ class Dictionary : Module(isOptional = true) {
             WordApi.definitions(wordOrPhrase)
         }
 
-        if (definitions.isEmpty()) {
-            evt.channel.sendMessage(
+        when {
+            definitions.isEmpty() -> evt.channel.sendMessage(
                 "No definitions were found for `$wordOrPhrase`. Make sure it's spelled correctly."
             ).complete()
-            return
-        }
-        if (index - 1 !in definitions.indices) {
-            evt.channel.sendMessage(
+            index - 1 !in definitions.indices -> evt.channel.sendMessage(
                 "There is no definition for `$wordOrPhrase` with the given index."
             ).complete()
-            return
+            else -> evt.channel.sendEmbed {
+                definitions[index - 1].let {
+                    setTitle(
+                        "${it.word} (Definition $index of ${definitions.size})",
+                        "https://www.wordnik.com/words/$wordOrPhrase"
+                    )
+                    setDescription("*${it.partOfSpeech}*\n${it.text}")
+                }
+                setFooter("Powered by Wordnik", "http://www.wordnik.com/img/wordnik_gearheart.png")
+            }.complete()
         }
-
-        evt.channel.sendEmbed {
-            definitions[index - 1].let {
-                setTitle(
-                    "${it.word} (Definition $index of ${definitions.size})",
-                    "https://www.wordnik.com/words/$wordOrPhrase"
-                )
-                setDescription("*${it.partOfSpeech}*\n${it.text}")
-            }
-            setFooter("Powered by Wordnik", "http://www.wordnik.com/img/wordnik_gearheart.png")
-        }.complete()
     }
 
     @Command(description = "Gets synonyms and antonyms for the given word or phrase.", splitLastParameter = false)

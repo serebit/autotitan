@@ -5,17 +5,17 @@ import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.meta.annotations.Command
 import com.serebit.autotitan.config
 import com.serebit.autotitan.listeners.EventListener
-import com.serebit.extensions.jda.asMetricUnit
-import com.serebit.extensions.jda.asPercentageOf
+import com.serebit.extensions.asMetricUnit
+import com.serebit.extensions.asPercentageOf
 import com.serebit.extensions.jda.sendEmbed
-import com.serebit.extensions.jda.toVerboseTimestamp
+import com.serebit.extensions.toVerboseTimestamp
 import com.serebit.loggerkt.Logger
 import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import oshi.SystemInfo
 import kotlin.system.exitProcess
 
-@Suppress("UNUSED")
+@Suppress("UNUSED", "TooManyFunctions")
 class Owner : Module() {
     @Command(
         description = "Shuts down the bot with an exit code of 0.",
@@ -34,11 +34,9 @@ class Owner : Module() {
         access = Access.BOT_OWNER
     )
     fun reset(evt: MessageReceivedEvent) {
-        evt.run {
-            val message = channel.sendMessage("Resetting...").complete()
-            EventListener.resetModules()
-            message.editMessage("Reset commands and listeners.").complete()
-        }
+        val message = evt.channel.sendMessage("Resetting...").complete()
+        EventListener.resetModules()
+        message.editMessage("Reset commands and listeners.").complete()
     }
 
     @Command(
@@ -57,7 +55,7 @@ class Owner : Module() {
         val processMemory = process.residentSetSize
         val processMemoryPercentage = processMemory.asPercentageOf(totalMemory)
         val systemUptime = info.hardware.processor.systemUptime
-        val processUptime = process.upTime / 1000
+        val processUptime = process.upTime / millisecondsPerSecond
         evt.channel.sendEmbed {
             addField(
                 "Processor",
@@ -145,15 +143,15 @@ class Owner : Module() {
         access = Access.BOT_OWNER
     )
     fun blackList(evt: MessageReceivedEvent) {
-        if (config.blackList.isEmpty()) {
+        if (config.blackList.isNotEmpty()) {
+            evt.channel.sendEmbed {
+                addField("Blacklisted Users", config.blackList.joinToString("\n") {
+                    evt.jda.getUserById(it).asMention
+                }, true)
+            }.complete()
+        } else {
             evt.channel.sendMessage("The blacklist is empty.").complete()
-            return
         }
-        evt.channel.sendEmbed {
-            addField("Blacklisted Users", config.blackList.joinToString("\n") {
-                evt.jda.getUserById(it).asMention
-            }, true)
-        }.complete()
     }
 
     @Command(
@@ -223,5 +221,9 @@ class Owner : Module() {
         config.enabledModules.remove(moduleName)
         config.serialize()
         evt.channel.sendMessage("Disabled the `$moduleName` module.").complete()
+    }
+
+    companion object {
+        private const val millisecondsPerSecond = 1000
     }
 }

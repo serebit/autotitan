@@ -41,11 +41,14 @@ internal class Command(
     internal fun parseTokensOrNull(evt: MessageReceivedEvent): List<Any>? {
         if (!evt.isInvalidCommandInvocation) return null
         val tokens = tokenizeMessage(evt.message.contentRaw)
-        if (tokens[0] != config.prefix + name) return null
-        if (parameterTypes.size != tokens.size - 1) return null
-
-        val parsedTokens = parseTokens(evt, tokens)
-        return if (parsedTokens.any { it == null }) null else parsedTokens.filterNotNull()
+        return when {
+            tokens[0] != config.prefix + name -> null
+            parameterTypes.size != tokens.size - 1 -> null
+            else -> {
+                val parsedTokens = parseTokens(evt, tokens)
+                if (parsedTokens.any { it == null }) null else parsedTokens.filterNotNull()
+            }
+        }
     }
 
     private fun tokenizeMessage(message: String): List<String> {
@@ -66,6 +69,7 @@ internal class Command(
         }
     }
 
+    @Suppress("ComplexMethod")
     private fun castParameter(
         evt: MessageReceivedEvent,
         type: KClass<out Any>,

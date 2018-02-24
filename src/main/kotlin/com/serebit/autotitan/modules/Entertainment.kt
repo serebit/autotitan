@@ -6,7 +6,7 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import java.util.*
 import kotlin.math.roundToInt
 
-@Suppress("UNUSED")
+@Suppress("UNUSED", "TooManyFunctions")
 class Entertainment : Module(isOptional = true) {
     private val deterministicRandom = Random()
     private val random = Random()
@@ -28,42 +28,33 @@ class Entertainment : Module(isOptional = true) {
         "Very doubtful."
     )
 
-    @Command(
-        name = "magic8",
-        description = "A deterministic version of the 8-ball command.",
-        hidden = true,
-        splitLastParameter = false
-    )
-    fun deterministicEightBall(evt: MessageReceivedEvent, question: String) {
-        deterministicRandom.setSeed(
-            question.normalize()
-                .hashCode()
-                .toLong()
-        )
-        val responseIndex = deterministicRandom.nextInt(eightBallResponses.size - 1)
-        evt.channel.sendMessage(eightBallResponses[responseIndex]).complete()
-    }
-
     @Command(name = "8", description = "Answers questions in 8-ball fashion.", splitLastParameter = false)
     fun eightBall(evt: MessageReceivedEvent, @Suppress("UNUSED_PARAMETER") question: String) {
         val responseIndex = random.next(eightBallResponses.size - 1)
         evt.channel.sendMessage(eightBallResponses[responseIndex]).complete()
     }
 
-    @Command(description = "Rates the given thing on a scale of 0 to 10.", splitLastParameter = false)
+    @Command(
+        description = "Rates the given thing on a scale of 0 to $defaultRatingDenominator.",
+        splitLastParameter = false
+    )
     fun rate(evt: MessageReceivedEvent, thingToRate: String) {
         deterministicRandom.setSeed(
             thingToRate.normalize()
                 .hashCode()
                 .toLong()
         )
-        val rating = deterministicRandom.next(10)
-        evt.channel.sendMessage("I'd give $thingToRate a `$rating/10`.").complete()
+        val rating = deterministicRandom.next(defaultRatingDenominator)
+        evt.channel.sendMessage("I'd give $thingToRate a `$rating/$defaultRatingDenominator`.").complete()
     }
 
     private fun String.normalize(): String = this
         .toLowerCase()
         .filter { it.isLetterOrDigit() }
 
-    private fun Random.next(bound: Int = 10) = (nextFloat() * bound).roundToInt()
+    private fun Random.next(bound: Int) = (nextFloat() * bound).roundToInt()
+
+    companion object {
+        private const val defaultRatingDenominator = 10
+    }
 }

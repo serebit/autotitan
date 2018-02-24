@@ -13,7 +13,7 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.time.temporal.Temporal
 
-@Suppress("UNUSED")
+@Suppress("UNUSED", "TooManyFunctions")
 class General : Module() {
     private val dateFormat = DateTimeFormatter.ofPattern("d MMM, yyyy")
 

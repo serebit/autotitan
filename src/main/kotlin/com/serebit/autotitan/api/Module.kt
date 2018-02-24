@@ -70,7 +70,8 @@ abstract class Module(name: String = "", val isOptional: Boolean = false) {
         } else return false
         return when {
             specificFunction.isValidCommand -> {
-                val annotation = specificFunction.findAnnotation<CommandAnnotation>() ?: return false
+                // we know it isn't null, because isValidCommand checks for a null annotation
+                val annotation = specificFunction.findAnnotation<CommandAnnotation>()!!
                 commands.add(
                     Command(
                         specificFunction,
