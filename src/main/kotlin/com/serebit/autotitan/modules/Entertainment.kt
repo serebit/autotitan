@@ -2,6 +2,7 @@ package com.serebit.autotitan.modules
 
 import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.api.meta.annotations.Command
+import com.serebit.autotitan.config
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import java.util.*
 import kotlin.math.roundToInt
@@ -43,6 +44,7 @@ class Entertainment : Module(isOptional = true) {
             thingToRate.normalize()
                 .hashCode()
                 .toLong()
+                .plus(config.token.hashCode())
         )
         val rating = deterministicRandom.next(defaultRatingDenominator)
         evt.channel.sendMessage("I'd give $thingToRate a `$rating/$defaultRatingDenominator`.").complete()

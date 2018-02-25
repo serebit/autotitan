@@ -39,7 +39,7 @@ internal class Command(
     }
 
     internal fun parseTokensOrNull(evt: MessageReceivedEvent): List<Any>? {
-        if (!evt.isInvalidCommandInvocation) return null
+        if (evt.isInvalidCommandInvocation) return null
         val tokens = tokenizeMessage(evt.message.contentRaw)
         return when {
             tokens[0] != config.prefix + name -> null
