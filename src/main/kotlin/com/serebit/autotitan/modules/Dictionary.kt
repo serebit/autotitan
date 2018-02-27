@@ -20,7 +20,9 @@ class Dictionary : Module(isOptional = true) {
     private val relatedWordsCache: MutableMap<String, List<Related>> = mutableMapOf()
 
     init {
-        if (config.apiKey != null) java.lang.System.setProperty("WORDNIK_API_KEY", config.apiKey)
+        config.apiKey?.let {
+            System.setProperty("WORDNIK_API_KEY", config.apiKey)
+        }
     }
 
     @Command(
