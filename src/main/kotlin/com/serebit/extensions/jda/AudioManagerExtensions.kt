@@ -6,11 +6,13 @@ import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.entities.VoiceChannel
 import net.dv8tion.jda.core.managers.AudioManager
 
-inline fun AudioManager.onConnectionStatusChange(crossinline task: (ConnectionStatus) -> Unit) {
+inline fun AudioManager.onConnectionStatusChange(desiredStatus: ConnectionStatus, crossinline task: () -> Unit) {
     connectionListener = object : ConnectionListener {
         override fun onStatusChange(status: ConnectionStatus) {
-            task(status)
-            connectionListener = null
+            if (status == desiredStatus) {
+                task()
+                connectionListener = null
+            }
         }
 
         override fun onUserSpeaking(user: User?, speaking: Boolean) = Unit
@@ -19,11 +21,12 @@ inline fun AudioManager.onConnectionStatusChange(crossinline task: (ConnectionSt
     }
 }
 
-inline fun AudioManager.openAudioConnection(channel: VoiceChannel, crossinline onConnect: () -> Unit) {
+inline fun AudioManager.openAudioConnection(channel: VoiceChannel, crossinline task: () -> Unit) {
+    onConnectionStatusChange(ConnectionStatus.CONNECTED, task)
     openAudioConnection(channel)
-    onConnectionStatusChange { status ->
-        if (status == ConnectionStatus.CONNECTED) {
-            onConnect()
-        }
-    }
+}
+
+inline fun AudioManager.closeAudioConnection(crossinline task: () -> Unit) {
+    onConnectionStatusChange(ConnectionStatus.NOT_CONNECTED, task)
+    closeAudioConnection()
 }

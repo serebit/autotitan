@@ -2,15 +2,20 @@ package com.serebit.autotitan.audio
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter
+import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
+import com.serebit.extensions.jda.infoString
+import com.serebit.extensions.jda.infoStringWithPosition
+import com.serebit.extensions.jda.sendEmbed
 import net.dv8tion.jda.core.audio.AudioSendHandler
+import net.dv8tion.jda.core.entities.MessageChannel
 
 class GuildMusicManager : AudioEventAdapter() {
     private val player: AudioPlayer = AudioHandler.createPlayer().also {
         it.addListener(this)
     }
-    val queue = mutableListOf<AudioTrack>()
+    private val queue = mutableListOf<AudioTrack>()
     val sendHandler = AudioPlayerSendHandler()
     var volume: Int
         get() = player.volume
@@ -20,8 +25,8 @@ class GuildMusicManager : AudioEventAdapter() {
     val playingTrack: AudioTrack? get() = player.playingTrack
 
     fun reset() {
-        resume()
         stop()
+        resume()
         player.volume = maxVolume
     }
 
@@ -51,6 +56,32 @@ class GuildMusicManager : AudioEventAdapter() {
         queue.clear()
     }
 
+    fun sendQueueEmbed(channel: MessageChannel) {
+        playingTrack?.let { track ->
+            channel.sendEmbed {
+                when (track) {
+                    is YoutubeAudioTrack -> setThumbnail("https://img.youtube.com/vi/${track.info.identifier}/0.jpg")
+                }
+                setTitle("Now Playing")
+                setDescription(track.infoStringWithPosition)
+                val upNextList = queue
+                    .take(queueListLength)
+                    .joinToString("\n", transform = AudioTrack::infoString)
+
+                if (upNextList.isNotEmpty()) addField(
+                    "Up Next",
+                    buildString {
+                        append(upNextList)
+                        if (queue.size > queueListLength) {
+                            append("\n plus ${queue.size - queueListLength} more...")
+                        }
+                    },
+                    false
+                )
+            }.complete()
+        } ?: channel.sendMessage("No songs are queued.").complete()
+    }
+
     override fun onTrackEnd(player: AudioPlayer, track: AudioTrack, endReason: AudioTrackEndReason) {
         if (queue.isNotEmpty() && endReason == AudioTrackEndReason.FINISHED) {
             player.playTrack(queue.removeAt(0))
@@ -67,6 +98,7 @@ class GuildMusicManager : AudioEventAdapter() {
     }
 
     companion object {
+        private const val queueListLength = 8
         private const val maxVolume = 100
     }
 }

@@ -12,9 +12,15 @@ const val VERSION = "0.4.1"
 val config: Configuration = Configuration.generate()
 
 fun main(args: Array<String>) {
-    args.find { it in setOf("-d", "--debug") }?.let {
+    Logger.level = LogLevel.WARNING
+    args.find { it == "--trace" }?.let {
+        Logger.level = LogLevel.TRACE
+    }
+    args.find { it == "--debug" }?.let {
         Logger.level = LogLevel.DEBUG
-        Logger.debug("Starting in debug mode.")
+    }
+    args.find { it == "--info" }?.let {
+        Logger.level = LogLevel.INFO
     }
 
     jda(AccountType.BOT) {

@@ -3,6 +3,7 @@ package com.serebit.autotitan.audio
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager
+import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
@@ -11,6 +12,11 @@ import net.dv8tion.jda.core.entities.MessageChannel
 import java.util.concurrent.Future
 
 object AudioHandler : AudioPlayerManager by DefaultAudioPlayerManager() {
+    init {
+        AudioSourceManagers.registerRemoteSources(this)
+        AudioSourceManagers.registerLocalSource(this)
+    }
+
     inline fun loadTrack(
         query: String,
         channel: MessageChannel,
