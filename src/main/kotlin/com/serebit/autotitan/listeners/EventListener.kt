@@ -42,8 +42,17 @@ internal object EventListener : ListenerAdapter() {
     }
 
     class Help : Module() {
-        @CommandAnnotation(description = "Sends an embed with a list of commands.")
+        @CommandAnnotation(description = "Sends an embed with a list of commands that can be used by the invoker.")
         fun commands(evt: MessageReceivedEvent) {
+            evt.channel.sendEmbed {
+                loadedModules.sortedBy { it.name }
+                    .mapNotNull { it.getInvokeableCommandList(evt) }
+                    .forEach { addField(it) }
+            }.complete()
+        }
+
+        @CommandAnnotation(description = "Sends an embed with all commands listed.")
+        fun allCommands(evt: MessageReceivedEvent) {
             evt.channel.sendEmbed {
                 loadedModules.sortedBy { it.name }.forEach { module ->
                     addField(module.commandListField)
@@ -71,7 +80,7 @@ internal object EventListener : ListenerAdapter() {
             val matchingCommands = loadedModules
                 .mapNotNull { it.findCommandsByName(commandName) }
                 .flatten()
-                .filter { it.isNotHidden }
+                .filter { it.isNotHidden && it.isInvokeableByAuthor(evt) }
             if (matchingCommands.isNotEmpty()) {
                 evt.channel.sendEmbed {
                     matchingCommands.forEachIndexed { index, command ->

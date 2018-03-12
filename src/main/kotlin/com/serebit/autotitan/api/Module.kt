@@ -34,7 +34,12 @@ abstract class Module(name: String = "", val isOptional: Boolean = false) {
         Char::class,
         String::class
     )
-    lateinit var commandListField: MessageEmbed.Field
+    val commandListField
+        get() = MessageEmbed.Field(
+            name,
+            commands.filter { it.isNotHidden }.joinToString("\n") { it.summary },
+            false
+        )
     val isStandard get() = !isOptional
 
     init {
@@ -44,11 +49,17 @@ abstract class Module(name: String = "", val isOptional: Boolean = false) {
     private fun init() {
         this::class.declaredMemberFunctions.forEach { addFunction(it) }
         name = if (name.isNotBlank()) name else this::class.simpleName ?: name
-        commandListField = MessageEmbed.Field(
-            name,
-            commands.filter { it.isNotHidden }.joinToString("\n") { it.summary },
-            false
-        )
+    }
+
+    fun getInvokeableCommandList(evt: MessageReceivedEvent): MessageEmbed.Field? {
+        val validCommands = commands.filter { it.isNotHidden && it.isInvokeableByAuthor(evt) }
+        return if (validCommands.isNotEmpty()) {
+            MessageEmbed.Field(
+                name,
+                validCommands.joinToString("\n") { it.summary },
+                false
+            )
+        } else null
     }
 
     internal fun runListeners(evt: Event) {

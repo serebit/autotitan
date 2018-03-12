@@ -96,29 +96,31 @@ internal class Command(
         else -> null
     }
 
+    fun isInvokeableByAuthor(evt: MessageReceivedEvent): Boolean {
+        val hasAccess = when (access) {
+            Access.ALL -> true
+            Access.GUILD_OWNER -> evt.member == evt.member?.guild?.owner
+            Access.BOT_OWNER -> evt.author == evt.jda.asBot().applicationInfo.complete().owner
+            Access.RANK_ABOVE -> evt.guild != null && evt.member.roles[0] > evt.guild.selfMember.roles[0]
+            Access.RANK_SAME -> evt.guild != null && evt.member.roles[0] == evt.guild.selfMember.roles[0]
+            Access.RANK_BELOW -> evt.guild != null && evt.member.roles[0] < evt.guild.selfMember.roles[0]
+        }
+
+        val correctLocale = when (locale) {
+            Locale.ALL -> true
+            Locale.GUILD -> evt.guild != null
+            Locale.PRIVATE_CHANNEL -> evt.guild == null
+        }
+
+        return hasAccess && correctLocale
+    }
+
     private val MessageReceivedEvent.isValidCommandInvocation: Boolean
-        get() {
-            val hasAccess = when (access) {
-                Access.ALL -> true
-                Access.GUILD_OWNER -> member == guild?.owner
-                Access.BOT_OWNER -> author == jda.asBot().applicationInfo.complete().owner
-                Access.RANK_ABOVE -> member.roles[0] > guild.selfMember.roles[0]
-                Access.RANK_SAME -> member.roles[0] == guild.selfMember.roles[0]
-                Access.RANK_BELOW -> member.roles[0] < guild.selfMember.roles[0]
-            }
-
-            val correctLocale = when (locale) {
-                Locale.ALL -> true
-                Locale.GUILD -> guild != null
-                Locale.PRIVATE_CHANNEL -> guild == null
-            }
-
-            return when {
-                author.isBot -> false
-                author.idLong in config.blackList -> false
-                guild != null && !member.hasPermission(memberPermissions.toMutableList()) -> false
-                else -> hasAccess && correctLocale
-            }
+        get() = when {
+            author.isBot -> false
+            author.idLong in config.blackList -> false
+            guild != null && !member.hasPermission(memberPermissions.toMutableList()) -> false
+            else -> isInvokeableByAuthor(this)
         }
 
     private val MessageReceivedEvent.isInvalidCommandInvocation: Boolean get() = !isValidCommandInvocation
