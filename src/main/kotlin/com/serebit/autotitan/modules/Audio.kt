@@ -1,16 +1,16 @@
 package com.serebit.autotitan.modules
 
 import com.serebit.autotitan.api.Module
+import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.meta.Locale
 import com.serebit.autotitan.api.meta.annotations.Command
 import com.serebit.autotitan.api.meta.annotations.Listener
 import com.serebit.autotitan.audio.AudioHandler
 import com.serebit.autotitan.audio.VoiceStatus
 import com.serebit.extensions.jda.closeAudioConnection
-import com.serebit.extensions.jda.musicManager
 import com.serebit.extensions.jda.openAudioConnection
+import com.serebit.extensions.jda.trackManager
 import com.serebit.extensions.jda.voiceStatus
-import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Guild
 import net.dv8tion.jda.core.entities.VoiceChannel
 import net.dv8tion.jda.core.events.guild.voice.GuildVoiceLeaveEvent
@@ -26,10 +26,8 @@ class Audio : Module() {
     fun joinVoice(evt: MessageReceivedEvent) {
         val voiceStatus = evt.voiceStatus
         when (voiceStatus) {
-            VoiceStatus.SELF_DISCONNECTED_USER_CONNECTED -> {
-                connectToVoiceChannel(evt.member.voiceState.channel) {
-                    evt.channel.sendMessage("Joined ${evt.guild.audioManager.connectedChannel.name}.").complete()
-                }
+            VoiceStatus.SELF_DISCONNECTED_USER_CONNECTED -> connectToVoiceChannel(evt.member.voiceState.channel) {
+                evt.channel.sendMessage("Joined ${evt.guild.audioManager.connectedChannel.name}.").complete()
             }
             VoiceStatus.BOTH_CONNECTED_SAME_CHANNEL -> {
                 evt.channel.sendMessage("We're already in the same voice channel.").complete()
@@ -52,21 +50,42 @@ class Audio : Module() {
     }
 
     @Command(
-        description = "Plays a URL, or searches YouTube for the given search terms.",
+        description = "Plays a track from a URI, or searches YouTube for the given search terms.",
         locale = Locale.GUILD,
         splitLastParameter = false
     )
     fun play(evt: MessageReceivedEvent, query: String) {
         if (handleVoiceStatus(evt, true)) {
+            val trimmedQuery = query.removeSurrounding("<", ">")
             val formattedQuery = buildString {
-                if (!urlValidator.isValid(query)) {
+                if (!urlValidator.isValid(trimmedQuery)) {
                     append("ytsearch: ")
                 }
-                append(query)
+                append(trimmedQuery)
             }
             AudioHandler.loadTrack(formattedQuery, evt.textChannel) { track ->
                 evt.channel.sendMessage("Adding ${track.info.title} to queue.").complete()
-                evt.guild.musicManager.addToQueue(track)
+                evt.guild.trackManager.addToQueue(track)
+            }
+        }
+    }
+
+    @Command(
+        description = "Plays a playlist from the given URI.",
+        locale = Locale.GUILD
+    )
+    fun playPlaylist(evt: MessageReceivedEvent, uri: String) {
+        if (handleVoiceStatus(evt, true)) {
+            val trimmedUri = uri.removeSurrounding("<", ">")
+            if (urlValidator.isValid(trimmedUri)) {
+                AudioHandler.loadPlaylist(trimmedUri, evt.textChannel) { playlist ->
+                    evt.channel.sendMessage(
+                        "Adding ${playlist.tracks.size} tracks from ${playlist.name} to queue."
+                    ).complete()
+                    playlist.tracks.forEach(evt.guild.trackManager::addToQueue)
+                }
+            } else {
+                evt.channel.sendMessage("That URI isn't a valid playlist.").complete()
             }
         }
     }
@@ -74,27 +93,27 @@ class Audio : Module() {
     @Command(description = "Skips the currently playing song.", locale = Locale.GUILD)
     fun skip(evt: MessageReceivedEvent) {
         if (handleVoiceStatus(evt)) {
-            evt.guild.musicManager.playingTrack?.let {
-                evt.guild.musicManager.skipTrack()
+            evt.guild.trackManager.playingTrack?.let {
+                evt.guild.trackManager.skipTrack()
                 evt.channel.sendMessage("Skipped to next track.").complete()
             } ?: evt.channel.sendMessage("Cannot skip. Nothing is playing.").complete()
         }
     }
 
     @Command(
-        description = "Stops playing music and clears the queue.",
+        description = "Stops playing music and clears the queue. Can only be used by members above the bot's role.",
         locale = Locale.GUILD,
-        memberPermissions = [Permission.VOICE_MUTE_OTHERS]
+        access = Access.RANK_ABOVE
     )
     fun stop(evt: MessageReceivedEvent) {
-        evt.guild.musicManager.stop()
+        evt.guild.trackManager.stop()
         evt.channel.sendMessage("Cleared the music queue.").complete()
     }
 
     @Command(description = "Pauses the currently playing song.", locale = Locale.GUILD)
     fun pause(evt: MessageReceivedEvent) {
-        if (handleVoiceStatus(evt) && evt.guild.musicManager.playingTrack != null) {
-            evt.guild.musicManager.pause()
+        if (handleVoiceStatus(evt) && evt.guild.trackManager.playingTrack != null) {
+            evt.guild.trackManager.pause()
             evt.channel.sendMessage("Paused the track.").complete()
         }
     }
@@ -102,21 +121,21 @@ class Audio : Module() {
     @Command(description = "Resumes the currently playing song.", locale = Locale.GUILD)
     fun unPause(evt: MessageReceivedEvent) {
         if (handleVoiceStatus(evt)) {
-            evt.guild.musicManager.resume()
+            evt.guild.trackManager.resume()
             evt.channel.sendMessage("Unpaused the track.").complete()
         }
     }
 
     @Command(description = "Sends an embed with the list of songs in the queue.", locale = Locale.GUILD)
     fun queue(evt: MessageReceivedEvent) {
-        evt.guild.musicManager.sendQueueEmbed(evt.textChannel)
+        evt.guild.trackManager.sendQueueEmbed(evt.textChannel)
     }
 
     @Command(description = "Sets the volume.", locale = Locale.GUILD)
     fun setVolume(evt: MessageReceivedEvent, volume: Int) {
         if (handleVoiceStatus(evt)) {
-            evt.guild.musicManager.volume = volume
-            evt.channel.sendMessage("Set volume to ${evt.guild.musicManager.volume}%.").complete()
+            evt.guild.trackManager.volume = volume
+            evt.channel.sendMessage("Set volume to ${evt.guild.trackManager.volume}%.").complete()
         }
     }
 
@@ -138,7 +157,7 @@ class Audio : Module() {
 
     private inline fun leaveVoiceChannel(guild: Guild, crossinline onDisconnect: () -> Unit = {}) {
         if (guild.audioManager.isConnected) {
-            guild.musicManager.reset()
+            guild.trackManager.reset()
             guild.audioManager.closeAudioConnection(onDisconnect)
         }
     }

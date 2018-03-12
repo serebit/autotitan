@@ -24,21 +24,48 @@ object AudioHandler : AudioPlayerManager by DefaultAudioPlayerManager() {
     ): Future<Void> = loadItem(query, object : AudioLoadResultHandler {
         override fun trackLoaded(track: AudioTrack) = onLoad(track)
 
-        override fun loadFailed(exception: FriendlyException) {
-            Logger.error(exception.message ?: "Failed to load track. No error message available.")
-            channel.sendMessage("Failed to load the track. The exception says `${exception.message}`.").complete()
-        }
-
-        override fun noMatches() {
-            channel.sendMessage("Couldn't find anything. Maybe you misspelled the query?").complete()
-        }
-
         override fun playlistLoaded(playlist: AudioPlaylist) {
             if (playlist.isSearchResult) {
                 onLoad(playlist.selectedTrack ?: playlist.tracks[0])
             } else {
                 channel.sendMessage("Can't load a track from a playlist URI!").complete()
             }
+        }
+
+        override fun noMatches() {
+            channel.sendMessage("Couldn't find anything. Maybe you misspelled the query?").complete()
+        }
+
+        override fun loadFailed(exception: FriendlyException) {
+            Logger.error(exception.message ?: "Failed to load track. No error message available.")
+            channel.sendMessage("Failed to load the track. The exception says `${exception.message}`.").complete()
+        }
+    })
+
+    inline fun loadPlaylist(
+        query: String,
+        channel: MessageChannel,
+        crossinline onLoad: (AudioPlaylist) -> Unit
+    ): Future<Void> = loadItem(query, object : AudioLoadResultHandler {
+        override fun playlistLoaded(playlist: AudioPlaylist) {
+            if (playlist.isSearchResult) {
+                channel.sendMessage("Can't load search results as a playlist!").complete()
+            } else {
+                onLoad(playlist)
+            }
+        }
+
+        override fun trackLoaded(track: AudioTrack) {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        override fun noMatches() {
+            channel.sendMessage("Couldn't find anything. Maybe you misspelled the query?").complete()
+        }
+
+        override fun loadFailed(exception: FriendlyException) {
+            Logger.error(exception.message ?: "Failed to load playlist. No error message available.")
+            channel.sendMessage("Failed to load the playlist. The exception says `${exception.message}`.").complete()
         }
     })
 }
