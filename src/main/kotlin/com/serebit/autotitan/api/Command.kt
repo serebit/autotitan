@@ -3,6 +3,11 @@ package com.serebit.autotitan.api
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.meta.Locale
 import com.serebit.autotitan.config
+import com.serebit.extensions.jda.getMemberByMention
+import com.serebit.extensions.jda.getTextChannelByMention
+import com.serebit.extensions.jda.getUserByMention
+import com.serebit.extensions.toBooleanOrNull
+import com.serebit.extensions.toCharOrNull
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Channel
 import net.dv8tion.jda.core.entities.Member
@@ -29,7 +34,11 @@ internal class Command(
     private val parameterTypes: List<KClass<out Any>> = function.valueParameters.map { it.type.jvmErasure }.drop(1)
     val isNotHidden get() = !isHidden
     val summary = "`$name ${parameterTypes.joinToString(" ") { "<${it.simpleName}>" }}`"
-    val helpField = MessageEmbed.Field(summary, description, false)
+    val helpField = MessageEmbed.Field(summary, buildString {
+        append("$description\n")
+        append("Access: ${access.description}\n")
+        append("Locale: ${locale.description}\n")
+    }, false)
 
     operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>): Any? =
         function.call(instance, evt, *parameters.toTypedArray())
@@ -56,18 +65,15 @@ internal class Command(
         return if (splitLastParameter) {
             splitParameters
         } else {
-            listOf(
-                *splitParameters.slice(0..(parameterTypes.size - 1)).toTypedArray(),
+            splitParameters.slice(0 until parameterTypes.size) +
                 splitParameters.drop(parameterTypes.size).joinToString(" ")
-            )
         }.filter(String::isNotBlank)
     }
 
-    private fun parseTokens(evt: MessageReceivedEvent, tokens: List<String>): List<Any?> {
-        return parameterTypes.zip(tokens.drop(1)).map { (type, string) ->
+    private fun parseTokens(evt: MessageReceivedEvent, tokens: List<String>): List<Any?> =
+        parameterTypes.zip(tokens.drop(1)).map { (type, string) ->
             castParameter(evt, type, string)
         }
-    }
 
     @Suppress("ComplexMethod")
     private fun castParameter(
@@ -84,23 +90,11 @@ internal class Command(
         Byte::class -> string.toByteOrNull()
         Boolean::class -> string.toBooleanOrNull()
         Char::class -> string.toCharOrNull()
-        User::class -> evt.jda.getUserById(
-            string
-                .removeSurrounding("<@", ">")
-                .removePrefix("!")
-        )
-        Member::class -> evt.guild.getMemberById(
-            string
-                .removeSurrounding("<@", ">")
-                .removePrefix("!")
-        )
-        Channel::class -> evt.guild.getTextChannelById(
-            string.removeSurrounding("<#", ">")
-        )
+        User::class -> evt.jda.getUserByMention(string)
+        Member::class -> evt.guild.getMemberByMention(string)
+        Channel::class -> evt.guild.getTextChannelByMention(string)
         else -> null
     }
-
-//    operator fun Role.compareTo(other: Role) = guild.roles.indexOf(this).compareTo(guild.roles.indexOf(other))
 
     private val MessageReceivedEvent.isValidCommandInvocation: Boolean
         get() {
@@ -109,7 +103,7 @@ internal class Command(
                 Access.GUILD_OWNER -> member == guild?.owner
                 Access.BOT_OWNER -> author == jda.asBot().applicationInfo.complete().owner
                 Access.RANK_ABOVE -> member.roles[0] > guild.selfMember.roles[0]
-                Access.RANK_SAME -> member.roles[0].compareTo(guild.selfMember.roles[0]) == 0
+                Access.RANK_SAME -> member.roles[0] == guild.selfMember.roles[0]
                 Access.RANK_BELOW -> member.roles[0] < guild.selfMember.roles[0]
             }
 
@@ -128,8 +122,4 @@ internal class Command(
         }
 
     private val MessageReceivedEvent.isInvalidCommandInvocation: Boolean get() = !isValidCommandInvocation
-
-    private fun String.toBooleanOrNull() = if (this == "true" || this == "false") toBoolean() else null
-
-    private fun String.toCharOrNull() = if (length == 1) this[0] else null
 }

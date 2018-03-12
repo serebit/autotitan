@@ -74,9 +74,11 @@ internal object EventListener : ListenerAdapter() {
                 .filter { it.isNotHidden }
             if (matchingCommands.isNotEmpty()) {
                 evt.channel.sendEmbed {
-                    matchingCommands.forEach { command ->
+                    matchingCommands.forEachIndexed { index, command ->
+                        if (index > 0) addBlankField(false)
                         addField(command.helpField)
                     }
+                    setTimestamp(null)
                 }.complete()
             } else {
                 evt.channel.sendMessage("Could not find any commands matching `$commandName`.").complete()
