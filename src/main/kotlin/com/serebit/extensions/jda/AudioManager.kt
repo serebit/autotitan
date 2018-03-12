@@ -1,3 +1,5 @@
+@file:JvmName("AudioManagerExtensions")
+
 package com.serebit.extensions.jda
 
 import net.dv8tion.jda.core.audio.hooks.ConnectionListener

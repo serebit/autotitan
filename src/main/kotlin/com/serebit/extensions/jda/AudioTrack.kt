@@ -1,17 +1,19 @@
+@file:JvmName("AudioTrackExtensions")
+
 package com.serebit.extensions.jda
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
+import com.sedmelluq.discord.lavaplayer.track.AudioTrackState
 import com.serebit.extensions.toBasicTimestamp
 
-private const val millisecondsPerSecond = 1000
+private const val MILLISECONDS_PER_SECOND = 1000
 
 val AudioTrack.infoString: String get() {
-    val durationString = (duration / millisecondsPerSecond).toBasicTimestamp()
-    return "[${info.title}](${info.uri}) [$durationString]"
-}
-
-val AudioTrack.infoStringWithPosition: String get() {
-    val positionString = (position / millisecondsPerSecond).toBasicTimestamp()
-    val durationString = (duration / millisecondsPerSecond).toBasicTimestamp()
-    return "[${info.title}](${info.uri}) [$positionString/$durationString]"
+    val durationString = (duration / MILLISECONDS_PER_SECOND).toBasicTimestamp()
+    return if (state == AudioTrackState.PLAYING) {
+        val positionString = (position / MILLISECONDS_PER_SECOND).toBasicTimestamp()
+        "[${info.title}](${info.uri}) [$positionString/$durationString]"
+    } else {
+        "[${info.title}](${info.uri}) [$durationString]"
+    }
 }

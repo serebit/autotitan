@@ -1,14 +1,26 @@
+@file:JvmName("GuildExtensions")
+
 package com.serebit.extensions.jda
 
-import com.serebit.autotitan.audio.GuildMusicManager
+import com.serebit.autotitan.audio.GuildTrackManager
 import net.dv8tion.jda.core.entities.Guild
+import net.dv8tion.jda.core.entities.Member
+import net.dv8tion.jda.core.entities.TextChannel
 
-private val musicManagers = mutableMapOf<Long, GuildMusicManager>()
+private val trackManagers = mutableMapOf<Long, GuildTrackManager>()
 
-val Guild.musicManager: GuildMusicManager
-    get() = musicManagers.getOrPut(idLong) {
-        GuildMusicManager().also {
+val Guild.trackManager: GuildTrackManager
+    get() = trackManagers.getOrPut(idLong) {
+        GuildTrackManager().also {
             audioManager.sendingHandler = it.sendHandler
         }
     }
 
+fun Guild.getMemberByMention(mention: String): Member? = getMemberById(
+    mention.removeSurrounding("<@", ">")
+        .removePrefix("!")
+)
+
+fun Guild.getTextChannelByMention(mention: String): TextChannel? = getTextChannelById(
+    mention.removeSurrounding("<#", ">")
+)

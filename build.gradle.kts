@@ -28,8 +28,8 @@ dependencies {
     compile(group = "net.dv8tion", name = "JDA", version = "3.5.1_345")
     compile(group = "commons-validator", name = "commons-validator", version = "1.6")
     compile(group = "com.sedmelluq", name = "lavaplayer", version = "1.2.56")
-    compile(group = "fastily", name = "jwiki", version = "1.5.0")
     compile(group = "com.github.salomonbrys.kotson", name = "kotson", version = "2.5.0")
+    compile(group = "khttp", name = "khttp", version = "0.1.0")
     compile(group = "com.google.guava", name = "guava", version = "24.0-jre")
     compile(group = "org.slf4j", name = "slf4j-simple", version = "1.8.0-beta1")
     compile(group = "com.github.oshi", name = "oshi-core", version = "3.4.4")
@@ -39,6 +39,14 @@ dependencies {
 
 kotlin {
     experimental.coroutines = Coroutines.ENABLE
+}
+
+detekt {
+    profile("main", Action {
+        input = "$projectDir/src/main/kotlin"
+        config = "$projectDir/detekt.yml"
+        filters = ".*test.*,.*/resources/.*,.*/tmp/.*"
+    })
 }
 
 tasks {

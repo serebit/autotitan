@@ -26,7 +26,7 @@ fun main(args: Array<String>) {
     jda(AccountType.BOT) {
         setToken(config.token)
         addEventListener(EventListener)
-        setGame(Game.playing(config.prefix))
+        setGame(Game.playing("${config.prefix}help"))
     }.let {
         println()
         println("$NAME v$VERSION")

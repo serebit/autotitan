@@ -10,6 +10,7 @@ import com.serebit.extensions.asPercentageOf
 import com.serebit.extensions.jda.sendEmbed
 import com.serebit.extensions.toVerboseTimestamp
 import com.serebit.loggerkt.Logger
+import net.dv8tion.jda.core.entities.Game
 import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import oshi.SystemInfo
@@ -107,6 +108,7 @@ class Owner : Module() {
         }
         config.prefix = prefix
         config.serialize()
+        evt.jda.presence.game = Game.playing("${prefix}help")
         evt.channel.sendMessage("Set prefix to `${config.prefix}`.").complete()
     }
 

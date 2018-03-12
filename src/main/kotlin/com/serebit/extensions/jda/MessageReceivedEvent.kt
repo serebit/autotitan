@@ -1,3 +1,5 @@
+@file:JvmName("MessageReceivedEventExtensions")
+
 package com.serebit.extensions.jda
 
 import com.serebit.autotitan.audio.VoiceStatus
