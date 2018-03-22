@@ -4,7 +4,7 @@ import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.Gson
 import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.api.meta.Access
-import com.serebit.autotitan.api.meta.annotations.Command
+import com.serebit.autotitan.api.annotations.Command
 import com.serebit.autotitan.data.DataManager
 import com.serebit.extensions.jda.sendEmbed
 import khttp.get

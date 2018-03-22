@@ -3,13 +3,18 @@ package com.serebit.autotitan.api
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.meta.Locale
 import com.serebit.autotitan.config
+import com.serebit.extensions.jda.getEmoteByMention
 import com.serebit.extensions.jda.getMemberByMention
 import com.serebit.extensions.jda.getTextChannelByMention
 import com.serebit.extensions.jda.getUserByMention
+import com.serebit.extensions.jda.hasPermissions
+import com.serebit.extensions.jda.isNotBot
+import com.serebit.extensions.jda.notInBlacklist
 import com.serebit.extensions.toBooleanOrNull
 import com.serebit.extensions.toCharOrNull
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Channel
+import net.dv8tion.jda.core.entities.Emote
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.entities.MessageEmbed
 import net.dv8tion.jda.core.entities.User
@@ -18,11 +23,10 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.full.valueParameters
 import kotlin.reflect.jvm.jvmErasure
-import com.serebit.autotitan.api.meta.annotations.Command as CommandAnnotation
+import com.serebit.autotitan.api.annotations.Command as CommandAnnotation
 
 internal class Command(
     private val function: KFunction<Unit>,
-    private val instance: Any,
     val name: String,
     description: String,
     private val access: Access,
@@ -40,12 +44,11 @@ internal class Command(
         append("Locale: ${locale.description}\n")
     }, false)
 
-    operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>): Any? =
+    operator fun invoke(instance: Module, evt: MessageReceivedEvent, parameters: List<Any>): Any? =
         function.call(instance, evt, *parameters.toTypedArray())
 
-    internal fun looselyMatches(rawMessageContent: String): Boolean {
-        return rawMessageContent.split(" ")[0] == config.prefix + name
-    }
+    internal fun looselyMatches(rawMessageContent: String): Boolean =
+        rawMessageContent.split(" ")[0] == config.prefix + name
 
     internal fun parseTokensOrNull(evt: MessageReceivedEvent): List<Any>? {
         if (evt.isInvalidCommandInvocation) return null
@@ -53,8 +56,7 @@ internal class Command(
         return when {
             tokens[0] != config.prefix + name -> null
             parameterTypes.size != tokens.size - 1 -> null
-            else -> {
-                val parsedTokens = parseTokens(evt, tokens)
+            else -> parseTokens(evt, tokens).let { parsedTokens ->
                 if (parsedTokens.any { it == null }) null else parsedTokens.filterNotNull()
             }
         }
@@ -93,6 +95,7 @@ internal class Command(
         User::class -> evt.jda.getUserByMention(string)
         Member::class -> evt.guild.getMemberByMention(string)
         Channel::class -> evt.guild.getTextChannelByMention(string)
+        Emote::class -> evt.jda.getEmoteByMention(string)
         else -> null
     }
 
@@ -116,12 +119,27 @@ internal class Command(
     }
 
     private val MessageReceivedEvent.isValidCommandInvocation: Boolean
-        get() = when {
-            author.isBot -> false
-            author.idLong in config.blackList -> false
-            guild != null && !member.hasPermission(memberPermissions.toMutableList()) -> false
-            else -> isInvokeableByAuthor(this)
-        }
+        get() = if (author.isNotBot && author.notInBlacklist && member.hasPermissions(memberPermissions)) {
+            isInvokeableByAuthor(this)
+        } else false
 
     private val MessageReceivedEvent.isInvalidCommandInvocation: Boolean get() = !isValidCommandInvocation
+
+    companion object {
+        internal val validParameterTypes = setOf(
+            Boolean::class,
+            Byte::class,
+            Short::class,
+            Int::class,
+            Long::class,
+            Float::class,
+            Double::class,
+            User::class,
+            Member::class,
+            Channel::class,
+            Emote::class,
+            Char::class,
+            String::class
+        )
+    }
 }

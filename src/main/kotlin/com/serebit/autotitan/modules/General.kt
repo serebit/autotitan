@@ -2,7 +2,7 @@ package com.serebit.autotitan.modules
 
 import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.api.meta.Locale
-import com.serebit.autotitan.api.meta.annotations.Command
+import com.serebit.autotitan.api.annotations.Command
 import com.serebit.extensions.jda.sendEmbed
 import net.dv8tion.jda.core.OnlineStatus
 import net.dv8tion.jda.core.Permission

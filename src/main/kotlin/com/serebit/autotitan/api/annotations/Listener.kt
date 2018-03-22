@@ -1,4 +1,4 @@
-package com.serebit.autotitan.api.meta.annotations
+package com.serebit.autotitan.api.annotations
 
 /**
  * Represents the attributes of a bot event listener.

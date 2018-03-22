@@ -1,9 +1,6 @@
 package com.serebit.autotitan.api
 
-import net.dv8tion.jda.core.entities.Channel
-import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.entities.MessageEmbed
-import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.Event
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import kotlin.reflect.KFunction
@@ -12,28 +9,14 @@ import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.valueParameters
 import kotlin.reflect.jvm.jvmErasure
-import com.serebit.autotitan.api.meta.annotations.Command as CommandAnnotation
-import com.serebit.autotitan.api.meta.annotations.Listener as ListenerAnnotation
+import com.serebit.autotitan.api.annotations.Command as CommandAnnotation
+import com.serebit.autotitan.api.annotations.Listener as ListenerAnnotation
 
 abstract class Module(name: String = "", val isOptional: Boolean = false) {
     var name: String = name
         private set
     private val commands: MutableList<Command> = mutableListOf()
     private val listeners: MutableList<Listener> = mutableListOf()
-    private val validParameterTypes = setOf(
-        Boolean::class,
-        Byte::class,
-        Short::class,
-        Int::class,
-        Long::class,
-        Float::class,
-        Double::class,
-        User::class,
-        Member::class,
-        Channel::class,
-        Char::class,
-        String::class
-    )
     val commandListField
         get() = MessageEmbed.Field(
             name,
@@ -71,7 +54,7 @@ abstract class Module(name: String = "", val isOptional: Boolean = false) {
             .filter { it.looselyMatches(evt.message.contentRaw) }
             .associate { it to it.parseTokensOrNull(evt) }.entries
             .firstOrNull { it.value != null } ?: return
-        command(evt, parameters!!)
+        command(this, evt, parameters!!)
     }
 
     private fun <T> addFunction(function: KFunction<T>): Boolean {
@@ -86,7 +69,6 @@ abstract class Module(name: String = "", val isOptional: Boolean = false) {
                 commands.add(
                     Command(
                         specificFunction,
-                        this,
                         (if (annotation.name.isNotBlank()) annotation.name else specificFunction.name).toLowerCase(),
                         annotation.description.trim(),
                         annotation.access,
@@ -106,9 +88,8 @@ abstract class Module(name: String = "", val isOptional: Boolean = false) {
 
     private val KFunction<Unit>.isValidListener: Boolean
         get() {
-            if (valueParameters.size != 1) return false
-            if (findAnnotation<ListenerAnnotation>() == null) return false
-            return valueParameters[0].type.jvmErasure.isSubclassOf(Event::class)
+            return if (valueParameters.size != 1 || findAnnotation<ListenerAnnotation>() == null) false
+            else valueParameters[0].type.jvmErasure.isSubclassOf(Event::class)
         }
 
     private val KFunction<Unit>.isValidCommand: Boolean
@@ -120,7 +101,7 @@ abstract class Module(name: String = "", val isOptional: Boolean = false) {
             return valueParameters
                 .drop(1)
                 .all {
-                    it.type.jvmErasure in validParameterTypes
+                    it.type.jvmErasure in Command.validParameterTypes
                 }
         }
 }

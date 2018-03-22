@@ -12,15 +12,11 @@ const val VERSION = "0.5.0"
 val config: Configuration = Configuration.generate()
 
 fun main(args: Array<String>) {
-    Logger.level = LogLevel.WARNING
-    args.find { it == "--trace" }?.let {
-        Logger.level = LogLevel.TRACE
-    }
-    args.find { it == "--debug" }?.let {
-        Logger.level = LogLevel.DEBUG
-    }
-    args.find { it == "--info" }?.let {
-        Logger.level = LogLevel.INFO
+    Logger.level = when {
+        "--trace" in args -> LogLevel.TRACE
+        "--debug" in args -> LogLevel.DEBUG
+        "--info" in args -> LogLevel.INFO
+        else -> LogLevel.WARNING
     }
 
     jda(AccountType.BOT) {

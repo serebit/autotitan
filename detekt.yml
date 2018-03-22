@@ -20,13 +20,12 @@ test-pattern: # Configure exclusions for test sources
     - 'TooManyFunctions'
 
 build:
-  warningThreshold: 5
-  failThreshold: 10
+  maxIssues: 10
   weights:
-    complexity: 2
-    formatting: 1
-    LongParameterList: 1
-    comments: 1
+    # complexity: 2
+    # LongParameterList: 1
+    # style: 1
+    # comments: 1
 
 processors:
   active: true
@@ -49,6 +48,7 @@ console-reports:
 output-reports:
   active: true
   exclude:
+  #  - 'HtmlOutputReport'
   #  - 'PlainOutputReport'
   #  - 'XmlOutputReport'
 
@@ -74,7 +74,7 @@ complexity:
   active: true
   ComplexCondition:
     active: true
-    threshold: 3
+    threshold: 4
   ComplexInterface:
     active: false
     threshold: 10
@@ -82,6 +82,7 @@ complexity:
   ComplexMethod:
     active: true
     threshold: 10
+    ignoreSingleWhenExpression: false
   LabeledExpression:
     active: false
   LargeClass:
@@ -92,32 +93,33 @@ complexity:
     threshold: 20
   LongParameterList:
     active: true
-    threshold: 5
+    threshold: 6
     ignoreDefaultParameters: false
   MethodOverloading:
     active: false
-    threshold: 5
+    threshold: 6
   NestedBlockDepth:
     active: true
-    threshold: 3
+    threshold: 4
   StringLiteralDuplication:
     active: false
-    threshold: 2
+    threshold: 3
     ignoreAnnotation: true
     excludeStringsWithLessThan5Characters: true
     ignoreStringsRegex: '$^'
   TooManyFunctions:
     active: true
-    thresholdInFiles: 10
-    thresholdInClasses: 10
-    thresholdInInterfaces: 10
-    thresholdInObjects: 10
-    thresholdInEnums: 10
+    thresholdInFiles: 11
+    thresholdInClasses: 11
+    thresholdInInterfaces: 11
+    thresholdInObjects: 11
+    thresholdInEnums: 11
 
 empty-blocks:
   active: true
   EmptyCatchBlock:
     active: true
+    allowedExceptionNameRegex: "^(ignore|expected).*"
   EmptyClassBlock:
     active: true
   EmptyDefaultConstructor:
@@ -173,7 +175,7 @@ exceptions:
     active: false
   TooGenericExceptionCaught:
     active: true
-    exceptions:
+    exceptionNames:
      - ArrayIndexOutOfBoundsException
      - Error
      - Exception
@@ -184,10 +186,9 @@ exceptions:
      - Throwable
   TooGenericExceptionThrown:
     active: true
-    exceptions:
+    exceptionNames:
      - Error
      - Exception
-     - NullPointerException
      - Throwable
      - RuntimeException
 
@@ -198,7 +199,7 @@ naming:
     classPattern: '[A-Z$][a-zA-Z0-9$]*'
   EnumNaming:
     active: true
-    enumEntryPattern: '^[A-Z$][a-zA-Z_$]*$'
+    enumEntryPattern: '^[A-Z][_a-zA-Z0-9]*'
   ForbiddenClassName:
     active: false
     forbiddenName: ''
@@ -211,6 +212,7 @@ naming:
   FunctionNaming:
     active: true
     functionPattern: '^([a-z$][a-zA-Z$0-9]*)|(`.*`)$'
+    excludeClassPattern: '$^'
   MatchingDeclarationName:
     active: true
   MemberNameEqualsClassName:
@@ -237,6 +239,7 @@ naming:
     active: true
     variablePattern: '[a-z][A-Za-z0-9]*'
     privateVariablePattern: '(_)?[a-z][A-Za-z0-9]*'
+    excludeClassPattern: '$^'
 
 performance:
   active: true
@@ -319,16 +322,18 @@ style:
     maxLineLength: 120
     excludePackageStatements: false
     excludeImportStatements: false
+  MayBeConst:
+    active: false
   ModifierOrder:
     active: true
   NestedClassesVisibility:
     active: false
   NewLineAtEndOfFile:
     active: true
+  NoTabs:
+    active: false
   OptionalAbstractKeyword:
     active: true
-  OptionalReturnKeyword:
-    active: false
   OptionalUnit:
     active: false
   OptionalWhenBraces:
@@ -350,6 +355,8 @@ style:
   ThrowsCount:
     active: true
     max: 2
+  TrailingWhitespace:
+    active: false
   UnnecessaryAbstractClass:
     active: false
   UnnecessaryInheritance:
@@ -359,6 +366,8 @@ style:
   UntilInsteadOfRangeTo:
     active: false
   UnusedImports:
+    active: false
+  UnusedPrivateMember:
     active: false
   UseDataClass:
     active: false

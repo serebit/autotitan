@@ -1,7 +1,7 @@
 package com.serebit.autotitan.modules
 
 import com.serebit.autotitan.api.Module
-import com.serebit.autotitan.api.meta.annotations.Command
+import com.serebit.autotitan.api.annotations.Command
 import com.serebit.autotitan.config
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import java.util.*

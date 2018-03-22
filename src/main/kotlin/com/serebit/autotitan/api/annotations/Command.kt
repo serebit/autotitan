@@ -1,4 +1,4 @@
-package com.serebit.autotitan.api.meta.annotations
+package com.serebit.autotitan.api.annotations
 
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.meta.Locale

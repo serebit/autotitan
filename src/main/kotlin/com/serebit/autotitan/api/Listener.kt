@@ -5,7 +5,7 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.full.valueParameters
 import kotlin.reflect.jvm.jvmErasure
-import com.serebit.autotitan.api.meta.annotations.Listener as ListenerAnnotation
+import com.serebit.autotitan.api.annotations.Listener as ListenerAnnotation
 
 internal class Listener(
     private val function: KFunction<Unit>,

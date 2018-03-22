@@ -3,8 +3,8 @@ package com.serebit.autotitan.modules
 import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.meta.Locale
-import com.serebit.autotitan.api.meta.annotations.Command
-import com.serebit.autotitan.api.meta.annotations.Listener
+import com.serebit.autotitan.api.annotations.Command
+import com.serebit.autotitan.api.annotations.Listener
 import com.serebit.autotitan.audio.AudioHandler
 import com.serebit.autotitan.audio.VoiceStatus
 import com.serebit.extensions.jda.closeAudioConnection

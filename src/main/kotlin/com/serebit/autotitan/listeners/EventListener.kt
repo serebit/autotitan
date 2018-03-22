@@ -10,7 +10,7 @@ import net.dv8tion.jda.core.events.Event
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import net.dv8tion.jda.core.hooks.ListenerAdapter
 import kotlin.reflect.full.createInstance
-import com.serebit.autotitan.api.meta.annotations.Command as CommandAnnotation
+import com.serebit.autotitan.api.annotations.Command as CommandAnnotation
 
 internal object EventListener : ListenerAdapter() {
     var allModules: List<Module> = classpathModules
