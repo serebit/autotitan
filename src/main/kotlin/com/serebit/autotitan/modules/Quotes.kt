@@ -41,7 +41,7 @@ class Quotes : Module(isOptional = true) {
         val quotes = quoteMap[evt.guild]
 
         when {
-            quotes.isEmpty() -> evt.channel.sendMessage("There are no quotes to delete.").complete()
+            quotes.isEmpty() -> evt.channel.sendMessage("This server has no quotes saved.").complete()
             index.toString() !in quotes -> {
                 evt.channel.sendMessage("There is no quote with an index of `$index`.").complete()
             }
@@ -65,7 +65,7 @@ class Quotes : Module(isOptional = true) {
                 it.values.toList()[random.nextInt(it.size)]
             }
             evt.channel.sendMessage(quote).complete()
-        } else evt.channel.sendMessage("No quotes are available.").complete()
+        } else evt.channel.sendMessage("This server has no quotes saved.").complete()
     }
 
     @Command(description = "Gets the quote at the given index.", locale = Locale.GUILD)
@@ -76,6 +76,22 @@ class Quotes : Module(isOptional = true) {
             quotes[index.toString()]?.let { quote ->
                 evt.channel.sendMessage(quote).complete()
             } ?: evt.channel.sendMessage("There is no quote with an index of `$index`.").complete()
-        } else evt.channel.sendMessage("No quotes are available.").complete()
+        } else evt.channel.sendMessage("This server has no quotes saved.").complete()
+    }
+
+    @Command(description = "Gets the list of quotes that this server has saved.", locale = Locale.GUILD)
+    fun quoteList(evt: MessageReceivedEvent) {
+        val quotes = quoteMap[evt.guild]
+
+        if (quotes.isNotEmpty()) {
+            val file = createTempFile(prefix = "quotes", suffix = ".txt").also {
+                it.writeText(quotes.entries.joinToString("\n\n") { (key, value) ->
+                    "$key: $value"
+                })
+            }
+            evt.channel.sendFile(file).queue {
+                file.delete()
+            }
+        } else evt.channel.sendMessage("This server has no quotes saved.").complete()
     }
 }
