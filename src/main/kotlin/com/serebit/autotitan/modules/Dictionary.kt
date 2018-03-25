@@ -3,8 +3,8 @@ package com.serebit.autotitan.modules
 import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.Gson
 import com.serebit.autotitan.api.Module
-import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.annotations.Command
+import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.data.DataManager
 import com.serebit.extensions.jda.sendEmbed
 import khttp.get
@@ -31,7 +31,7 @@ class Dictionary : Module(isOptional = true) {
     }
 
     @Command(
-        description = "Initializes the module with a Wordnik API key, which can be obtained on https://wordnik.com.",
+        description = "Initializes the module with a Wordnik API key from https://dev.wordnik.com.",
         access = Access.BOT_OWNER
     )
     fun initDictionary(evt: MessageReceivedEvent, apiKey: String) {
@@ -48,7 +48,7 @@ class Dictionary : Module(isOptional = true) {
         }
     }
 
-    @Command(description = "Gets the first definition of the given word or phrase.", splitLastParameter = false)
+    @Command(description = "Gets the first definition of the given query.", splitLastParameter = false)
     fun define(evt: MessageReceivedEvent, wordOrPhrase: String) {
         if (AccountApi.apiTokenStatus().isInvalid) {
             evt.channel.sendMessage(
@@ -80,7 +80,7 @@ class Dictionary : Module(isOptional = true) {
         }.complete()
     }
 
-    @Command(description = "Gets the Nth definition of the given word or phrase.", splitLastParameter = false)
+    @Command(description = "Gets the Nth definition of the given query.", splitLastParameter = false)
     fun define(evt: MessageReceivedEvent, index: Int, wordOrPhrase: String) {
         if (AccountApi.apiTokenStatus().isInvalid) {
             evt.channel.sendMessage(
@@ -113,7 +113,7 @@ class Dictionary : Module(isOptional = true) {
         }
     }
 
-    @Command(description = "Gets synonyms and antonyms for the given word or phrase.", splitLastParameter = false)
+    @Command(description = "Gets synonyms and antonyms for the given query.", splitLastParameter = false)
     fun related(evt: MessageReceivedEvent, wordOrPhrase: String) {
         if (AccountApi.apiTokenStatus().isInvalid) {
             evt.channel.sendMessage(
@@ -144,10 +144,10 @@ class Dictionary : Module(isOptional = true) {
         }.complete()
     }
 
-    @Command(description = "Get the first Urban Dictionary definition of the given query.", splitLastParameter = false)
+    @Command(description = "Gets the first Urban Dictionary definition of the given query.", splitLastParameter = false)
     fun urban(evt: MessageReceivedEvent, query: String) = urban(evt, 1, query)
 
-    @Command(description = "Get the Nth Urban Dictionary definition of the given query.", splitLastParameter = false)
+    @Command(description = "Gets the Nth Urban Dictionary definition of the given query.", splitLastParameter = false)
     fun urban(evt: MessageReceivedEvent, index: Int, query: String) {
         val encodedQuery = URLEncoder.encode(query, "UTF-8")
         val apiResult = get("https://api.urbandictionary.com/v0/define?term=$encodedQuery")

@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/serebit/autotitan.svg?branch=master)](https://goo.gl/0Gm2gy)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg)](https://goo.gl/OWpJxJ)
 
-AutoTitan is a modular, self-hosted [Discord](https://discordapp.com) bot built in Kotlin using the 
+AutoTitan is a modular, self-hosted [Discord](https://discordapp.com) bot built in Kotlin/JVM using the 
 [Java Discord API](https://github.com/DV8FromTheWorld/JDA). 
 
 ## System Requirements

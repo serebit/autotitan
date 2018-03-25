@@ -4,13 +4,15 @@ import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.api.annotations.Command
 import com.serebit.autotitan.api.meta.Locale
 import com.serebit.autotitan.data.DataManager
+import com.serebit.autotitan.data.GuildResourceMap
+import com.serebit.extensions.jda.mentionsUsers
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import java.util.*
 
 @Suppress("UNUSED", "TooManyFunctions")
 class Quotes : Module(isOptional = true) {
     private val dataManager = DataManager(this::class)
-    private val quoteMap = dataManager.read("quotes.json") ?: QuoteMap()
+    private val quoteMap = dataManager.read("quotes.json") ?: GuildResourceMap<String, String>()
     private val random = Random()
 
     @Command(
@@ -19,15 +21,13 @@ class Quotes : Module(isOptional = true) {
         splitLastParameter = false
     )
     fun addQuote(evt: MessageReceivedEvent, quote: String) {
-        evt.message.run {
-            if (mentionedUsers.isNotEmpty() || mentionedRoles.isNotEmpty() || mentionsEveryone()) {
-                channel.sendMessage("Quotes containing mentions are not permitted.").complete()
-                return
-            }
+        if (evt.message.mentionsUsers) {
+            evt.channel.sendMessage("Quotes containing mentions are not permitted.").complete()
+            return
         }
-        quoteMap.getOrPutDefault(evt.guild.idLong).let {
-            val quoteIndex = it.keys.max()?.plus(1) ?: 0
-            it[quoteIndex] = quote
+        quoteMap[evt.guild].let {
+            val quoteIndex = it.keys.map { it.toInt() }.max()?.plus(1) ?: 0
+            it[quoteIndex.toString()] = quote
             evt.channel.sendMessage("Added ${evt.member.asMention}'s quote as number `$quoteIndex`.").complete()
         }
         dataManager.write("quotes.json", quoteMap)
@@ -38,18 +38,19 @@ class Quotes : Module(isOptional = true) {
         locale = Locale.GUILD
     )
     fun deleteQuote(evt: MessageReceivedEvent, index: Int) {
-        quoteMap.getOrElse(evt.guild.idLong) {
-            evt.channel.sendMessage("There are no quotes to delete.").complete()
-            return
-        }.let {
-                if (!it.contains(index)) {
-                    evt.channel.sendMessage("A quote with that number cannot be found.").complete()
-                    return
-                }
-                it[index] = ""
+        val quotes = quoteMap[evt.guild]
+
+        when {
+            quotes.isEmpty() -> evt.channel.sendMessage("There are no quotes to delete.").complete()
+            index.toString() !in quotes -> {
+                evt.channel.sendMessage("There is no quote with an index of `$index`.").complete()
+            }
+            else -> {
+                quotes.remove(index.toString())
+                dataManager.write("quotes.json", quoteMap)
                 evt.channel.sendMessage("Removed quote `$index`.").complete()
             }
-        dataManager.write("quotes.json", quoteMap)
+        }
     }
 
     @Command(
@@ -57,38 +58,24 @@ class Quotes : Module(isOptional = true) {
         locale = Locale.GUILD
     )
     fun quote(evt: MessageReceivedEvent) {
-        quoteMap.getOrElse(evt.guild.idLong) {
-            evt.channel.sendMessage("No quotes are available.").complete()
-            return
-        }.let { map ->
-                if (map.isEmpty() || map.all { it.value.isBlank() }) {
-                    evt.channel.sendMessage("No quotes are available.").complete()
-                    return
-                }
-                val quote = map.filter { it.value.isNotBlank() }.let {
-                    it.values.toList()[random.nextInt(it.size)]
-                }
-                evt.channel.sendMessage(quote).complete()
+        val quotes = quoteMap[evt.guild]
+
+        if (quotes.isNotEmpty()) {
+            val quote = quotes.filter { it.value.isNotBlank() }.let {
+                it.values.toList()[random.nextInt(it.size)]
             }
+            evt.channel.sendMessage(quote).complete()
+        } else evt.channel.sendMessage("No quotes are available.").complete()
     }
 
     @Command(description = "Gets the quote at the given index.", locale = Locale.GUILD)
     fun quote(evt: MessageReceivedEvent, index: Int) {
-        quoteMap[evt.guild.idLong]?.let { quotes ->
-            val quote = quotes[index]
-            when {
-                quotes.isEmpty() || quotes.all { it.value.isBlank() } -> {
-                    evt.channel.sendMessage("No quotes are available.").complete()
-                }
-                quote.isNullOrBlank() -> {
-                    evt.channel.sendMessage("A quote with that index could not be found.").complete()
-                }
-                else -> evt.channel.sendMessage(quote).complete()
-            }
-        } ?: evt.channel.sendMessage("No quotes are available.").complete()
-    }
+        val quotes = quoteMap[evt.guild]
 
-    private class QuoteMap : MutableMap<Long, MutableMap<Int, String>> by mutableMapOf() {
-        fun getOrPutDefault(key: Long): MutableMap<Int, String> = getOrPut(key, { mutableMapOf() })
+        if (quotes.isNotEmpty()) {
+            quotes[index.toString()]?.let { quote ->
+                evt.channel.sendMessage(quote).complete()
+            } ?: evt.channel.sendMessage("There is no quote with an index of `$index`.").complete()
+        } else evt.channel.sendMessage("No quotes are available.").complete()
     }
 }

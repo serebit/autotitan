@@ -1,8 +1,9 @@
 package com.serebit.autotitan.modules
 
 import com.serebit.autotitan.api.Module
-import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.annotations.Command
+import com.serebit.autotitan.api.meta.Access
+import com.serebit.autotitan.api.meta.Locale
 import com.serebit.autotitan.config
 import com.serebit.autotitan.listeners.EventListener
 import com.serebit.extensions.asMetricUnit
@@ -18,10 +19,7 @@ import kotlin.system.exitProcess
 
 @Suppress("UNUSED", "TooManyFunctions")
 class Owner : Module() {
-    @Command(
-        description = "Shuts down the bot with an exit code of 0.",
-        access = Access.BOT_OWNER
-    )
+    @Command(description = "Shuts down the bot with an exit code of 0.", access = Access.BOT_OWNER)
     fun shutdown(evt: MessageReceivedEvent) {
         Logger.info("Shutting down...")
         evt.channel.sendMessage("Shutting down.").complete()
@@ -30,20 +28,14 @@ class Owner : Module() {
         exitProcess(0)
     }
 
-    @Command(
-        description = "Resets the command and listener classes of the bot, effectively restarting it.",
-        access = Access.BOT_OWNER
-    )
+    @Command(description = "Resets the modules of the bot, effectively restarting it.", access = Access.BOT_OWNER)
     fun reset(evt: MessageReceivedEvent) {
         val message = evt.channel.sendMessage("Resetting...").complete()
         EventListener.resetModules()
         message.editMessage("Reset commands and listeners.").complete()
     }
 
-    @Command(
-        description = "Gets information about the system that the bot is running on.",
-        access = Access.BOT_OWNER
-    )
+    @Command(description = "Gets information about the system that the bot is running on.", access = Access.BOT_OWNER)
     fun systemInfo(evt: MessageReceivedEvent) {
         val info = SystemInfo()
         val process = info.operatingSystem.getProcess(info.operatingSystem.processId)
@@ -88,19 +80,19 @@ class Owner : Module() {
     }
 
     @Command(
-        description = "Renames the bot.",
-        splitLastParameter = false,
-        access = Access.BOT_OWNER
+        description = "Changes the bot's username.",
+        access = Access.BOT_OWNER,
+        splitLastParameter = false
     )
     fun setName(evt: MessageReceivedEvent, name: String) {
+        when (name.length) {
+            1 -> evt.channel.sendMessage("Usernames must be between 2 and 32 characters in length.")
+        }
         evt.jda.selfUser.manager.setName(name).complete()
         evt.channel.sendMessage("Renamed to $name.").complete()
     }
 
-    @Command(
-        description = "Changes the bot's command prefix.",
-        access = Access.BOT_OWNER
-    )
+    @Command(description = "Changes the bot's command prefix.", access = Access.BOT_OWNER)
     fun setPrefix(evt: MessageReceivedEvent, prefix: String) {
         if (prefix.isBlank() || prefix.contains("\\s".toRegex())) {
             evt.channel.sendMessage("Invalid prefix. Prefix must not be empty, and may not contain whitespace.")
@@ -112,10 +104,7 @@ class Owner : Module() {
         evt.channel.sendMessage("Set prefix to `${config.prefix}`.").complete()
     }
 
-    @Command(
-        description = "Adds a user to the blacklist.",
-        access = Access.BOT_OWNER
-    )
+    @Command(description = "Adds a user to the blacklist.", access = Access.BOT_OWNER)
     fun blackListAdd(evt: MessageReceivedEvent, user: User) {
         if (user.idLong in config.blackList) {
             evt.channel.sendMessage("${user.name} is already in the blacklist.").complete()
@@ -126,10 +115,7 @@ class Owner : Module() {
         config.serialize()
     }
 
-    @Command(
-        description = "Removes a user from the blacklist.",
-        access = Access.BOT_OWNER
-    )
+    @Command(description = "Removes a user from the blacklist.", access = Access.BOT_OWNER)
     fun blackListRemove(evt: MessageReceivedEvent, user: User) {
         if (user.idLong !in config.blackList) {
             evt.channel.sendMessage("${user.name} is not in the blacklist.").complete()
@@ -140,10 +126,7 @@ class Owner : Module() {
         config.serialize()
     }
 
-    @Command(
-        description = "Sends the blacklist.",
-        access = Access.BOT_OWNER
-    )
+    @Command(description = "Sends a list of blacklisted users in an embed.", access = Access.BOT_OWNER)
     fun blackList(evt: MessageReceivedEvent) {
         if (config.blackList.isNotEmpty()) {
             evt.channel.sendEmbed {
@@ -156,20 +139,14 @@ class Owner : Module() {
         }
     }
 
-    @Command(
-        description = "Sends the bot's invite link to the command invoker.",
-        access = Access.BOT_OWNER
-    )
+    @Command(description = "Sends the bot's invite link in a private message.", access = Access.BOT_OWNER)
     fun getInvite(evt: MessageReceivedEvent) {
         evt.author.openPrivateChannel().complete().sendMessage(
             "Invite link: ${evt.jda.asBot().getInviteUrl()}"
         ).complete()
     }
 
-    @Command(
-        description = "Gets the list of servers that the bot is currently in.",
-        access = Access.BOT_OWNER
-    )
+    @Command(description = "Sends the list of servers that the bot is in.", access = Access.BOT_OWNER)
     fun serverList(evt: MessageReceivedEvent) {
         evt.channel.sendEmbed {
             evt.jda.guilds.forEach {
@@ -183,8 +160,8 @@ class Owner : Module() {
     }
 
     @Command(
-        description = "Leaves the server.",
-        access = Access.BOT_OWNER
+        description = "Leaves the server in which the command is invoked.",
+        access = Access.BOT_OWNER, locale = Locale.GUILD
     )
     fun leaveServer(evt: MessageReceivedEvent) {
         evt.channel.sendMessage("Leaving the server.").complete()

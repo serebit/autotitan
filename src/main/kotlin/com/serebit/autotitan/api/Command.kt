@@ -3,6 +3,8 @@ package com.serebit.autotitan.api
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.meta.Locale
 import com.serebit.autotitan.config
+import com.serebit.autotitan.data.Emote
+import com.serebit.extensions.jda.asEmoji
 import com.serebit.extensions.jda.getEmoteByMention
 import com.serebit.extensions.jda.getMemberByMention
 import com.serebit.extensions.jda.getTextChannelByMention
@@ -14,7 +16,6 @@ import com.serebit.extensions.toBooleanOrNull
 import com.serebit.extensions.toCharOrNull
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Channel
-import net.dv8tion.jda.core.entities.Emote
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.entities.MessageEmbed
 import net.dv8tion.jda.core.entities.User
@@ -95,7 +96,7 @@ internal class Command(
         User::class -> evt.jda.getUserByMention(string)
         Member::class -> evt.guild.getMemberByMention(string)
         Channel::class -> evt.guild.getTextChannelByMention(string)
-        Emote::class -> evt.jda.getEmoteByMention(string)
+        Emote::class -> evt.jda.getEmoteByMention(string)?.asEmoji ?: Emote(string)
         else -> null
     }
 

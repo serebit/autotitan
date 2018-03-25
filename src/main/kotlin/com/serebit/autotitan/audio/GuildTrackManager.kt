@@ -21,7 +21,8 @@ class GuildTrackManager : AudioEventAdapter() {
         set(value) {
             player.volume = value.coerceIn(0..maxVolume)
         }
-    val playingTrack: AudioTrack? get() = player.playingTrack
+    val isPlaying: Boolean get() = player.playingTrack == null
+    val isNotPlaying get() = !isPlaying
 
     fun reset() {
         stop()
@@ -56,7 +57,7 @@ class GuildTrackManager : AudioEventAdapter() {
     }
 
     fun sendQueueEmbed(channel: MessageChannel) {
-        playingTrack?.let { track ->
+        player.playingTrack?.let { track ->
             channel.sendEmbed {
                 when (track) {
                     is YoutubeAudioTrack -> setThumbnail("https://img.youtube.com/vi/${track.info.identifier}/0.jpg")

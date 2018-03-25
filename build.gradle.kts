@@ -5,7 +5,7 @@ import org.jetbrains.kotlin.gradle.dsl.Coroutines
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.2.30"
+    kotlin("jvm") version "1.2.31"
     id("com.github.johnrengelman.shadow") version "2.0.2"
     id("com.github.ben-manes.versions") version "0.17.0"
     id("io.gitlab.arturbosch.detekt") version "1.0.0.RC6-4"
@@ -14,7 +14,7 @@ plugins {
 group = "com.serebit"
 version = "0.5.0"
 
-description = "AutoTitan is a modular, self-hosted Discord bot built in Kotlin using the Java Discord API."
+description = "AutoTitan is a modular, self-hosted Discord bot built in Kotlin/JVM using the Java Discord API."
 
 repositories {
     jcenter()

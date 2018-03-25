@@ -1,10 +1,10 @@
 package com.serebit.autotitan.modules
 
 import com.serebit.autotitan.api.Module
-import com.serebit.autotitan.api.meta.Access
-import com.serebit.autotitan.api.meta.Locale
 import com.serebit.autotitan.api.annotations.Command
 import com.serebit.autotitan.api.annotations.Listener
+import com.serebit.autotitan.api.meta.Access
+import com.serebit.autotitan.api.meta.Locale
 import com.serebit.autotitan.audio.AudioHandler
 import com.serebit.autotitan.audio.VoiceStatus
 import com.serebit.extensions.jda.closeAudioConnection
@@ -93,10 +93,12 @@ class Audio : Module() {
     @Command(description = "Skips the currently playing song.", locale = Locale.GUILD)
     fun skip(evt: MessageReceivedEvent) {
         if (handleVoiceStatus(evt)) {
-            evt.guild.trackManager.playingTrack?.let {
+            if (evt.guild.trackManager.isPlaying) {
                 evt.guild.trackManager.skipTrack()
-                evt.channel.sendMessage("Skipped to next track.").complete()
-            } ?: evt.channel.sendMessage("Cannot skip. Nothing is playing.").complete()
+                evt.channel.sendMessage("Skipped.").complete()
+            } else {
+                evt.channel.sendMessage("Cannot skip. Nothing is playing.").complete()
+            }
         }
     }
 
@@ -112,7 +114,7 @@ class Audio : Module() {
 
     @Command(description = "Pauses the currently playing song.", locale = Locale.GUILD)
     fun pause(evt: MessageReceivedEvent) {
-        if (handleVoiceStatus(evt) && evt.guild.trackManager.playingTrack != null) {
+        if (handleVoiceStatus(evt) && evt.guild.trackManager.isNotPlaying) {
             evt.guild.trackManager.pause()
             evt.channel.sendMessage("Paused the track.").complete()
         }
@@ -176,14 +178,12 @@ class Audio : Module() {
         val voiceStatus = evt.voiceStatus
         return when (evt.voiceStatus) {
             VoiceStatus.BOTH_CONNECTED_SAME_CHANNEL -> true
-            VoiceStatus.SELF_DISCONNECTED_USER_CONNECTED -> {
-                if (shouldConnect) {
-                    connectToVoiceChannel(evt.member.voiceState.channel)
-                    true
-                } else {
-                    voiceStatus.sendErrorMessage(evt.textChannel)
-                    false
-                }
+            VoiceStatus.SELF_DISCONNECTED_USER_CONNECTED -> if (shouldConnect) {
+                connectToVoiceChannel(evt.member.voiceState.channel)
+                true
+            } else {
+                voiceStatus.sendErrorMessage(evt.textChannel)
+                false
             }
             else -> {
                 voiceStatus.sendErrorMessage(evt.textChannel)
