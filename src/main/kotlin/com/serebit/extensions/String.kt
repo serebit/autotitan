@@ -4,11 +4,12 @@ package com.serebit.extensions
 
 import khttp.get
 
+private const val EMOJIONE_CODEPOINT_RADIX = 16
 private val validUnicodeCodePoints = get("https://raw.githubusercontent.com/emojione/emojione/master/emoji.json")
     .jsonObject
     .keySet()
     .map {
-        it.split("-").map { it.toInt(16) }.toIntArray()
+        it.split("-").map { it.toInt(EMOJIONE_CODEPOINT_RADIX) }.toIntArray()
     }
     .toSet()
 

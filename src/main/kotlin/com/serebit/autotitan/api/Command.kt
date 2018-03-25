@@ -103,23 +103,23 @@ internal class Command(
         else -> null
     }
 
-    fun isInvokeableByAuthor(evt: MessageReceivedEvent): Boolean {
-        val hasAccess = when (access) {
-            Access.ALL -> true
-            Access.GUILD_OWNER -> evt.member == evt.member?.guild?.owner
-            Access.BOT_OWNER -> evt.author == evt.jda.asBot().applicationInfo.complete().owner
-            Access.RANK_ABOVE -> evt.guild != null && evt.member.roles[0] > evt.guild.selfMember.roles[0]
-            Access.RANK_SAME -> evt.guild != null && evt.member.roles[0] == evt.guild.selfMember.roles[0]
-            Access.RANK_BELOW -> evt.guild != null && evt.member.roles[0] < evt.guild.selfMember.roles[0]
-        }
+    fun authorHasAccess(evt: MessageReceivedEvent) = when (access) {
+        Access.ALL -> true
+        Access.GUILD_OWNER -> evt.member == evt.member?.guild?.owner
+        Access.BOT_OWNER -> evt.author == evt.jda.asBot().applicationInfo.complete().owner
+        Access.RANK_ABOVE -> evt.guild != null && evt.member.roles[0] > evt.guild.selfMember.roles[0]
+        Access.RANK_SAME -> evt.guild != null && evt.member.roles[0] == evt.guild.selfMember.roles[0]
+        Access.RANK_BELOW -> evt.guild != null && evt.member.roles[0] < evt.guild.selfMember.roles[0]
+    }
 
+    fun isInvokeableByAuthor(evt: MessageReceivedEvent): Boolean {
         val correctLocale = when (locale) {
             Locale.ALL -> true
             Locale.GUILD -> evt.guild != null
             Locale.PRIVATE_CHANNEL -> evt.guild == null
         }
 
-        return hasAccess && correctLocale
+        return authorHasAccess(evt) && correctLocale
     }
 
     private val MessageReceivedEvent.isValidCommandInvocation: Boolean
