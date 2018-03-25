@@ -5,7 +5,7 @@ import net.dv8tion.jda.core.entities.Guild
 class GuildResourcePairSet<K : Any, V : Any> : MutableMap<GuildId, MutableSet<Pair<K, V>>> by mutableMapOf() {
     operator fun contains(guild: Guild): Boolean = guild.idLong in this
 
-    operator fun get(guild: Guild) = this.getOrPut(guild.idLong) { kotlin.collections.mutableSetOf() }
+    operator fun get(guild: Guild) = this.getOrPut(guild.idLong) { mutableSetOf() }
 
     operator fun get(guild: Guild, key: K): Set<V> =
         this[guild].filter { it.first == key }.map { it.second }.toSet()

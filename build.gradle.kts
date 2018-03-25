@@ -61,10 +61,6 @@ tasks {
         }
     }
 
-    withType<Jar> {
-        isEnabled = false
-    }
-
     withType<GradleBuild> {
         dependsOn("shadowJar")
     }

@@ -15,4 +15,10 @@ class Emote {
         unicodeValue = null
         emoteIdValue = emoteId
     }
+
+    override fun equals(other: Any?): Boolean {
+        return if (other is Emote?) {
+            other?.unicodeValue == unicodeValue && other?.emoteIdValue == emoteIdValue
+        } else false
+    }
 }
