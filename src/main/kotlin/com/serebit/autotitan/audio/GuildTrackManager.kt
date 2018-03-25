@@ -21,7 +21,7 @@ class GuildTrackManager : AudioEventAdapter() {
         set(value) {
             player.volume = value.coerceIn(0..maxVolume)
         }
-    val isPlaying: Boolean get() = player.playingTrack == null
+    val isPlaying: Boolean get() = player.playingTrack != null
     val isNotPlaying get() = !isPlaying
 
     fun reset() {
