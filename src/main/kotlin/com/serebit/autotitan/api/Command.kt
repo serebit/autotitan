@@ -4,6 +4,7 @@ import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.meta.Locale
 import com.serebit.autotitan.config
 import com.serebit.autotitan.data.Emote
+import com.serebit.extensions.isUnicodeEmote
 import com.serebit.extensions.jda.asEmoji
 import com.serebit.extensions.jda.getEmoteByMention
 import com.serebit.extensions.jda.getMemberByMention
@@ -96,7 +97,9 @@ internal class Command(
         User::class -> evt.jda.getUserByMention(string)
         Member::class -> evt.guild.getMemberByMention(string)
         Channel::class -> evt.guild.getTextChannelByMention(string)
-        Emote::class -> evt.jda.getEmoteByMention(string)?.asEmoji ?: Emote(string)
+        Emote::class -> evt.jda.getEmoteByMention(string)?.asEmoji ?: if (string.isUnicodeEmote) {
+            Emote(string)
+        } else null
         else -> null
     }
 

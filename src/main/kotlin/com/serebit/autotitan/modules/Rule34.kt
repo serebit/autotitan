@@ -8,6 +8,7 @@ import com.serebit.extensions.jda.sendEmbed
 import com.serebit.extensions.randomEntry
 import khttp.get
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
+import org.apache.http.HttpStatus
 
 @Suppress("UNUSED")
 class Rule34 : Module(isOptional = true) {
@@ -50,7 +51,7 @@ class Rule34 : Module(isOptional = true) {
 
     private fun randomPostOrNull(provider: ImageProvider, tags: String): ApiPost? {
         val response = get("https://${provider.baseUri}/index.php?page=dapi&s=post&q=index&tags=$tags&json=1")
-        return if (response.statusCode == 200 && response.text.isNotBlank()) {
+        return if (response.statusCode == HttpStatus.SC_OK && response.text.isNotBlank()) {
             gson.fromJson<List<ApiPost>>(response.text)
                 .filter { !it.image.endsWith(".webm") }
                 .randomEntry()

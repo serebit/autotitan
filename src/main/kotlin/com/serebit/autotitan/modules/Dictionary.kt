@@ -161,8 +161,8 @@ class Dictionary : Module(isOptional = true) {
                         "\\[(.+?)]".toRegex(),
                         "$1"
                     )
-                val trimmedDefinition = if (definition.length > 1024) {
-                    definition.substring(0..1021) + "..."
+                val trimmedDefinition = if (definition.length > maxEmbedFieldLength) {
+                    definition.substring(0 until maxEmbedFieldLength) + '\u2026'
                 } else definition
                 evt.channel.sendEmbed {
                     setTitle("$query (Definition 1 of ${definitions.size})", definitions[0].permalink)
@@ -187,4 +187,8 @@ class Dictionary : Module(isOptional = true) {
     private data class UrbanDictionaryDefinition(val definition: String, val permalink: String, val example: String)
 
     private val TokenStatus.isInvalid get() = !isValid
+
+    companion object {
+        private const val maxEmbedFieldLength = 1024
+    }
 }
