@@ -70,10 +70,7 @@ class Audio : Module() {
         }
     }
 
-    @Command(
-        description = "Plays a playlist from the given URI.",
-        locale = Locale.GUILD
-    )
+    @Command(description = "Plays a playlist from the given URI.", locale = Locale.GUILD)
     fun playPlaylist(evt: MessageReceivedEvent, uri: String) {
         if (handleVoiceStatus(evt, true)) {
             val trimmedUri = uri.removeSurrounding("<", ">")
@@ -114,18 +111,18 @@ class Audio : Module() {
 
     @Command(description = "Pauses the currently playing song.", locale = Locale.GUILD)
     fun pause(evt: MessageReceivedEvent) {
-        if (handleVoiceStatus(evt) && evt.guild.trackManager.isNotPlaying) {
+        if (handleVoiceStatus(evt) && evt.guild.trackManager.isNotPaused) {
             evt.guild.trackManager.pause()
             evt.channel.sendMessage("Paused the track.").complete()
-        }
+        } else evt.channel.sendMessage("The track is already paused.").complete()
     }
 
     @Command(description = "Resumes the currently playing song.", locale = Locale.GUILD)
     fun unPause(evt: MessageReceivedEvent) {
-        if (handleVoiceStatus(evt)) {
+        if (handleVoiceStatus(evt) && evt.guild.trackManager.isPaused) {
             evt.guild.trackManager.resume()
             evt.channel.sendMessage("Unpaused the track.").complete()
-        }
+        } else evt.channel.sendMessage("The track is already playing.").complete()
     }
 
     @Command(description = "Sends an embed with the list of songs in the queue.", locale = Locale.GUILD)
@@ -171,10 +168,7 @@ class Audio : Module() {
         }
     }
 
-    private fun handleVoiceStatus(
-        evt: MessageReceivedEvent,
-        shouldConnect: Boolean = false
-    ): Boolean {
+    private fun handleVoiceStatus(evt: MessageReceivedEvent, shouldConnect: Boolean = false): Boolean {
         val voiceStatus = evt.voiceStatus
         return when (evt.voiceStatus) {
             VoiceStatus.BOTH_CONNECTED_SAME_CHANNEL -> true

@@ -23,6 +23,8 @@ class GuildTrackManager : AudioEventAdapter() {
         }
     val isPlaying: Boolean get() = player.playingTrack != null
     val isNotPlaying get() = !isPlaying
+    val isPaused: Boolean get() = isPlaying && player.isPaused
+    val isNotPaused: Boolean get() = !isPaused
 
     fun reset() {
         stop()

@@ -59,7 +59,7 @@ class Rule34 : Module(isOptional = true) {
     }
 
     private fun formatTags(tagString: String, delimiter: String = "+") = tagString
-        .filter { it.isLetterOrDigit() || it.isWhitespace() || it in arrayOf('-', '_') }
+        .filter { it.isLetterOrDigit() || it.isWhitespace() || it in arrayOf('-', '_', '(', ')') }
         .replace("\\s+".toRegex(), delimiter)
 
     private enum class ImageProvider(val baseUri: String, val imageBaseUri: String) {
