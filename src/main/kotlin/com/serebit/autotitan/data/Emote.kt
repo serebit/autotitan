@@ -23,10 +23,13 @@ class Emote {
         channel.jda.getEmoteById(emoteIdValue!!).canInteract(channel.jda.selfUser, channel, true)
     } else true
 
-    override fun equals(other: Any?): Boolean {
-        return if (other is Emote?) {
-            other?.unicodeValue == unicodeValue && other?.emoteIdValue == emoteIdValue
-        } else false
+    override fun equals(other: Any?): Boolean = if (other is Emote) {
+        other.unicodeValue == unicodeValue && other.emoteIdValue == emoteIdValue
+    } else false
+
+    @Suppress("MagicNumber")
+    override fun hashCode(): Int {
+        return 37 * (unicodeValue?.hashCode() ?: emoteIdValue?.hashCode()!!)
     }
 
     fun toString(jda: JDA): String {

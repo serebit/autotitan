@@ -3,6 +3,7 @@
 package com.serebit.extensions
 
 import khttp.get
+import net.dv8tion.jda.core.entities.MessageEmbed
 
 private const val EMOJIONE_CODEPOINT_RADIX = 16
 private val validUnicodeCodePoints = get("https://raw.githubusercontent.com/emojione/emojione/master/emoji.json")
@@ -22,3 +23,7 @@ val String.isUnicodeEmote: Boolean
         val codePoints = codePoints().toArray()
         return validUnicodeCodePoints.any { it.contentEquals(codePoints) }
     }
+
+fun String.limitLengthTo(max: Int) = if (length > max) {
+    substring(0 until MessageEmbed.VALUE_MAX_LENGTH) + '\u2026'
+} else this

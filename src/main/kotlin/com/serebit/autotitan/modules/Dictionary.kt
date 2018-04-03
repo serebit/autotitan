@@ -7,7 +7,9 @@ import com.serebit.autotitan.api.annotations.Command
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.data.DataManager
 import com.serebit.extensions.jda.sendEmbed
+import com.serebit.extensions.limitLengthTo
 import khttp.get
+import net.dv8tion.jda.core.entities.MessageEmbed
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import net.jeremybrooks.knicker.AccountApi
 import net.jeremybrooks.knicker.WordApi
@@ -123,8 +125,7 @@ class Dictionary : Module(isOptional = true) {
         }
 
         val related = relatedWordsCache.getOrPut(wordOrPhrase) {
-            WordApi.related(wordOrPhrase)
-                .filter { it.relType in setOf("synonym", "antonym") }
+            WordApi.related(wordOrPhrase).filter { it.relType in setOf("synonym", "antonym") }
         }.map { it.relType to it.words }
 
         if (related.isEmpty()) {
@@ -151,31 +152,21 @@ class Dictionary : Module(isOptional = true) {
     fun urban(evt: MessageReceivedEvent, index: Int, query: String) {
         val encodedQuery = URLEncoder.encode(query, "UTF-8")
         val apiResult = get("https://api.urbandictionary.com/v0/define?term=$encodedQuery")
-        when {
-            apiResult.jsonObject["result_type"] != "no_results" -> {
-                val definitions = gson.fromJson<UrbanDictionaryResult>(apiResult.text).list
-                val definition = definitions[index - 1]
-                    .definition
-                    .replace("\\[word]".toRegex(), "")
-                    .replace(
-                        "\\[(.+?)]".toRegex(),
-                        "$1"
-                    )
-                val trimmedDefinition = if (definition.length > maxEmbedFieldLength) {
-                    definition.substring(0 until maxEmbedFieldLength) + '\u2026'
-                } else definition
-                evt.channel.sendEmbed {
-                    setTitle("$query (Definition 1 of ${definitions.size})", definitions[0].permalink)
-                    setDescription(trimmedDefinition)
-                    setFooter(
-                        "Powered by Urban Dictionary",
-                        "https://res.cloudinary.com/hrscywv4p/image/upload/v1/1194347/vo5ge6mdw4creyrgaq2m.png"
-                    )
-                }.complete()
-            }
-            index == 1 -> evt.channel.sendMessage("Couldn't find a definition. Maybe you spelled it wrong?").complete()
-            else -> evt.channel.sendMessage("Couldn't find a definition at that index.").complete()
-        }
+        if (apiResult.jsonObject["result_type"] != "no_results") {
+            val definitions = gson.fromJson<UrbanDictionaryResult>(apiResult.text).list
+            val definition = definitions[index - 1]
+                .definition
+                .replace("\\[word]".toRegex(), "")
+                .replace("\\[(.+?)]".toRegex(), "$1")
+            evt.channel.sendEmbed {
+                setTitle("$query (Definition $index of ${definitions.size})", definitions[0].permalink)
+                setDescription(definition.limitLengthTo(MessageEmbed.VALUE_MAX_LENGTH))
+                setFooter(
+                    "Powered by Urban Dictionary",
+                    "https://res.cloudinary.com/hrscywv4p/image/upload/v1/1194347/vo5ge6mdw4creyrgaq2m.png"
+                )
+            }.complete()
+        } else evt.channel.sendMessage("Couldn't find a definition at that index.").complete()
     }
 
     private data class WordnikConfig(var apiKey: String? = null)
@@ -187,8 +178,4 @@ class Dictionary : Module(isOptional = true) {
     private data class UrbanDictionaryDefinition(val definition: String, val permalink: String, val example: String)
 
     private val TokenStatus.isInvalid get() = !isValid
-
-    companion object {
-        private const val maxEmbedFieldLength = 1024
-    }
 }
