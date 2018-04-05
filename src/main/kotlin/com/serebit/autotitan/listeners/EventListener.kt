@@ -10,11 +10,9 @@ import net.dv8tion.jda.core.events.Event
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import net.dv8tion.jda.core.hooks.ListenerAdapter
 import kotlin.reflect.full.createInstance
-import com.serebit.autotitan.api.meta.annotations.Command as CommandAnnotation
 
 object EventListener : ListenerAdapter() {
-    var allModules: List<Module> = classpathModules
-        private set
+    private var allModules: List<Module> = classpathModules
     private val classpathModules
         get() = ClassPath
             .from(Thread.currentThread().contextClassLoader)
@@ -53,48 +51,35 @@ object EventListener : ListenerAdapter() {
                     }.complete()
                 }
             }
-        }
 
-        @CommandAnnotation(description = "Sends an embed with a list of commands.")
-        fun commands(evt: MessageReceivedEvent) {
-            evt.run {
-                channel.sendEmbed {
-                    loadedModules.sortedBy { it.name }.forEach { module ->
-                        addField(module.commandListField)
-                    }
-                }.complete()
-            }
-        }
-
-        @CommandAnnotation(description = "Sends an embed with general information on how to use the bot.")
-        fun help(evt: MessageReceivedEvent) {
-            evt.channel.sendEmbed {
-                addField(
-                    "Help",
-                    """
+            command("help") { evt ->
+                evt.channel.sendEmbed {
+                    addField(
+                        "Help",
+                        """
                         My prefix is `${config.prefix}`.
                         For a list of commands, enter `${config.prefix}commands`.
                         For information on a certain command, enter `${config.prefix}help <command name>`.
-                    """.trimIndent(),
-                    false
-                )
-            }.complete()
-        }
-
-        @CommandAnnotation(description = "Sends an embed with information about the requested command.")
-        fun help(evt: MessageReceivedEvent, commandName: String) {
-            val matchingCommands = loadedModules
-                .mapNotNull { it.findCommandsByName(commandName) }
-                .flatten()
-                .filter { it.isNotHidden }
-            if (matchingCommands.isNotEmpty()) {
-                evt.channel.sendEmbed {
-                    matchingCommands.forEach { command ->
-                        addField(command.helpField)
-                    }
+                        """.trimIndent(),
+                        false
+                    )
                 }.complete()
-            } else {
-                evt.channel.sendMessage("Could not find any commands matching `$commandName`.").complete()
+            }
+
+            command("help") { evt, commandName: String ->
+                val matchingCommands = loadedModules
+                    .mapNotNull { it.findCommandsByName(commandName) }
+                    .flatten()
+                    .filter { it.isNotHidden }
+                if (matchingCommands.isNotEmpty()) {
+                    evt.channel.sendEmbed {
+                        matchingCommands.forEach { command ->
+                            addField(command.helpField)
+                        }
+                    }.complete()
+                } else {
+                    evt.channel.sendMessage("Could not find any commands matching `$commandName`.").complete()
+                }
             }
         }
     }

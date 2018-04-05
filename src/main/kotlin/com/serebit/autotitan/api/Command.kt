@@ -10,10 +10,6 @@ import net.dv8tion.jda.core.entities.MessageEmbed
 import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import kotlin.reflect.KClass
-import kotlin.reflect.KFunction
-import kotlin.reflect.full.valueParameters
-import kotlin.reflect.jvm.jvmErasure
-import com.serebit.autotitan.api.meta.annotations.Command as CommandAnnotation
 
 class Command(
     val name: String,

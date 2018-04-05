@@ -59,9 +59,7 @@ class Audio : Module() {
             }
         }
 
-        command("leaveVoice") { evt ->
-            leaveVoiceChannel(evt.guild)
-        }
+        command("leavevoice") { evt -> leaveVoiceChannel(evt.guild) }
 
         command("play", delimitLastString = false) { evt, query: String ->
             evt.run {

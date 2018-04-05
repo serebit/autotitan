@@ -10,8 +10,6 @@ import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.Event
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import kotlin.reflect.KClass
-import com.serebit.autotitan.api.meta.annotations.Command as CommandAnnotation
-import com.serebit.autotitan.api.meta.annotations.Listener as ListenerAnnotation
 
 abstract class Module(name: String = "", val isOptional: Boolean = false) {
     var name: String = name
