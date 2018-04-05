@@ -63,7 +63,7 @@ class Audio : Module() {
             leaveVoiceChannel(evt.guild)
         }
 
-        command("play") { evt, query: String ->
+        command("play", delimitLastString = false) { evt, query: String ->
             evt.run {
                 val voiceStatus = voiceStatus(evt)
                 when (voiceStatus) {

@@ -9,12 +9,7 @@ import net.dv8tion.jda.core.entities.MessageEmbed
 import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.Event
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
-import kotlin.reflect.KFunction
-import kotlin.reflect.full.findAnnotation
-import kotlin.reflect.full.isSubclassOf
-import kotlin.reflect.full.valueParameters
-import kotlin.reflect.jvm.jvmErasure
-import kotlin.reflect.jvm.reflect
+import kotlin.reflect.KClass
 import com.serebit.autotitan.api.meta.annotations.Command as CommandAnnotation
 import com.serebit.autotitan.api.meta.annotations.Listener as ListenerAnnotation
 
@@ -58,30 +53,38 @@ abstract class Module(name: String = "", val isOptional: Boolean = false) {
             .filter { it.looselyMatches(evt.message.contentRaw) }
             .associate { it to it.parseTokensOrNull(evt) }.entries
             .firstOrNull { it.value != null } ?: return
-        command(this, evt, parameters!!)
+        command(evt, parameters!!)
     }
 
     fun runListeners(evt: Event) {
-        listeners.filter { it.eventType == evt::class }.forEach { it.invoke(evt) }
+        listeners.filter { it.eventType == evt::class }.forEach { it(evt) }
     }
 
     fun findCommandsByName(name: String): List<Command>? = commands.filter { it.name == name }
 
-    private fun addCommand(
-        function: KFunction<Unit>?,
+    protected fun addCommand(
         name: String,
         description: String = "",
         access: Access = Access.ALL,
         locale: Locale = Locale.ALL,
         delimitLastString: Boolean = true,
         hidden: Boolean = false,
-        permissions: List<Permission> = emptyList()
-    ): Boolean {
-        if (function == null) return false
-        return commands.add(
-            Command(function, name, description, access, locale, delimitLastString, hidden, permissions)
+        permissions: List<Permission> = emptyList(),
+        parameterTypes: List<KClass<*>>,
+        wrapper: FunctionWrapper
+    ): Boolean = if (parameterTypes.all { it in validParameterTypes }) {
+        commands.add(
+            Command(
+                name.toLowerCase(), description,
+                access, locale,
+                delimitLastString,
+                hidden,
+                permissions,
+                parameterTypes,
+                wrapper
+            )
         )
-    }
+    } else false
 
     protected fun command(
         name: String,
@@ -92,9 +95,15 @@ abstract class Module(name: String = "", val isOptional: Boolean = false) {
         hidden: Boolean = false,
         permissions: List<Permission> = emptyList(),
         task: (MessageReceivedEvent) -> Unit
-    ) = addCommand(task.reflect(), name, description, access, locale, delimitLastString, hidden, permissions)
+    ) = addCommand(name, description, access, locale, delimitLastString, hidden, permissions, emptyList(),
+        object : FunctionWrapper {
+            override fun invoke(evt: Event, vararg args: Any) {
+                task(evt as MessageReceivedEvent)
+            }
+        }
+    )
 
-    protected fun <P0> command(
+    protected inline fun <reified P0> command(
         name: String,
         description: String = "",
         access: Access = Access.ALL,
@@ -102,10 +111,18 @@ abstract class Module(name: String = "", val isOptional: Boolean = false) {
         delimitLastString: Boolean = true,
         hidden: Boolean = false,
         permissions: List<Permission> = emptyList(),
-        task: (MessageReceivedEvent, P0) -> Unit
-    ) = addCommand(task.reflect(), name, description, access, locale, delimitLastString, hidden, permissions)
+        crossinline task: (MessageReceivedEvent, P0) -> Unit
+    ) = addCommand(name, description, access, locale, delimitLastString, hidden, permissions,
+        listOf(P0::class),
+        object : FunctionWrapper {
+            override fun invoke(evt: Event, vararg args: Any) {
+                println(args[0]::class.qualifiedName)
+                task(evt as MessageReceivedEvent, args[0] as P0)
+            }
+        }
+    )
 
-    protected fun <P0, P1> command(
+    protected inline fun <reified P0, reified P1> command(
         name: String,
         description: String = "",
         access: Access = Access.ALL,
@@ -113,10 +130,16 @@ abstract class Module(name: String = "", val isOptional: Boolean = false) {
         delimitLastString: Boolean = true,
         hidden: Boolean = false,
         permissions: List<Permission> = emptyList(),
-        task: (MessageReceivedEvent, P0, P1) -> Unit
-    ) = addCommand(task.reflect(), name, description, access, locale, delimitLastString, hidden, permissions)
+        crossinline task: (MessageReceivedEvent, P0, P1) -> Unit
+    ) = addCommand(name, description, access, locale, delimitLastString, hidden, permissions,
+        listOf(P0::class, P1::class),
+        object : FunctionWrapper {
+            override fun invoke(evt: Event, vararg args: Any) =
+                task(evt as MessageReceivedEvent, args[0] as P0, args[1] as P1)
+        }
+    )
 
-    protected fun <P0, P1, P2> command(
+    protected inline fun <reified P0, reified P1, reified P2> command(
         name: String,
         description: String = "",
         access: Access = Access.ALL,
@@ -124,10 +147,15 @@ abstract class Module(name: String = "", val isOptional: Boolean = false) {
         delimitLastString: Boolean = true,
         hidden: Boolean = false,
         permissions: List<Permission> = emptyList(),
-        task: (MessageReceivedEvent, P0, P1, P2) -> Unit
-    ) = addCommand(task.reflect(), name, description, access, locale, delimitLastString, hidden, permissions)
+        crossinline task: (MessageReceivedEvent, P0, P1, P2) -> Unit
+    ) = addCommand(name, description, access, locale, delimitLastString, hidden, permissions,
+        listOf(P0::class, P1::class, P2::class),
+        object : FunctionWrapper {
+            override fun invoke(evt: Event, vararg args: Any) =
+                task(evt as MessageReceivedEvent, args[0] as P0, args[1] as P1, args[2] as P2)
+        })
 
-    protected fun <P0, P1, P2, P3> command(
+    protected inline fun <reified P0, reified P1, reified P2, reified P3> command(
         name: String,
         description: String = "",
         access: Access = Access.ALL,
@@ -135,10 +163,15 @@ abstract class Module(name: String = "", val isOptional: Boolean = false) {
         delimitLastString: Boolean = true,
         hidden: Boolean = false,
         permissions: List<Permission> = emptyList(),
-        task: (MessageReceivedEvent, P0, P1, P2, P3) -> Unit
-    ) = addCommand(task.reflect(), name, description, access, locale, delimitLastString, hidden, permissions)
+        crossinline task: (MessageReceivedEvent, P0, P1, P2, P3) -> Unit
+    ) = addCommand(name, description, access, locale, delimitLastString, hidden, permissions,
+        listOf(P0::class, P1::class, P2::class, P3::class),
+        object : FunctionWrapper {
+            override fun invoke(evt: Event, vararg args: Any) =
+                task(evt as MessageReceivedEvent, args[0] as P0, args[1] as P1, args[2] as P2, args[3] as P3)
+        })
 
-    protected fun <P0, P1, P2, P3, P4> command(
+    protected inline fun <reified P0, reified P1, reified P2, reified P3, reified P4> command(
         name: String,
         description: String = "",
         access: Access = Access.ALL,
@@ -146,10 +179,17 @@ abstract class Module(name: String = "", val isOptional: Boolean = false) {
         delimitLastString: Boolean = true,
         hidden: Boolean = false,
         permissions: List<Permission> = emptyList(),
-        task: (MessageReceivedEvent, P0, P1, P2, P3, P4) -> Unit
-    ) = addCommand(task.reflect(), name, description, access, locale, delimitLastString, hidden, permissions)
+        crossinline task: (MessageReceivedEvent, P0, P1, P2, P3, P4) -> Unit
+    ) = addCommand(name, description, access, locale, delimitLastString, hidden, permissions,
+        listOf(P0::class, P1::class, P2::class, P3::class, P4::class),
+        object : FunctionWrapper {
+            override fun invoke(evt: Event, vararg args: Any) = task(
+                evt as MessageReceivedEvent,
+                args[0] as P0, args[1] as P1, args[2] as P2, args[3] as P3, args[4] as P4
+            )
+        })
 
-    protected fun <P0, P1, P2, P3, P4, P5> command(
+    protected inline fun <reified P0, reified P1, reified P2, reified P3, reified P4, reified P5> command(
         name: String,
         description: String = "",
         access: Access = Access.ALL,
@@ -157,10 +197,17 @@ abstract class Module(name: String = "", val isOptional: Boolean = false) {
         delimitLastString: Boolean = true,
         hidden: Boolean = false,
         permissions: List<Permission> = emptyList(),
-        task: (MessageReceivedEvent, P0, P1, P2, P3, P4, P5) -> Unit
-    ) = addCommand(task.reflect(), name, description, access, locale, delimitLastString, hidden, permissions)
+        crossinline task: (MessageReceivedEvent, P0, P1, P2, P3, P4, P5) -> Unit
+    ) = addCommand(name, description, access, locale, delimitLastString, hidden, permissions,
+        listOf(P0::class, P1::class, P2::class, P3::class, P4::class, P5::class),
+        object : FunctionWrapper {
+            override fun invoke(evt: Event, vararg args: Any) = task(
+                evt as MessageReceivedEvent,
+                args[0] as P0, args[1] as P1, args[2] as P2, args[3] as P3, args[4] as P4, args[5] as P5
+            )
+        })
 
-    protected fun <T : Event> listener(task: (T) -> Unit) {
+    protected inline fun <reified T : Event> listener(crossinline task: (T) -> Unit) {
 
     }
 }

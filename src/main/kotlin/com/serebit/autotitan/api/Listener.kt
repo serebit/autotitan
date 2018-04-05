@@ -8,12 +8,10 @@ import kotlin.reflect.jvm.jvmErasure
 import com.serebit.autotitan.api.meta.annotations.Listener as ListenerAnnotation
 
 class Listener(
-    private val function: KFunction<Unit>,
-    private val instance: Any
+    private val function: FunctionWrapper,
+    internal val eventType: KClass<out Event>
 ) {
-    val eventType: KClass<out Any> = function.valueParameters[0].type.jvmErasure
-
     operator fun invoke(evt: Event) {
-        if (evt::class == eventType) function.call(instance, evt)
+        if (evt::class == eventType) function(evt)
     }
 }

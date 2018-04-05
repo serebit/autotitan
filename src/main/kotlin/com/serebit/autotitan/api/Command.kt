@@ -16,22 +16,23 @@ import kotlin.reflect.jvm.jvmErasure
 import com.serebit.autotitan.api.meta.annotations.Command as CommandAnnotation
 
 class Command(
-    private val function: KFunction<Unit>,
     val name: String,
     description: String,
     private val access: Access,
     private val locale: Locale,
     private val splitLastParameter: Boolean = true,
     private val isHidden: Boolean,
-    private val memberPermissions: List<Permission> = emptyList()
+    private val memberPermissions: List<Permission> = emptyList(),
+    private val parameterTypes: List<KClass<out Any>>,
+    private val function: FunctionWrapper
 ) {
-    private val parameterTypes: List<KClass<out Any>> = function.valueParameters.map { it.type.jvmErasure }
     val isNotHidden get() = !isHidden
     val summary = "`$name ${parameterTypes.joinToString(" ") { "<${it.simpleName}>" }}`"
     val helpField = MessageEmbed.Field(summary, description, false)
 
-    operator fun invoke(instance: Module, evt: MessageReceivedEvent, parameters: List<Any>): Any? =
-        function.call(instance, evt, *parameters.toTypedArray())
+    operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>) {
+        function.invoke(evt, *parameters.toTypedArray())
+    }
 
     fun looselyMatches(rawMessageContent: String): Boolean = rawMessageContent.split(" ")[0] == config.prefix + name
 
@@ -39,7 +40,7 @@ class Command(
         val tokens = tokenizeMessage(evt.message.contentRaw)
         if (evt.author.isBot) return null
         if (tokens[0] != config.prefix + name) return null
-        if (parameterTypes.size != tokens.size) return null
+        if (parameterTypes.size != tokens.size - 1) return null
         if (evt.author.idLong in config.blackList) return null
         if (evt.guild != null && !evt.member.hasPermission(memberPermissions.toMutableList())) return null
 
