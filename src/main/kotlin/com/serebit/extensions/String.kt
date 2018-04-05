@@ -19,10 +19,7 @@ fun String.toBooleanOrNull() = if (this == "true" || this == "false") toBoolean(
 fun String.toCharOrNull() = if (length == 1) this[0] else null
 
 val String.isUnicodeEmote: Boolean
-    get() {
-        val codePoints = codePoints().toArray()
-        return validUnicodeCodePoints.any { it.contentEquals(codePoints) }
-    }
+    get() = validUnicodeCodePoints.any { it.contentEquals(codePoints().toArray()) }
 
 fun String.limitLengthTo(max: Int) = if (length > max) {
     substring(0 until MessageEmbed.VALUE_MAX_LENGTH) + '\u2026'

@@ -12,6 +12,7 @@ import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.time.temporal.Temporal
+import kotlin.math.absoluteValue
 
 @Suppress("UNUSED", "TooManyFunctions")
 class General : Module() {
@@ -58,7 +59,7 @@ class General : Module() {
 
     @Command(description = "Gets information about a specific server member.", locale = Locale.GUILD)
     fun memberInfo(evt: MessageReceivedEvent, member: Member) {
-        val title = StringBuilder().apply {
+        val title = buildString {
             append("${member.user.name}#${member.user.discriminator}")
             member.nickname?.let {
                 append(" ($it)")
@@ -66,11 +67,14 @@ class General : Module() {
             if (member.user.isBot) {
                 append(" [BOT]")
             }
-        }.toString()
+        }
 
-        val status = member.onlineStatus.readableName + if (member.game != null) {
-            " - Playing ${member.game.name}"
-        } else ""
+        val status = buildString {
+            append(member.onlineStatus.readableName)
+            member.game?.let {
+                append(" - Playing ${member.game.name}")
+            }
+        }
 
         val roles = member.roles.joinToString(", ") { it.name }
 
@@ -103,9 +107,15 @@ class General : Module() {
 
     private operator fun OffsetDateTime.minus(other: Temporal): String {
         val yearDifference = ChronoUnit.YEARS.between(other, this)
-        val yearDifferenceString = "$yearDifference year${if (yearDifference != 1L) "s" else ""}"
+        val yearDifferenceString = buildString {
+            append("$yearDifference year")
+            if (yearDifference.absoluteValue != 1L) append("s")
+        }
         val dayDifference = ChronoUnit.DAYS.between(other, minusYears(yearDifference))
-        val dayDifferenceString = "$dayDifference day${if (dayDifference != 1L) "s" else ""}"
+        val dayDifferenceString = buildString {
+            append("$dayDifference day")
+            if (dayDifference.absoluteValue != 1L) append("s")
+        }
         return if (yearDifference > 0) {
             "$yearDifferenceString and $dayDifferenceString ago"
         } else "$dayDifferenceString ago"
