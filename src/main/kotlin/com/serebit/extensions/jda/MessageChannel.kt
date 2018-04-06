@@ -12,3 +12,8 @@ inline fun MessageChannel.sendEmbed(init: EmbedBuilder.() -> Unit): MessageActio
         setColor((this@sendEmbed as? TextChannel)?.guild?.selfMember?.color)
         init()
     }.build())
+
+fun MessageChannel.sendEmbed(embedBuilder: EmbedBuilder): MessageAction =
+    sendMessage(embedBuilder.apply {
+        setColor((this@sendEmbed as? TextChannel)?.guild?.selfMember?.color)
+    }.build())

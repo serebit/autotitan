@@ -64,17 +64,21 @@ class AutoReact : Module(isOptional = true) {
         evt.channel.sendMessage("Deleted all autoreacts from this server.").complete()
     }
 
-    @Command(description = "Gets a list of autoreacts for the server.", locale = Locale.GUILD)
+    @Command(description = "Sends a list of autoreacts for the server to the command invoker.", locale = Locale.GUILD)
     fun reactList(evt: MessageReceivedEvent) {
-        evt.channel.sendEmbed {
-            reactMap[evt.guild].forEach { phrase, emotes ->
-                addField(
-                    emotes.joinToString("") { it.emote.toString(evt.jda) },
-                    phrase.limitLengthTo(MessageEmbed.VALUE_MAX_LENGTH),
-                    false
-                )
-            }
-        }.complete()
+        evt.channel.sendMessage("Sending a reaction list in PMs.").queue()
+        val privateChannel = evt.author.openPrivateChannel().complete()
+        reactMap[evt.guild].map { (word, emotes) ->
+            MessageEmbed.Field(
+                word.limitLengthTo(MessageEmbed.TITLE_MAX_LENGTH),
+                emotes.joinToString("") { it.emote.toString(evt.jda) },
+                false
+            )
+        }.chunked(8).forEach { embeds ->
+            privateChannel.sendEmbed {
+                embeds.forEach { addField(it) }
+            }.queue()
+        }
     }
 
     @Listener
