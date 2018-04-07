@@ -30,9 +30,8 @@ class AutoReact : Module(isOptional = true) {
     fun addReact(evt: MessageReceivedEvent, word: String, emote: Emote) {
         val value = reactMap[evt.guild].getOrPut(word, ::mutableListOf)
         when {
-            value.size >= maxReactionsPerMessage -> {
+            value.size >= maxReactionsPerMessage ->
                 evt.channel.sendMessage("There are already 20 reactions for that word.").complete()
-            }
             !emote.canInteract(evt.channel) -> evt.channel.sendMessage("I can't use that emote.").complete()
             value.add(EmoteData.from(emote, evt)) -> {
                 dataManager.write("reacts.json", reactMap)
@@ -47,9 +46,15 @@ class AutoReact : Module(isOptional = true) {
         memberPermissions = [Permission.MESSAGE_ADD_REACTION]
     )
     fun removeReact(evt: MessageReceivedEvent, word: String, emote: Emote) {
-        if (reactMap[evt.guild].getOrPut(word, ::mutableListOf).removeIf { it.emote == emote }) {
-            dataManager.write("reacts.json", reactMap)
-            evt.channel.sendMessage("Removed reaction.").complete()
+        val guildReacts = reactMap[evt.guild]
+        when {
+            word !in guildReacts -> evt.channel.sendMessage("There are no autoreacts for that word.").complete()
+            guildReacts[word]?.none { it.emote == emote } ?: false ->
+                evt.channel.sendMessage("That emote is not an autoreact for that word.").complete()
+            guildReacts[word]?.removeIf { it.emote == emote } ?: false -> {
+                dataManager.write("reacts.json", reactMap)
+                evt.channel.sendMessage("Removed reaction.")
+            }
         }
     }
 
@@ -61,7 +66,7 @@ class AutoReact : Module(isOptional = true) {
     )
     fun clearReacts(evt: MessageReceivedEvent) {
         reactMap[evt.guild].clear()
-        evt.channel.sendMessage("Deleted all autoreacts from this server.").complete()
+        evt.channel.sendMessage("Cleared all autoreacts from this server.").complete()
     }
 
     @Command(description = "Sends a list of autoreacts for the server to the command invoker.", locale = Locale.GUILD)
