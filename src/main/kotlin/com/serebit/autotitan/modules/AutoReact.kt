@@ -79,7 +79,7 @@ class AutoReact : Module(isOptional = true) {
                 emotes.joinToString("") { it.emote.toString(evt.jda) },
                 false
             )
-        }.chunked(8).forEach { embeds ->
+        }.chunked(maxFieldsPerReactListEmbed).forEach { embeds ->
             privateChannel.sendEmbed {
                 embeds.forEach { addField(it) }
             }.queue()
@@ -117,5 +117,6 @@ class AutoReact : Module(isOptional = true) {
 
     companion object {
         private const val maxReactionsPerMessage = 20
+        private const val maxFieldsPerReactListEmbed = 8
     }
 }
