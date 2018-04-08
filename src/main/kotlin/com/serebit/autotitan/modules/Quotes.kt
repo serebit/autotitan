@@ -5,6 +5,7 @@ import com.serebit.autotitan.api.annotations.Command
 import com.serebit.autotitan.api.meta.Locale
 import com.serebit.autotitan.data.DataManager
 import com.serebit.autotitan.data.GuildResourceMap
+import com.serebit.extensions.jda.MESSAGE_EMBED_MAX_FIELDS
 import com.serebit.extensions.jda.chunkedBy
 import com.serebit.extensions.jda.mentionsUsers
 import com.serebit.extensions.jda.sendEmbed
@@ -94,7 +95,9 @@ class Quotes : Module(isOptional = true) {
                         index.limitLengthTo(MessageEmbed.TITLE_MAX_LENGTH) to
                             quote.limitLengthTo(MessageEmbed.VALUE_MAX_LENGTH)
                     }
-                    .chunkedBy(MessageEmbed.EMBED_MAX_LENGTH_BOT) { it.first.length + it.second.length }
+                    .chunkedBy(MessageEmbed.EMBED_MAX_LENGTH_BOT, MESSAGE_EMBED_MAX_FIELDS) {
+                        it.first.length + it.second.length
+                    }
                     .forEach { embeds ->
                         privateChannel.sendEmbed {
                             embeds.forEach { addField(it.first, it.second, false) }

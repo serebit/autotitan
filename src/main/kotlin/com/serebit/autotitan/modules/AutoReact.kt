@@ -7,6 +7,7 @@ import com.serebit.autotitan.api.meta.Locale
 import com.serebit.autotitan.data.DataManager
 import com.serebit.autotitan.data.Emote
 import com.serebit.autotitan.data.GuildResourceMap
+import com.serebit.extensions.jda.MESSAGE_EMBED_MAX_FIELDS
 import com.serebit.extensions.jda.addReaction
 import com.serebit.extensions.jda.chunkedBy
 import com.serebit.extensions.jda.sendEmbed
@@ -81,7 +82,9 @@ class AutoReact : Module(isOptional = true) {
                         word.limitLengthTo(MessageEmbed.TITLE_MAX_LENGTH) to
                             emotes.joinToString("") { it.emote.toString(evt.jda) }
                     }
-                    .chunkedBy(MessageEmbed.EMBED_MAX_LENGTH_BOT) { it.first.length + it.second.length }
+                    .chunkedBy(MessageEmbed.EMBED_MAX_LENGTH_BOT, MESSAGE_EMBED_MAX_FIELDS) {
+                        it.first.length + it.second.length
+                    }
                     .forEach { embeds ->
                         privateChannel.sendEmbed {
                             embeds.forEach { addField(it.first, it.second, false) }
