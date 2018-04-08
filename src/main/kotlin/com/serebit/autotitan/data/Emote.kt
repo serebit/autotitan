@@ -1,5 +1,7 @@
 package com.serebit.autotitan.data
 
+import com.serebit.extensions.isUnicodeEmote
+import com.serebit.extensions.jda.getEmoteByMention
 import net.dv8tion.jda.core.JDA
 import net.dv8tion.jda.core.entities.MessageChannel
 
@@ -9,12 +11,12 @@ class Emote {
     val isDiscordEmote get() = emoteIdValue != null
     val isUnicodeEmote get() = unicodeValue != null
 
-    constructor(unicode: String) {
+    private constructor(unicode: String) {
         unicodeValue = unicode
         emoteIdValue = null
     }
 
-    constructor(emoteId: EmoteId) {
+    private constructor(emoteId: EmoteId) {
         unicodeValue = null
         emoteIdValue = emoteId
     }
@@ -22,6 +24,10 @@ class Emote {
     fun canInteract(channel: MessageChannel) = if (isDiscordEmote) {
         channel.jda.getEmoteById(emoteIdValue!!).canInteract(channel.jda.selfUser, channel, true)
     } else true
+
+    fun toString(jda: JDA): String {
+        return if (isDiscordEmote) jda.getEmoteById(emoteIdValue!!).asMention else unicodeValue!!
+    }
 
     override fun equals(other: Any?): Boolean = if (other is Emote) {
         other.unicodeValue == unicodeValue && other.emoteIdValue == emoteIdValue
@@ -32,7 +38,11 @@ class Emote {
         return 37 * (unicodeValue?.hashCode() ?: emoteIdValue?.hashCode()!!)
     }
 
-    fun toString(jda: JDA): String {
-        return if (isDiscordEmote) jda.getEmoteById(emoteIdValue!!).asMention else unicodeValue!!
+    companion object {
+        fun from(string: String, jda: JDA? = null): Emote? = if (string.isUnicodeEmote) {
+            Emote(string)
+        } else {
+            jda?.getEmoteByMention(string)?.let { Emote(it.idLong) }
+        }
     }
 }

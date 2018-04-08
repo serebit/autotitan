@@ -5,7 +5,11 @@ import com.serebit.autotitan.api.annotations.Command
 import com.serebit.autotitan.api.meta.Locale
 import com.serebit.autotitan.data.DataManager
 import com.serebit.autotitan.data.GuildResourceMap
+import com.serebit.extensions.jda.chunkedBy
 import com.serebit.extensions.jda.mentionsUsers
+import com.serebit.extensions.jda.sendEmbed
+import com.serebit.extensions.limitLengthTo
+import net.dv8tion.jda.core.entities.MessageEmbed
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import java.util.*
 
@@ -82,16 +86,25 @@ class Quotes : Module(isOptional = true) {
     @Command(description = "Gets the list of quotes that this server has saved.", locale = Locale.GUILD)
     fun quoteList(evt: MessageReceivedEvent) {
         val quotes = quoteMap[evt.guild]
-
         if (quotes.isNotEmpty()) {
-            val file = createTempFile(prefix = "quotes", suffix = ".txt").also {
-                it.writeText(quotes.entries.joinToString("\n\n") { (key, value) ->
-                    "$key: $value"
-                })
-            }
-            evt.channel.sendFile(file).queue {
-                file.delete()
-            }
+            evt.channel.sendMessage("Sending a quote list in PMs.").complete()
+            evt.author.openPrivateChannel().queue({ privateChannel ->
+                quotes
+                    .map { (index, quote) ->
+                        index.limitLengthTo(MessageEmbed.TITLE_MAX_LENGTH) to
+                            quote.limitLengthTo(MessageEmbed.VALUE_MAX_LENGTH)
+                    }
+                    .chunkedBy(MessageEmbed.EMBED_MAX_LENGTH_BOT) { it.first.length + it.second.length }
+                    .forEach { embeds ->
+                        privateChannel.sendEmbed {
+                            embeds.forEach { addField(it.first, it.second, false) }
+                        }.queue()
+                    }
+            }, {
+                evt.channel.sendMessage(
+                    "Failed to send the quote list. Make sure that you haven't blocked me!"
+                ).complete()
+            })
         } else evt.channel.sendMessage("This server has no quotes saved.").complete()
     }
 }

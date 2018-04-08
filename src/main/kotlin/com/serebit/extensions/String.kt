@@ -21,6 +21,11 @@ fun String.toCharOrNull() = if (length == 1) this[0] else null
 val String.isUnicodeEmote: Boolean
     get() = validUnicodeCodePoints.any { it.contentEquals(codePoints().toArray()) }
 
-fun String.limitLengthTo(max: Int) = if (length > max) {
-    substring(0 until MessageEmbed.VALUE_MAX_LENGTH) + '\u2026'
-} else this
+fun String.limitLengthTo(max: Int): String {
+    val trimmedString = replace("(\\s){2,}".toRegex(), "$1$1")
+    return if (trimmedString.length > max) {
+        trimmedString
+            .replace("(\\s){2,}".toRegex(), "$1$1")
+            .substring(0 until MessageEmbed.VALUE_MAX_LENGTH - 1) + '\u2026'
+    } else trimmedString
+}

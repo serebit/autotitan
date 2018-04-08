@@ -4,13 +4,9 @@ import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.meta.Locale
 import com.serebit.autotitan.config
 import com.serebit.autotitan.data.Emote
-import com.serebit.extensions.isUnicodeEmote
-import com.serebit.extensions.jda.asEmoji
-import com.serebit.extensions.jda.getEmoteByMention
 import com.serebit.extensions.jda.getMemberByMention
 import com.serebit.extensions.jda.getTextChannelByMention
 import com.serebit.extensions.jda.getUserByMention
-import com.serebit.extensions.jda.hasPermissions
 import com.serebit.extensions.jda.isNotBot
 import com.serebit.extensions.jda.notInBlacklist
 import com.serebit.extensions.toBooleanOrNull
@@ -49,10 +45,10 @@ internal class Command(
     operator fun invoke(instance: Module, evt: MessageReceivedEvent, parameters: List<Any>): Any? =
         function.call(instance, evt, *parameters.toTypedArray())
 
-    internal fun looselyMatches(rawMessageContent: String): Boolean =
+    fun looselyMatches(rawMessageContent: String): Boolean =
         rawMessageContent.split(" ")[0] == config.prefix + name
 
-    internal fun parseTokensOrNull(evt: MessageReceivedEvent): List<Any>? {
+    fun parseTokensOrNull(evt: MessageReceivedEvent): List<Any>? {
         if (evt.isInvalidCommandInvocation) return null
         val tokens = tokenizeMessage(evt.message.contentRaw)
         return when {
@@ -62,6 +58,16 @@ internal class Command(
                 if (parsedTokens.any { it == null }) null else parsedTokens.filterNotNull()
             }
         }
+    }
+
+    fun isInvokeableByAuthor(evt: MessageReceivedEvent): Boolean {
+        val correctLocale = when (locale) {
+            Locale.ALL -> true
+            Locale.GUILD -> evt.guild != null
+            Locale.PRIVATE_CHANNEL -> evt.guild == null
+        }
+
+        return authorHasAccess(evt) && correctLocale
     }
 
     private fun tokenizeMessage(message: String): List<String> {
@@ -97,13 +103,11 @@ internal class Command(
         User::class -> evt.jda.getUserByMention(string)
         Member::class -> evt.guild.getMemberByMention(string)
         Channel::class -> evt.guild.getTextChannelByMention(string)
-        Emote::class -> evt.jda.getEmoteByMention(string)?.asEmoji ?: if (string.isUnicodeEmote) {
-            Emote(string)
-        } else null
+        Emote::class -> Emote.from(string, evt.jda)
         else -> null
     }
 
-    fun authorHasAccess(evt: MessageReceivedEvent) = when (access) {
+    private fun authorHasAccess(evt: MessageReceivedEvent) = when (access) {
         Access.ALL -> true
         Access.GUILD_OWNER -> evt.member == evt.member?.guild?.owner
         Access.BOT_OWNER -> evt.author == evt.jda.asBot().applicationInfo.complete().owner
@@ -112,22 +116,15 @@ internal class Command(
         Access.RANK_BELOW -> evt.guild != null && evt.member.roles[0] < evt.guild.selfMember.roles[0]
     }
 
-    fun isInvokeableByAuthor(evt: MessageReceivedEvent): Boolean {
-        val correctLocale = when (locale) {
-            Locale.ALL -> true
-            Locale.GUILD -> evt.guild != null
-            Locale.PRIVATE_CHANNEL -> evt.guild == null
-        }
-
-        return authorHasAccess(evt) && correctLocale
-    }
-
     private val MessageReceivedEvent.isValidCommandInvocation: Boolean
         get() = if (author.isNotBot && author.notInBlacklist && member.hasPermissions(memberPermissions)) {
             isInvokeableByAuthor(this)
         } else false
 
     private val MessageReceivedEvent.isInvalidCommandInvocation: Boolean get() = !isValidCommandInvocation
+
+    private fun Member?.hasPermissions(permissions: Collection<Permission>): Boolean =
+        this?.hasPermission(permissions.toMutableList()) ?: false
 
     companion object {
         internal val validParameterTypes = setOf(

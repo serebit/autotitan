@@ -8,6 +8,7 @@ import com.serebit.autotitan.data.DataManager
 import com.serebit.autotitan.data.Emote
 import com.serebit.autotitan.data.GuildResourceMap
 import com.serebit.extensions.jda.addReaction
+import com.serebit.extensions.jda.chunkedBy
 import com.serebit.extensions.jda.sendEmbed
 import com.serebit.extensions.limitLengthTo
 import net.dv8tion.jda.core.Permission
@@ -71,19 +72,23 @@ class AutoReact : Module(isOptional = true) {
 
     @Command(description = "Sends a list of autoreacts for the server to the command invoker.", locale = Locale.GUILD)
     fun reactList(evt: MessageReceivedEvent) {
+        val reacts = reactMap[evt.guild]
         evt.channel.sendMessage("Sending a reaction list in PMs.").queue()
-        val privateChannel = evt.author.openPrivateChannel().complete()
-        reactMap[evt.guild].map { (word, emotes) ->
-            MessageEmbed.Field(
-                word.limitLengthTo(MessageEmbed.TITLE_MAX_LENGTH),
-                emotes.joinToString("") { it.emote.toString(evt.jda) },
-                false
-            )
-        }.chunked(maxFieldsPerReactListEmbed).forEach { embeds ->
-            privateChannel.sendEmbed {
-                embeds.forEach { addField(it) }
-            }.queue()
-        }
+        if (reacts.isNotEmpty()) {
+            evt.author.openPrivateChannel().queue({ privateChannel ->
+                reacts
+                    .map { (word, emotes) ->
+                        word.limitLengthTo(MessageEmbed.TITLE_MAX_LENGTH) to
+                            emotes.joinToString("") { it.emote.toString(evt.jda) }
+                    }
+                    .chunkedBy(MessageEmbed.EMBED_MAX_LENGTH_BOT) { it.first.length + it.second.length }
+                    .forEach { embeds ->
+                        privateChannel.sendEmbed {
+                            embeds.forEach { addField(it.first, it.second, false) }
+                        }.queue()
+                    }
+            }, { evt.channel.sendMessage(it.message).complete() })
+        } else evt.channel.sendMessage("This server has no autoreacts saved.").complete()
     }
 
     @Listener
