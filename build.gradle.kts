@@ -34,6 +34,7 @@ dependencies {
     compile(group = "org.slf4j", name = "slf4j-simple", version = "1.8.0-beta2")
     compile(group = "com.github.oshi", name = "oshi-core", version = "3.4.4")
     compile(group = "net.jeremybrooks", name = "knicker", version = "2.4.1")
+    compile(group = "com.vdurmont", name = "emoji-java", version = "4.0.0")
     testCompile(group = "io.kotlintest", name = "kotlintest", version = "2.0.7")
 }
 

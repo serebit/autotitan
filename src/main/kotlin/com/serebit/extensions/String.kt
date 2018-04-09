@@ -2,24 +2,14 @@
 
 package com.serebit.extensions
 
-import khttp.get
+import com.vdurmont.emoji.EmojiParser
 import net.dv8tion.jda.core.entities.MessageEmbed
-
-private const val EMOJIONE_CODEPOINT_RADIX = 16
-private val validUnicodeCodePoints = get("https://raw.githubusercontent.com/emojione/emojione/master/emoji.json")
-    .jsonObject
-    .keySet()
-    .map {
-        it.split("-").map { it.toInt(EMOJIONE_CODEPOINT_RADIX) }.toIntArray()
-    }
-    .toSet()
 
 fun String.toBooleanOrNull() = if (this == "true" || this == "false") toBoolean() else null
 
 fun String.toCharOrNull() = if (length == 1) this[0] else null
 
-val String.isUnicodeEmote: Boolean
-    get() = validUnicodeCodePoints.any { it.contentEquals(codePoints().toArray()) }
+val String.isUnicodeEmoji: Boolean get() = EmojiParser.extractEmojis(this).size == 1
 
 fun String.limitLengthTo(max: Int): String {
     val trimmedString = replace("(\\s){2,}".toRegex(), "$1$1")

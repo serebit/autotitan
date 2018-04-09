@@ -1,6 +1,6 @@
 package com.serebit.autotitan.data
 
-import com.serebit.extensions.isUnicodeEmote
+import com.serebit.extensions.isUnicodeEmoji
 import com.serebit.extensions.jda.getEmoteByMention
 import net.dv8tion.jda.core.JDA
 import net.dv8tion.jda.core.entities.MessageChannel
@@ -39,7 +39,7 @@ class Emote {
     }
 
     companion object {
-        fun from(string: String, jda: JDA? = null): Emote? = if (string.isUnicodeEmote) {
+        fun from(string: String, jda: JDA? = null): Emote? = if (string.isUnicodeEmoji) {
             Emote(string)
         } else {
             jda?.getEmoteByMention(string)?.let { Emote(it.idLong) }
