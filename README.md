@@ -13,9 +13,9 @@ AutoTitan requires **Java 8** or newer to run, and **JDK 8** to compile. AutoTit
 versions of the JDK, as some libraries it depends on behave unpredictably.
 
 ## Compiling
-```bash
-wget "https://github.com/serebit/autotitan/master.tar.gz"
-tar xvzf autotitan-master.tar.gz
+```
+wget "https://github.com/serebit/autotitan/archive/master.tar.gz"
+tar xvzf master.tar.gz
 cd autotitan-master
 ./gradlew shadowJar
 ```
