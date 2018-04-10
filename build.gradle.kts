@@ -25,7 +25,7 @@ dependencies {
     compile(kotlin("reflect"))
     compile(group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version = "0.22.5")
     compile(group = "com.serebit", name = "loggerkt", version = "0.2.0")
-    compile(group = "net.dv8tion", name = "JDA", version = "3.6.0_354")
+    compile(group = "net.dv8tion", name = "JDA", version = "3.6.0_355")
     compile(group = "commons-validator", name = "commons-validator", version = "1.6")
     compile(group = "com.sedmelluq", name = "lavaplayer", version = "1.2.62")
     compile(group = "com.github.salomonbrys.kotson", name = "kotson", version = "2.5.0")

@@ -46,7 +46,7 @@ internal class Command(
         function.call(instance, evt, *parameters.toTypedArray())
 
     fun looselyMatches(rawMessageContent: String): Boolean =
-        rawMessageContent.split(" ")[0] == config.prefix + name
+        rawMessageContent.split(" ").firstOrNull() == config.prefix + name
 
     fun parseTokensOrNull(evt: MessageReceivedEvent): List<Any>? {
         if (evt.isInvalidCommandInvocation) return null
