@@ -18,22 +18,19 @@ import net.dv8tion.jda.core.entities.MessageEmbed
 import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import kotlin.reflect.KClass
-import kotlin.reflect.KFunction
-import kotlin.reflect.full.valueParameters
-import kotlin.reflect.jvm.jvmErasure
 import com.serebit.autotitan.api.annotations.Command as CommandAnnotation
 
 internal class Command(
-    private val function: KFunction<Unit>,
     val name: String,
     description: String,
     private val access: Access,
     private val locale: Locale,
     private val splitLastParameter: Boolean = true,
     private val isHidden: Boolean,
-    private val memberPermissions: List<Permission> = emptyList()
+    private val memberPermissions: List<Permission> = emptyList(),
+    private val parameterTypes: List<KClass<*>> = emptyList(),
+    private val function: (MessageReceivedEvent, Array<Any>) -> Unit
 ) {
-    private val parameterTypes: List<KClass<out Any>> = function.valueParameters.map { it.type.jvmErasure }.drop(1)
     val isNotHidden get() = !isHidden
     val summary = "`$name ${parameterTypes.joinToString(" ") { "<${it.simpleName}>" }}`"
     val helpField = MessageEmbed.Field(summary, buildString {
@@ -42,8 +39,8 @@ internal class Command(
         append("Locale: ${locale.description}\n")
     }, false)
 
-    operator fun invoke(instance: Module, evt: MessageReceivedEvent, parameters: List<Any>): Any? =
-        function.call(instance, evt, *parameters.toTypedArray())
+    operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>) =
+        function.invoke(evt, parameters.toTypedArray())
 
     fun looselyMatches(rawMessageContent: String): Boolean =
         rawMessageContent.split(" ").firstOrNull() == config.prefix + name

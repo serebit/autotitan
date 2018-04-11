@@ -4,7 +4,7 @@ package com.serebit.autotitan.api.meta
  * Represents the different access levels that commands may have.
  * Some access levels are guild-only.
  */
-internal enum class Access(val description: String) {
+enum class Access(val description: String) {
     ALL("Anyone"),
     GUILD_OWNER("Guild owner only"),
     BOT_OWNER("Bot owner only"),
