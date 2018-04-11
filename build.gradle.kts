@@ -23,6 +23,8 @@ repositories {
 dependencies {
     compile(kotlin("stdlib-jdk8"))
     compile(kotlin("reflect"))
+    compile(kotlin("script-runtime"))
+    compile(kotlin("script-util"))
     compile(group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version = "0.22.5")
     compile(group = "com.serebit", name = "loggerkt", version = "0.2.0")
     compile(group = "net.dv8tion", name = "JDA", version = "3.6.0_355")
