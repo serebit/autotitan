@@ -122,22 +122,4 @@ internal class Command(
 
     private fun Member?.hasPermissions(permissions: Collection<Permission>): Boolean =
         this?.hasPermission(permissions.toMutableList()) ?: false
-
-    companion object {
-        internal val validParameterTypes = setOf(
-            Boolean::class,
-            Byte::class,
-            Short::class,
-            Int::class,
-            Long::class,
-            Float::class,
-            Double::class,
-            User::class,
-            Member::class,
-            Channel::class,
-            Emote::class,
-            Char::class,
-            String::class
-        )
-    }
 }

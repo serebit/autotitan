@@ -11,11 +11,6 @@ import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.Event
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import kotlin.reflect.KClass
-import kotlin.reflect.KFunction
-import kotlin.reflect.full.findAnnotation
-import kotlin.reflect.full.isSubclassOf
-import kotlin.reflect.full.valueParameters
-import kotlin.reflect.jvm.jvmErasure
 import com.serebit.autotitan.api.annotations.Command as CommandAnnotation
 import com.serebit.autotitan.api.annotations.Listener as ListenerAnnotation
 
@@ -174,8 +169,13 @@ abstract class Module(name: String = "", val isOptional: Boolean = false) {
         task(evt, args[0] as P0, args[1] as P1, args[2] as P2, args[3] as P3, args[4] as P4, args[5] as P5)
     }
 
-    protected inline fun <reified T : Event> listener(crossinline task: (T) -> Unit) {
+    protected fun addListener(eventType: KClass<out Event>, function: (Event) -> Unit) =
+        listeners.add(
+            Listener(eventType, function)
+        )
 
+    protected inline fun <reified T : Event> listener(crossinline task: (T) -> Unit) = addListener(T::class) {
+        task(it as T)
     }
 
     fun getInvokeableCommandList(evt: MessageReceivedEvent): MessageEmbed.Field? {
@@ -202,25 +202,6 @@ abstract class Module(name: String = "", val isOptional: Boolean = false) {
     }
 
     internal fun findCommandsByName(name: String): List<Command>? = commands.filter { it.name == name }
-
-    private val KFunction<Unit>.isValidListener: Boolean
-        get() {
-            return if (valueParameters.size != 1 || findAnnotation<ListenerAnnotation>() == null) false
-            else valueParameters[0].type.jvmErasure.isSubclassOf(Event::class)
-        }
-
-    private val KFunction<Unit>.isValidCommand: Boolean
-        get() {
-            if (returnType.jvmErasure != Unit::class) return false
-            if (valueParameters.isEmpty()) return false
-            if (findAnnotation<CommandAnnotation>() == null) return false
-            if (valueParameters[0].type.jvmErasure != MessageReceivedEvent::class) return false
-            return valueParameters
-                .drop(1)
-                .all {
-                    it.type.jvmErasure in Command.validParameterTypes
-                }
-        }
 
     companion object {
         private val validParameterTypes = setOf(
