@@ -42,56 +42,57 @@ internal object EventListener : ListenerAdapter() {
     }
 
     class Help : Module() {
-        @CommandAnnotation(description = "Sends an embed with a list of commands that can be used by the invoker.")
-        fun commands(evt: MessageReceivedEvent) {
-            evt.channel.sendEmbed {
-                loadedModules.sortedBy { it.name }
-                    .mapNotNull { it.getInvokeableCommandList(evt) }
-                    .forEach { addField(it) }
-            }.complete()
-        }
+        init {
+            command("commands", "Sends an embed with a list of commands that can be used by the invoker.") { evt ->
+                evt.channel.sendEmbed {
+                    loadedModules.sortedBy { it.name }
+                        .mapNotNull { it.getInvokeableCommandList(evt) }
+                        .forEach { addField(it) }
+                }.complete()
+            }
 
-        @CommandAnnotation(description = "Sends an embed with all commands listed.")
-        fun allCommands(evt: MessageReceivedEvent) {
-            evt.channel.sendEmbed {
-                loadedModules.sortedBy { it.name }.forEach { module ->
-                    addField(module.commandListField)
-                }
-            }.complete()
-        }
+            command("allCommands", description = "Sends an embed with all commands listed.") {
+                it.channel.sendEmbed {
+                    loadedModules.sortedBy { it.name }.forEach { module ->
+                        addField(module.commandListField)
+                    }
+                }.complete()
+            }
 
-        @CommandAnnotation(description = "Sends an embed with general information on how to use the bot.")
-        fun help(evt: MessageReceivedEvent) {
-            evt.channel.sendEmbed {
-                addField(
-                    "Help",
-                    """
+            command("help", description = "Sends an embed with general information on how to use the bot.") {
+                it.channel.sendEmbed {
+                    addField(
+                        "Help",
+                        """
                         My prefix is `${config.prefix}`.
                         For a list of commands, enter `${config.prefix}commands`.
                         For information on a certain command, enter `${config.prefix}help <command name>`.
                         For a list containing every command, enter `${config.prefix}allcommands`.
                     """.trimIndent(),
-                    false
-                )
-            }.complete()
-        }
-
-        @CommandAnnotation(description = "Sends an embed with information about the requested command.")
-        fun help(evt: MessageReceivedEvent, commandName: String) {
-            val matchingCommands = loadedModules
-                .mapNotNull { it.findCommandsByName(commandName) }
-                .flatten()
-                .filter { it.isNotHidden && it.isInvokeableByAuthor(evt) }
-            if (matchingCommands.isNotEmpty()) {
-                evt.channel.sendEmbed {
-                    matchingCommands.forEachIndexed { index, command ->
-                        if (index > 0) addBlankField(false)
-                        addField(command.helpField)
-                    }
-                    setTimestamp(null)
+                        false
+                    )
                 }.complete()
-            } else {
-                evt.channel.sendMessage("Could not find any commands matching `$commandName`.").complete()
+            }
+
+            command(
+                "help",
+                "Sends an embed with information about the requested command."
+            ) { evt, commandName: String ->
+                val matchingCommands = loadedModules
+                    .mapNotNull { it.findCommandsByName(commandName) }
+                    .flatten()
+                    .filter { it.isNotHidden && it.isInvokeableByAuthor(evt) }
+                if (matchingCommands.isNotEmpty()) {
+                    evt.channel.sendEmbed {
+                        matchingCommands.forEachIndexed { index, command ->
+                            if (index > 0) addBlankField(false)
+                            addField(command.helpField)
+                        }
+                        setTimestamp(null)
+                    }.complete()
+                } else {
+                    evt.channel.sendMessage("Could not find any commands matching `$commandName`.").complete()
+                }
             }
         }
     }

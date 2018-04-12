@@ -1,7 +1,6 @@
 package com.serebit.autotitan.modules
 
 import com.serebit.autotitan.api.Module
-import com.serebit.autotitan.api.annotations.Command
 import com.serebit.autotitan.api.meta.Locale
 import com.serebit.extensions.jda.sendEmbed
 import net.dv8tion.jda.core.OnlineStatus
@@ -18,47 +17,56 @@ import kotlin.math.absoluteValue
 class General : Module() {
     private val dateFormat = DateTimeFormatter.ofPattern("d MMM, yyyy")
 
-    @Command(description = "Pings the bot.")
-    fun ping(evt: MessageReceivedEvent) {
-        evt.channel.sendMessage("Pong. The last ping was ${evt.jda.ping}ms.").complete()
+    init {
+        command("ping", description = "Pings the bot.") {
+            it.channel.sendMessage("Pong. The last ping was ${it.jda.ping}ms.").complete()
+        }
+
+        command("serverInfo", description = "Gets information about the server.", locale = Locale.GUILD) { evt ->
+            val onlineMemberCount = evt.guild.members.count { it.onlineStatus != OnlineStatus.OFFLINE }
+            val hoistedRoles = evt.guild.roles
+                .filter { it.name != "@everyone" && it.isHoisted }
+                .joinToString(", ") { it.name }
+
+            evt.channel.sendEmbed {
+                setTitle(evt.guild.name, null)
+                setDescription("Created on ${evt.guild.creationTime.format(dateFormat)}")
+                setThumbnail(evt.guild.iconUrl)
+                addField("Owner", evt.guild.owner.asMention, true)
+                addField("Region", evt.guild.region.toString(), true)
+                addField("Online Members", onlineMemberCount.toString(), true)
+                addField("Total Members", evt.guild.members.size.toString(), true)
+                addField("Bots", evt.guild.members.count { it.user.isBot }.toString(), true)
+                addField("Text Channels", evt.guild.textChannels.size.toString(), true)
+                addField("Voice Channels", evt.guild.voiceChannels.size.toString(), true)
+                addField("Hoisted Roles", hoistedRoles, true)
+                if (evt.guild.selfMember.hasPermission(Permission.MANAGE_SERVER)) {
+                    val permanentInvites = evt.guild.invites.complete().filter { !it.isTemporary }
+                    if (permanentInvites.isNotEmpty()) addField(
+                        "Invite Link",
+                        permanentInvites.first().url,
+                        false
+                    )
+                }
+                setFooter("Server ID: ${evt.guild.id}", null)
+            }.complete()
+        }
+
+        command(
+            "selfInfo",
+            description = "Gets information about the invoker.",
+            locale = Locale.GUILD
+        ) { sendMemberInfo(it, it.member) }
+
+        command(
+            "memberInfo",
+            description = "Gets information about a specific server member.",
+            locale = Locale.GUILD,
+            task = ::sendMemberInfo
+        )
     }
 
-    @Command(description = "Gets information about the server.", locale = Locale.GUILD)
-    fun serverInfo(evt: MessageReceivedEvent) {
-        val onlineMemberCount = evt.guild.members.count { it.onlineStatus != OnlineStatus.OFFLINE }
-        val hoistedRoles = evt.guild.roles
-            .filter { it.name != "@everyone" && it.isHoisted }
-            .joinToString(", ") { it.name }
-
-        evt.channel.sendEmbed {
-            setTitle(evt.guild.name, null)
-            setDescription("Created on ${evt.guild.creationTime.format(dateFormat)}")
-            setThumbnail(evt.guild.iconUrl)
-            addField("Owner", evt.guild.owner.asMention, true)
-            addField("Region", evt.guild.region.toString(), true)
-            addField("Online Members", onlineMemberCount.toString(), true)
-            addField("Total Members", evt.guild.members.size.toString(), true)
-            addField("Bots", evt.guild.members.count { it.user.isBot }.toString(), true)
-            addField("Text Channels", evt.guild.textChannels.size.toString(), true)
-            addField("Voice Channels", evt.guild.voiceChannels.size.toString(), true)
-            addField("Hoisted Roles", hoistedRoles, true)
-            if (evt.guild.selfMember.hasPermission(Permission.MANAGE_SERVER)) {
-                val permanentInvites = evt.guild.invites.complete().filter { !it.isTemporary }
-                if (permanentInvites.isNotEmpty()) addField(
-                    "Invite Link",
-                    permanentInvites.first().url,
-                    false
-                )
-            }
-            setFooter("Server ID: ${evt.guild.id}", null)
-        }.complete()
-    }
-
-    @Command(description = "Gets information about the invoker.", locale = Locale.GUILD)
-    fun selfInfo(evt: MessageReceivedEvent) = memberInfo(evt, evt.member)
-
-    @Command(description = "Gets information about a specific server member.", locale = Locale.GUILD)
-    fun memberInfo(evt: MessageReceivedEvent, member: Member) {
+    private fun sendMemberInfo(evt: MessageReceivedEvent, member: Member) {
         val title = buildString {
             append("${member.user.name}#${member.user.discriminator}")
             member.nickname?.let {

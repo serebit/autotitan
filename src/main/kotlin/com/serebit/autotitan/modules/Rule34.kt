@@ -3,50 +3,50 @@ package com.serebit.autotitan.modules
 import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.Gson
 import com.serebit.autotitan.api.Module
-import com.serebit.autotitan.api.annotations.Command
 import com.serebit.extensions.jda.sendEmbed
 import com.serebit.extensions.randomEntry
 import khttp.get
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import org.apache.http.HttpStatus
 
 @Suppress("UNUSED")
 class Rule34 : Module(isOptional = true) {
     private val gson = Gson()
 
-    @Command(
-        description = "Searches Rule34.xxx for the given tags and returns a random image.",
-        splitLastParameter = false
-    )
-    fun rule34(evt: MessageReceivedEvent, tagString: String) {
-        if (evt.guild != null && evt.textChannel.isNSFW || evt.privateChannel != null) {
-            randomPostOrNull(ImageProvider.RULE34XXX, formatTags(tagString))?.let { post ->
-                evt.channel.sendEmbed {
-                    setImage(post.rule34xxxImageUri)
-                    setFooter("via Rule34.xxx", "https://rule34.xxx/favicon.png")
-                }.complete()
-            } ?: evt.channel.sendMessage(
-                "No images found on Rule34.xxx for `${formatTags(tagString, " ")}`."
-            ).complete()
-        } else evt.channel.sendMessage("This command can only be used in channels marked as NSFW.").complete()
-    }
+    init {
+        command(
+            "rule34",
+            description = "Searches Rule34.xxx for the given tags and returns a random image.",
+            delimitLastString = false
+        ) { evt, tagString: String ->
+            if (evt.guild != null && evt.textChannel.isNSFW || evt.privateChannel != null) {
+                randomPostOrNull(ImageProvider.RULE34XXX, formatTags(tagString))?.let { post ->
+                    evt.channel.sendEmbed {
+                        setImage(post.rule34xxxImageUri)
+                        setFooter("via Rule34.xxx", "https://rule34.xxx/favicon.png")
+                    }.complete()
+                } ?: evt.channel.sendMessage(
+                    "No images found on Rule34.xxx for `${formatTags(tagString, " ")}`."
+                ).complete()
+            } else evt.channel.sendMessage("This command can only be used in channels marked as NSFW.").complete()
+        }
 
-    @Command(
-        description = "Searches Gelbooru.com for the given tags and returns a random image.",
-        splitLastParameter = false
-    )
-    fun gelbooru(evt: MessageReceivedEvent, tagString: String) {
-        if (evt.guild != null && evt.textChannel.isNSFW || evt.privateChannel != null) {
-            val formattedTags = formatTags(tagString)
-            randomPostOrNull(ImageProvider.GELBOORU, formattedTags)?.let { post ->
-                evt.channel.sendEmbed {
-                    setImage(post.gelbooruImageUri)
-                    setFooter("via Gelbooru", "https://gelbooru.com/favicon.png")
-                }.complete()
-            } ?: evt.channel.sendMessage(
-                "No images found on Gelbooru for `${formatTags(tagString, " ")}`."
-            ).complete()
-        } else evt.channel.sendMessage("This command can only be used in channels marked as NSFW.").complete()
+        command(
+            "gelbooru",
+            description = "Searches Gelbooru.com for the given tags and returns a random image.",
+            delimitLastString = false
+        ) { evt, tagString: String ->
+            if (evt.guild != null && evt.textChannel.isNSFW || evt.privateChannel != null) {
+                val formattedTags = formatTags(tagString)
+                randomPostOrNull(ImageProvider.GELBOORU, formattedTags)?.let { post ->
+                    evt.channel.sendEmbed {
+                        setImage(post.gelbooruImageUri)
+                        setFooter("via Gelbooru", "https://gelbooru.com/favicon.png")
+                    }.complete()
+                } ?: evt.channel.sendMessage(
+                    "No images found on Gelbooru for `${formatTags(tagString, " ")}`."
+                ).complete()
+            } else evt.channel.sendMessage("This command can only be used in channels marked as NSFW.").complete()
+        }
     }
 
     private fun randomPostOrNull(provider: ImageProvider, tags: String): ApiPost? {

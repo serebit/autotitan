@@ -12,7 +12,7 @@ plugins {
 }
 
 group = "com.serebit"
-version = "0.5.0"
+version = "1.0.0"
 
 description = "AutoTitan is a modular, self-hosted Discord bot built in Kotlin/JVM using the Java Discord API."
 
@@ -29,12 +29,12 @@ dependencies {
     compile(group = "com.serebit", name = "loggerkt", version = "0.2.0")
     compile(group = "net.dv8tion", name = "JDA", version = "3.6.0_355")
     compile(group = "commons-validator", name = "commons-validator", version = "1.6")
-    compile(group = "com.sedmelluq", name = "lavaplayer", version = "1.2.62")
+    compile(group = "com.sedmelluq", name = "lavaplayer", version = "1.2.63")
     compile(group = "com.github.salomonbrys.kotson", name = "kotson", version = "2.5.0")
     compile(group = "khttp", name = "khttp", version = "0.1.0")
     compile(group = "com.google.guava", name = "guava", version = "24.1-jre")
     compile(group = "org.slf4j", name = "slf4j-simple", version = "1.8.0-beta2")
-    compile(group = "com.github.oshi", name = "oshi-core", version = "3.4.4")
+    compile(group = "com.github.oshi", name = "oshi-core", version = "3.4.5")
     compile(group = "net.jeremybrooks", name = "knicker", version = "2.4.1")
     compile(group = "com.vdurmont", name = "emoji-java", version = "4.0.0")
     testCompile(group = "io.kotlintest", name = "kotlintest", version = "2.0.7")
