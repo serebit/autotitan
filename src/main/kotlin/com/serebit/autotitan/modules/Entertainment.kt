@@ -12,8 +12,8 @@ class Entertainment : Module(isOptional = true) {
 
     init {
         command(
-            name = "8",
-            description = "Answers questions in 8-ball fashion.",
+            "8",
+            "Answers questions in 8-ball fashion.",
             delimitLastString = false
         ) { evt, _: String ->
             val responseIndex = random.next(eightBallResponses.size - 1)
@@ -22,7 +22,7 @@ class Entertainment : Module(isOptional = true) {
 
         command(
             "rate",
-            description = "Rates the given thing on a scale of 0 to $defaultRatingDenominator.",
+            "Rates the given thing on a scale of 0 to $defaultRatingDenominator.",
             delimitLastString = false
         ) { evt, thingToRate: String ->
             deterministicRandom.setSeed(

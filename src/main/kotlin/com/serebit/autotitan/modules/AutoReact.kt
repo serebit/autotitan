@@ -2,6 +2,7 @@ package com.serebit.autotitan.modules
 
 import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.api.meta.Access
+import com.serebit.autotitan.api.meta.Restrictions
 import com.serebit.autotitan.data.DataManager
 import com.serebit.autotitan.data.Emote
 import com.serebit.autotitan.data.GuildResourceMap
@@ -25,9 +26,8 @@ class AutoReact : Module(isOptional = true) {
     init {
         command(
             "addReact",
-            description = "Adds an autoreact with the given emote for the given word.",
-            access = Access.GUILD_ALL,
-            permissions = listOf(Permission.MESSAGE_ADD_REACTION)
+            "Adds an autoreact with the given emote for the given word.",
+            Restrictions(Access.GUILD_ALL, listOf(Permission.MESSAGE_ADD_REACTION))
         ) { evt, word: String, emote: Emote ->
             val value = reactMap[evt.guild].getOrPut(word, ::mutableListOf)
             when {
@@ -43,9 +43,8 @@ class AutoReact : Module(isOptional = true) {
 
         command(
             "removeReact",
-            description = "Removes the autoreact for the given word from the list.",
-            access = Access.GUILD_ALL,
-            permissions = listOf(Permission.MESSAGE_ADD_REACTION)
+            "Removes the autoreact for the given word from the list.",
+            Restrictions(Access.GUILD_ALL, listOf(Permission.MESSAGE_ADD_REACTION))
         ) { evt, word: String, emote: Emote ->
             val guildReacts = reactMap[evt.guild]
             when {
@@ -61,9 +60,8 @@ class AutoReact : Module(isOptional = true) {
 
         command(
             "clearReacts",
-            description = "Deletes all autoreacts from the server.",
-            access = Access.GUILD_ALL,
-            permissions = listOf(Permission.MESSAGE_ADD_REACTION, Permission.MANAGE_SERVER),
+            "Deletes all autoreacts from the server.",
+            Restrictions(Access.GUILD_ALL, listOf(Permission.MESSAGE_ADD_REACTION, Permission.MANAGE_SERVER)),
             delimitLastString = false
         ) {
             reactMap[it.guild].clear()
@@ -72,9 +70,9 @@ class AutoReact : Module(isOptional = true) {
 
         command(
             "reactList",
-            description = "Sends a list of autoreacts for the server to the command invoker.",
-            access = Access.GUILD_ALL
-        ) { evt: MessageReceivedEvent ->
+            "Sends a list of autoreacts for the server to the command invoker.",
+            Restrictions(Access.GUILD_ALL)
+        ) { evt ->
             val reacts = reactMap[evt.guild]
             evt.channel.sendMessage("Sending a reaction list in PMs.").queue()
             if (reacts.isNotEmpty()) {

@@ -15,7 +15,7 @@ class Rule34 : Module(isOptional = true) {
     init {
         command(
             "rule34",
-            description = "Searches Rule34.xxx for the given tags and returns a random image.",
+            "Searches Rule34.xxx for the given tags and returns a random image.",
             delimitLastString = false
         ) { evt, tagString: String ->
             if (evt.guild != null && evt.textChannel.isNSFW || evt.privateChannel != null) {
@@ -32,7 +32,7 @@ class Rule34 : Module(isOptional = true) {
 
         command(
             "gelbooru",
-            description = "Searches Gelbooru.com for the given tags and returns a random image.",
+            "Searches Gelbooru.com for the given tags and returns a random image.",
             delimitLastString = false
         ) { evt, tagString: String ->
             if (evt.guild != null && evt.textChannel.isNSFW || evt.privateChannel != null) {

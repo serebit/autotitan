@@ -2,6 +2,7 @@ package com.serebit.autotitan.modules
 
 import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.api.meta.Access
+import com.serebit.autotitan.api.meta.Restrictions
 import com.serebit.autotitan.data.DataManager
 import net.dv8tion.jda.core.JDA
 import net.dv8tion.jda.core.Permission
@@ -19,9 +20,8 @@ class Moderation : Module() {
     init {
         command(
             "kick",
-            description = "Kicks a member.",
-            access = Access.GUILD_ALL,
-            permissions = listOf(Permission.KICK_MEMBERS)
+            "Kicks a member.",
+            Restrictions(Access.GUILD_ALL, listOf(Permission.KICK_MEMBERS))
         ) { evt, member: Member ->
             evt.guild.controller.kick(member).complete()
             evt.channel.sendMessage("Kicked ${member.effectiveName}.").complete()
@@ -29,9 +29,8 @@ class Moderation : Module() {
 
         command(
             "ban",
-            description = "Bans a user.",
-            access = Access.GUILD_ALL,
-            permissions = listOf(Permission.BAN_MEMBERS)
+            "Bans a user.",
+            Restrictions(Access.GUILD_ALL, listOf(Permission.BAN_MEMBERS))
         ) { evt, user: User ->
             evt.guild.controller.ban(user, 0).complete()
             evt.channel.sendMessage("Banned ${user.name}.")
@@ -39,9 +38,8 @@ class Moderation : Module() {
 
         command(
             "unBan",
-            description = "Un-bans a banned user from the current server.",
-            access = Access.GUILD_ALL,
-            permissions = listOf(Permission.BAN_MEMBERS)
+            "Un-bans a banned user from the current server.",
+            Restrictions(Access.GUILD_ALL, listOf(Permission.BAN_MEMBERS))
         ) { evt, user: User ->
             evt.guild.controller.unban(user).complete()
             evt.channel.sendMessage("Unbanned ${user.name}.").complete()
@@ -50,8 +48,7 @@ class Moderation : Module() {
         command(
             "cleanUp",
             "Deletes the last N messages in the channel. N must be in the range of 1..$maximumCleanupCount.",
-            access = Access.GUILD_ALL,
-            permissions = listOf(Permission.MESSAGE_MANAGE)
+            Restrictions(Access.GUILD_ALL, listOf(Permission.MESSAGE_MANAGE))
         ) { evt, number: Int ->
             if (number !in 1..maximumCleanupCount) {
                 evt.channel.sendMessage("The number has to be in the range of `1..$maximumCleanupCount`.").complete()
@@ -63,8 +60,9 @@ class Moderation : Module() {
 
         command(
             "setMemberRole",
-            permissions = listOf(Permission.MANAGE_ROLES),
-            delimitLastString = false
+            "Sets the role given to new members of the server upon joining.",
+            Restrictions(permissions = listOf(Permission.MANAGE_ROLES)),
+            false
         ) { evt, roleName: String ->
             val role = evt.guild.roles.findLast { it.name.toLowerCase() == roleName.toLowerCase() } ?: run {
                 evt.channel.sendMessage("`$roleName` does not exist.").complete()
@@ -75,7 +73,11 @@ class Moderation : Module() {
             dataManager.write("rolemap.json", memberRoleMap)
         }
 
-        command("getMemberRole", permissions = listOf(Permission.MANAGE_ROLES)) { evt ->
+        command(
+            "getMemberRole",
+            "Gets the role given to new members of the server upon joining.",
+            Restrictions(permissions = listOf(Permission.MANAGE_ROLES))
+        ) { evt ->
             val role = memberRoleMap[evt.jda, evt.guild] ?: run {
                 evt.channel.sendMessage("The member role is not set up for this server.").complete()
                 return@command
@@ -83,7 +85,11 @@ class Moderation : Module() {
             evt.channel.sendMessage("The member role for this server is set to `${role.name}`.").complete()
         }
 
-        command("smartPrune", permissions = listOf(Permission.MANAGE_SERVER)) { evt ->
+        command(
+            "smartPrune",
+            "Prunes members from the server, including those with the default member role.",
+            Restrictions(permissions = listOf(Permission.MANAGE_SERVER))
+        ) { evt ->
             memberRoleMap[evt.jda, evt.guild]?.let { memberRole ->
                 val membersWithBaseRole = evt.guild.getMembersWithRoles(memberRole)
                 membersWithBaseRole.forEach { evt.guild.controller.removeSingleRoleFromMember(it, memberRole).queue() }

@@ -4,6 +4,7 @@ import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.Gson
 import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.api.meta.Access
+import com.serebit.autotitan.api.meta.Restrictions
 import com.serebit.autotitan.data.DataManager
 import com.serebit.extensions.jda.sendEmbed
 import com.serebit.extensions.limitLengthTo
@@ -32,8 +33,8 @@ class Dictionary : Module(isOptional = true) {
 
         command(
             "initDictionary",
-            description = "Initializes the module with a Wordnik API key from https://dev.wordnik.com.",
-            access = Access.BOT_OWNER
+            "Initializes the module with a Wordnik API key from https://dev.wordnik.com.",
+            Restrictions(Access.BOT_OWNER)
         ) { evt: MessageReceivedEvent, apiKey: String ->
             System.setProperty("WORDNIK_API_KEY", apiKey)
             if (AccountApi.apiTokenStatus().isValid) {
@@ -50,7 +51,7 @@ class Dictionary : Module(isOptional = true) {
 
         command(
             "define",
-            description = "Gets the first definition of the given query.",
+            "Gets the first definition of the given query.",
             delimitLastString = false
         ) { evt, wordOrPhrase: String ->
             if (AccountApi.apiTokenStatus().isInvalid) {

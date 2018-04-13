@@ -2,6 +2,7 @@ package com.serebit.autotitan.modules
 
 import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.api.meta.Access
+import com.serebit.autotitan.api.meta.Restrictions
 import com.serebit.extensions.jda.sendEmbed
 import net.dv8tion.jda.core.OnlineStatus
 import net.dv8tion.jda.core.Permission
@@ -18,11 +19,15 @@ class General : Module() {
     private val dateFormat = DateTimeFormatter.ofPattern("d MMM, yyyy")
 
     init {
-        command("ping", description = "Pings the bot.") {
+        command("ping", "Pings the bot.") {
             it.channel.sendMessage("Pong. The last ping was ${it.jda.ping}ms.").complete()
         }
 
-        command("serverInfo", description = "Gets information about the server.", access = Access.GUILD_ALL) { evt ->
+        command(
+            "serverInfo",
+            "Gets information about the server.",
+            Restrictions(Access.GUILD_ALL)
+        ) { evt ->
             val onlineMemberCount = evt.guild.members.count { it.onlineStatus != OnlineStatus.OFFLINE }
             val hoistedRoles = evt.guild.roles
                 .filter { it.name != "@everyone" && it.isHoisted }
@@ -54,14 +59,14 @@ class General : Module() {
 
         command(
             "selfInfo",
-            description = "Gets information about the invoker.",
-            access = Access.GUILD_ALL
+            "Gets information about the invoker.",
+            Restrictions(Access.GUILD_ALL)
         ) { sendMemberInfo(it, it.member) }
 
         command(
             "memberInfo",
-            description = "Gets information about a specific server member.",
-            access = Access.GUILD_ALL,
+            "Gets information about a specific server member.",
+            Restrictions(Access.GUILD_ALL),
             task = ::sendMemberInfo
         )
     }

@@ -2,6 +2,7 @@ package com.serebit.autotitan.modules
 
 import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.api.meta.Access
+import com.serebit.autotitan.api.meta.Restrictions
 import com.serebit.autotitan.audio.AudioHandler
 import com.serebit.autotitan.audio.VoiceStatus
 import com.serebit.extensions.jda.closeAudioConnection
@@ -22,8 +23,8 @@ class Audio : Module() {
     init {
         command(
             "joinVoice",
-            description = "Joins the voice channel that the invoker is in.",
-            access = Access.GUILD_ALL
+            "Joins the voice channel that the invoker is in.",
+            Restrictions(Access.GUILD_ALL)
         ) { evt: MessageReceivedEvent ->
             val voiceStatus = evt.voiceStatus
             when (voiceStatus) {
@@ -44,8 +45,8 @@ class Audio : Module() {
 
         command(
             "leaveVoice",
-            description = "Leaves the voice channel that the bot is in.",
-            access = Access.GUILD_ALL
+            "Leaves the voice channel that the bot is in.",
+            Restrictions(Access.GUILD_ALL)
         ) { evt: MessageReceivedEvent ->
             val channelName = evt.guild.audioManager.connectedChannel.name
             leaveVoiceChannel(evt.guild) {
@@ -55,8 +56,8 @@ class Audio : Module() {
 
         command(
             "play",
-            description = "Plays a track from a URI, or searches YouTube for the given search terms.",
-            access = Access.GUILD_ALL,
+            "Plays a track from a URI, or searches YouTube for the given search terms.",
+            Restrictions(Access.GUILD_ALL),
             delimitLastString = false
         ) { evt: MessageReceivedEvent, query: String ->
             if (handleVoiceStatus(evt, true)) {
@@ -76,8 +77,8 @@ class Audio : Module() {
 
         command(
             "playPlaylist",
-            description = "Plays a playlist from the given URI.",
-            access = Access.GUILD_ALL
+            "Plays a playlist from the given URI.",
+            Restrictions(Access.GUILD_ALL)
         ) { evt: MessageReceivedEvent, uri: String ->
             if (handleVoiceStatus(evt, true)) {
                 val trimmedUri = uri.removeSurrounding("<", ">")
@@ -96,8 +97,8 @@ class Audio : Module() {
 
         command(
             "skip",
-            description = "Skips the currently playing song.",
-            access = Access.GUILD_ALL
+            "Skips the currently playing song.",
+            Restrictions(Access.GUILD_ALL)
         ) { evt: MessageReceivedEvent ->
             if (handleVoiceStatus(evt)) {
                 if (evt.guild.trackManager.isPlaying) {
@@ -111,8 +112,8 @@ class Audio : Module() {
 
         command(
             "stop",
-            description = "Stops playing music and clears the queue. Can only be used by members above the bot's role.",
-            access = Access.GUILD_RANK_ABOVE
+            "Stops playing music and clears the queue. Can only be used by members above the bot's role.",
+            Restrictions(Access.GUILD_RANK_ABOVE)
         ) { evt: MessageReceivedEvent ->
             evt.guild.trackManager.stop()
             evt.channel.sendMessage("Cleared the music queue.").complete()
@@ -120,8 +121,8 @@ class Audio : Module() {
 
         command(
             "pause",
-            description = "Pauses the currently playing song.",
-            access = Access.GUILD_ALL
+            "Pauses the currently playing song.",
+            Restrictions(Access.GUILD_ALL)
         ) { evt: MessageReceivedEvent ->
             if (handleVoiceStatus(evt) && evt.guild.trackManager.isNotPaused) {
                 evt.guild.trackManager.pause()
@@ -131,8 +132,8 @@ class Audio : Module() {
 
         command(
             "unPause",
-            description = "Resumes the currently playing song.",
-            access = Access.GUILD_ALL
+            "Resumes the currently playing song.",
+            Restrictions(Access.GUILD_ALL)
         ) { evt: MessageReceivedEvent ->
             if (handleVoiceStatus(evt) && evt.guild.trackManager.isPaused) {
                 evt.guild.trackManager.resume()
@@ -142,16 +143,16 @@ class Audio : Module() {
 
         command(
             "queue",
-            description = "Sends an embed with the list of songs in the queue.",
-            access = Access.GUILD_ALL
+            "Sends an embed with the list of songs in the queue.",
+            Restrictions(Access.GUILD_ALL)
         ) { evt: MessageReceivedEvent ->
             evt.guild.trackManager.sendQueueEmbed(evt.textChannel)
         }
 
         command(
             "setVolume",
-            description = "Sets the volume.",
-            access = Access.GUILD_ALL
+            "Sets the volume.",
+            Restrictions(Access.GUILD_ALL)
         ) { evt: MessageReceivedEvent, volume: Int ->
             if (handleVoiceStatus(evt)) {
                 evt.guild.trackManager.volume = volume
