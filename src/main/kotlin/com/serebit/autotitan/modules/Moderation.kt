@@ -1,7 +1,7 @@
 package com.serebit.autotitan.modules
 
 import com.serebit.autotitan.api.Module
-import com.serebit.autotitan.api.meta.Locale
+import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.data.DataManager
 import net.dv8tion.jda.core.JDA
 import net.dv8tion.jda.core.Permission
@@ -20,7 +20,7 @@ class Moderation : Module() {
         command(
             "kick",
             description = "Kicks a member.",
-            locale = Locale.GUILD,
+            access = Access.GUILD_ALL,
             permissions = listOf(Permission.KICK_MEMBERS)
         ) { evt, member: Member ->
             evt.guild.controller.kick(member).complete()
@@ -30,7 +30,7 @@ class Moderation : Module() {
         command(
             "ban",
             description = "Bans a user.",
-            locale = Locale.GUILD,
+            access = Access.GUILD_ALL,
             permissions = listOf(Permission.BAN_MEMBERS)
         ) { evt, user: User ->
             evt.guild.controller.ban(user, 0).complete()
@@ -40,7 +40,7 @@ class Moderation : Module() {
         command(
             "unBan",
             description = "Un-bans a banned user from the current server.",
-            locale = Locale.GUILD,
+            access = Access.GUILD_ALL,
             permissions = listOf(Permission.BAN_MEMBERS)
         ) { evt, user: User ->
             evt.guild.controller.unban(user).complete()
@@ -49,8 +49,8 @@ class Moderation : Module() {
 
         command(
             "cleanUp",
-            description = "Deletes the last N messages in the channel. N must be in the range of 1..$maximumCleanupCount.",
-            locale = Locale.GUILD,
+            "Deletes the last N messages in the channel. N must be in the range of 1..$maximumCleanupCount.",
+            access = Access.GUILD_ALL,
             permissions = listOf(Permission.MESSAGE_MANAGE)
         ) { evt, number: Int ->
             if (number !in 1..maximumCleanupCount) {

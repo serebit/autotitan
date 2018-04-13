@@ -7,10 +7,8 @@ import com.serebit.extensions.jda.sendEmbed
 import com.serebit.loggerkt.Logger
 import kotlinx.coroutines.experimental.launch
 import net.dv8tion.jda.core.events.Event
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import net.dv8tion.jda.core.hooks.ListenerAdapter
 import kotlin.reflect.full.createInstance
-import com.serebit.autotitan.api.annotations.Command as CommandAnnotation
 
 internal object EventListener : ListenerAdapter() {
     var allModules: List<Module> = classpathModules
@@ -29,15 +27,7 @@ internal object EventListener : ListenerAdapter() {
 
     override fun onGenericEvent(evt: Event) {
         launch {
-            loadedModules.forEach { it.runListeners(evt) }
-        }
-    }
-
-    override fun onMessageReceived(evt: MessageReceivedEvent) {
-        launch {
-            if (evt.message.contentRaw.startsWith(config.prefix)) {
-                loadedModules.forEach { it.runCommands(evt) }
-            }
+            loadedModules.forEach { it.invoke(evt) }
         }
     }
 
@@ -81,7 +71,7 @@ internal object EventListener : ListenerAdapter() {
                 val matchingCommands = loadedModules
                     .mapNotNull { it.findCommandsByName(commandName) }
                     .flatten()
-                    .filter { it.isNotHidden && it.isInvokeableByAuthor(evt) }
+                    .filter { !it.restrictions.hidden && it.isInvokeableByAuthor(evt) }
                 if (matchingCommands.isNotEmpty()) {
                     evt.channel.sendEmbed {
                         matchingCommands.forEachIndexed { index, command ->

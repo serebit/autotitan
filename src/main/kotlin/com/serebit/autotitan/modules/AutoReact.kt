@@ -1,7 +1,7 @@
 package com.serebit.autotitan.modules
 
 import com.serebit.autotitan.api.Module
-import com.serebit.autotitan.api.meta.Locale
+import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.data.DataManager
 import com.serebit.autotitan.data.Emote
 import com.serebit.autotitan.data.GuildResourceMap
@@ -26,7 +26,7 @@ class AutoReact : Module(isOptional = true) {
         command(
             "addReact",
             description = "Adds an autoreact with the given emote for the given word.",
-            locale = Locale.GUILD,
+            access = Access.GUILD_ALL,
             permissions = listOf(Permission.MESSAGE_ADD_REACTION)
         ) { evt, word: String, emote: Emote ->
             val value = reactMap[evt.guild].getOrPut(word, ::mutableListOf)
@@ -44,7 +44,7 @@ class AutoReact : Module(isOptional = true) {
         command(
             "removeReact",
             description = "Removes the autoreact for the given word from the list.",
-            locale = Locale.GUILD,
+            access = Access.GUILD_ALL,
             permissions = listOf(Permission.MESSAGE_ADD_REACTION)
         ) { evt, word: String, emote: Emote ->
             val guildReacts = reactMap[evt.guild]
@@ -62,7 +62,7 @@ class AutoReact : Module(isOptional = true) {
         command(
             "clearReacts",
             description = "Deletes all autoreacts from the server.",
-            locale = Locale.GUILD,
+            access = Access.GUILD_ALL,
             permissions = listOf(Permission.MESSAGE_ADD_REACTION, Permission.MANAGE_SERVER),
             delimitLastString = false
         ) {
@@ -73,7 +73,7 @@ class AutoReact : Module(isOptional = true) {
         command(
             "reactList",
             description = "Sends a list of autoreacts for the server to the command invoker.",
-            locale = Locale.GUILD
+            access = Access.GUILD_ALL
         ) { evt: MessageReceivedEvent ->
             val reacts = reactMap[evt.guild]
             evt.channel.sendMessage("Sending a reaction list in PMs.").queue()

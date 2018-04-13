@@ -1,7 +1,7 @@
 package com.serebit.autotitan.modules
 
 import com.serebit.autotitan.api.Module
-import com.serebit.autotitan.api.meta.Locale
+import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.data.DataManager
 import com.serebit.autotitan.data.GuildResourceMap
 import com.serebit.extensions.jda.MESSAGE_EMBED_MAX_FIELDS
@@ -22,7 +22,7 @@ class Quotes : Module(isOptional = true) {
         command(
             "addQuote",
             description = "Adds the given quote.",
-            locale = Locale.GUILD,
+            access = Access.GUILD_ALL,
             delimitLastString = false
         ) { evt, quote: String ->
             if (evt.message.mentionsUsers) {
@@ -40,7 +40,7 @@ class Quotes : Module(isOptional = true) {
         command(
             "deleteQuote",
             description = "Deletes the quote at the given index.",
-            locale = Locale.GUILD
+            access = Access.GUILD_ALL
         ) { evt, index: Int ->
             val quotes = quoteMap[evt.guild]
 
@@ -57,7 +57,7 @@ class Quotes : Module(isOptional = true) {
             }
         }
 
-        command("quote", description = "Gets a random quote, if any exist.", locale = Locale.GUILD) { evt ->
+        command("quote", description = "Gets a random quote, if any exist.", access = Access.GUILD_ALL) { evt ->
             val quotes = quoteMap[evt.guild]
 
             if (quotes.isNotEmpty()) {
@@ -68,7 +68,11 @@ class Quotes : Module(isOptional = true) {
             } else evt.channel.sendMessage("This server has no quotes saved.").complete()
         }
 
-        command("quote", description = "Gets the quote at the given index.", locale = Locale.GUILD) { evt, index: Int ->
+        command(
+            "quote",
+            description = "Gets the quote at the given index.",
+            access = Access.GUILD_ALL
+        ) { evt, index: Int ->
             val quotes = quoteMap[evt.guild]
 
             if (quotes.isNotEmpty()) {
@@ -81,7 +85,7 @@ class Quotes : Module(isOptional = true) {
         command(
             "quoteList",
             description = "Gets the list of quotes that this server has saved.",
-            locale = Locale.GUILD
+            access = Access.GUILD_ALL
         ) { evt ->
             val quotes = quoteMap[evt.guild]
             if (quotes.isNotEmpty()) {

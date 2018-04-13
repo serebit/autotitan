@@ -1,7 +1,7 @@
 package com.serebit.autotitan.modules
 
 import com.serebit.autotitan.api.Module
-import com.serebit.autotitan.api.meta.Locale
+import com.serebit.autotitan.api.meta.Access
 import com.serebit.extensions.jda.sendEmbed
 import net.dv8tion.jda.core.OnlineStatus
 import net.dv8tion.jda.core.Permission
@@ -22,7 +22,7 @@ class General : Module() {
             it.channel.sendMessage("Pong. The last ping was ${it.jda.ping}ms.").complete()
         }
 
-        command("serverInfo", description = "Gets information about the server.", locale = Locale.GUILD) { evt ->
+        command("serverInfo", description = "Gets information about the server.", access = Access.GUILD_ALL) { evt ->
             val onlineMemberCount = evt.guild.members.count { it.onlineStatus != OnlineStatus.OFFLINE }
             val hoistedRoles = evt.guild.roles
                 .filter { it.name != "@everyone" && it.isHoisted }
@@ -55,13 +55,13 @@ class General : Module() {
         command(
             "selfInfo",
             description = "Gets information about the invoker.",
-            locale = Locale.GUILD
+            access = Access.GUILD_ALL
         ) { sendMemberInfo(it, it.member) }
 
         command(
             "memberInfo",
             description = "Gets information about a specific server member.",
-            locale = Locale.GUILD,
+            access = Access.GUILD_ALL,
             task = ::sendMemberInfo
         )
     }

@@ -2,7 +2,6 @@ package com.serebit.autotitan.modules
 
 import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.api.meta.Access
-import com.serebit.autotitan.api.meta.Locale
 import com.serebit.autotitan.config
 import com.serebit.autotitan.listeners.EventListener
 import com.serebit.extensions.asMetricUnit
@@ -188,8 +187,7 @@ class Owner : Module() {
         command(
             "leaveServer",
             description = "Leaves the server in which the command is invoked.",
-            access = Access.BOT_OWNER,
-            locale = Locale.GUILD
+            access = Access.GUILD_BOT_OWNER
         ) { evt ->
             evt.channel.sendMessage("Leaving the server.").complete()
             evt.guild.leave().complete()

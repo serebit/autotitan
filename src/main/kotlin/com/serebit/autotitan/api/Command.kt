@@ -1,7 +1,7 @@
 package com.serebit.autotitan.api
 
 import com.serebit.autotitan.api.meta.Access
-import com.serebit.autotitan.api.meta.Locale
+import com.serebit.autotitan.api.meta.Restrictions
 import com.serebit.autotitan.config
 import com.serebit.autotitan.data.Emote
 import com.serebit.extensions.jda.getMemberByMention
@@ -18,29 +18,23 @@ import net.dv8tion.jda.core.entities.MessageEmbed
 import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import kotlin.reflect.KClass
-import com.serebit.autotitan.api.annotations.Command as CommandAnnotation
 
 internal class Command(
     val name: String,
     description: String,
-    private val access: Access,
-    private val locale: Locale,
-    private val splitLastParameter: Boolean = true,
-    private val isHidden: Boolean,
-    private val memberPermissions: List<Permission> = emptyList(),
-    private val parameterTypes: List<KClass<*>> = emptyList(),
-    private val function: (MessageReceivedEvent, Array<Any>) -> Unit
+    val restrictions: Restrictions,
+    private val splitLastParameter: Boolean,
+    private val parameterTypes: List<KClass<*>>,
+    private val function: (MessageReceivedEvent, List<Any>) -> Unit
 ) {
-    val isNotHidden get() = !isHidden
     val summary = "`$name ${parameterTypes.joinToString(" ") { "<${it.simpleName}>" }}`"
     val helpField = MessageEmbed.Field(summary, buildString {
         append("$description\n")
-        append("Access: ${access.description}\n")
-        append("Locale: ${locale.description}\n")
+        append("Access: ${restrictions.access.description}\n")
     }, false)
 
     operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>) =
-        function.invoke(evt, parameters.toTypedArray())
+        function.invoke(evt, parameters)
 
     fun looselyMatches(rawMessageContent: String): Boolean =
         rawMessageContent.split(" ").firstOrNull() == config.prefix + name
@@ -57,14 +51,17 @@ internal class Command(
         }
     }
 
-    fun isInvokeableByAuthor(evt: MessageReceivedEvent): Boolean {
-        val correctLocale = when (locale) {
-            Locale.ALL -> true
-            Locale.GUILD -> evt.guild != null
-            Locale.PRIVATE_CHANNEL -> evt.guild == null
-        }
-
-        return authorHasAccess(evt) && correctLocale
+    fun isInvokeableByAuthor(evt: MessageReceivedEvent) = when (restrictions.access) {
+        Access.ALL -> true
+        Access.BOT_OWNER -> evt.author == evt.jda.asBot().applicationInfo.complete().owner
+        Access.PRIVATE_ALL -> evt.guild == null
+        Access.PRIVATE_BOT_OWNER -> evt.guild == null && evt.author == evt.jda.asBot().applicationInfo.complete().owner
+        Access.GUILD_ALL -> evt.guild != null
+        Access.GUILD_OWNER -> evt.member == evt.member?.guild?.owner
+        Access.GUILD_BOT_OWNER -> evt.guild != null && evt.author == evt.jda.asBot().applicationInfo.complete().owner
+        Access.GUILD_RANK_ABOVE -> evt.guild != null && evt.member.roles[0] > evt.guild.selfMember.roles[0]
+        Access.GUILD_RANK_SAME -> evt.guild != null && evt.member.roles[0] == evt.guild.selfMember.roles[0]
+        Access.GUILD_RANK_BELOW -> evt.guild != null && evt.member.roles[0] < evt.guild.selfMember.roles[0]
     }
 
     private fun tokenizeMessage(message: String): List<String> {
@@ -104,17 +101,8 @@ internal class Command(
         else -> null
     }
 
-    private fun authorHasAccess(evt: MessageReceivedEvent) = when (access) {
-        Access.ALL -> true
-        Access.GUILD_OWNER -> evt.member == evt.member?.guild?.owner
-        Access.BOT_OWNER -> evt.author == evt.jda.asBot().applicationInfo.complete().owner
-        Access.RANK_ABOVE -> evt.guild != null && evt.member.roles[0] > evt.guild.selfMember.roles[0]
-        Access.RANK_SAME -> evt.guild != null && evt.member.roles[0] == evt.guild.selfMember.roles[0]
-        Access.RANK_BELOW -> evt.guild != null && evt.member.roles[0] < evt.guild.selfMember.roles[0]
-    }
-
     private val MessageReceivedEvent.isValidCommandInvocation: Boolean
-        get() = if (author.isNotBot && author.notInBlacklist && member.hasPermissions(memberPermissions)) {
+        get() = if (author.isNotBot && author.notInBlacklist && member.hasPermissions(restrictions.permissions)) {
             isInvokeableByAuthor(this)
         } else false
 
