@@ -5,47 +5,62 @@ import com.google.gson.Gson
 import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.meta.Restrictions
+import com.serebit.autotitan.apiwrappers.WordnikApi
 import com.serebit.autotitan.data.DataManager
 import com.serebit.extensions.jda.sendEmbed
 import com.serebit.extensions.limitLengthTo
 import khttp.get
 import net.dv8tion.jda.core.entities.MessageEmbed
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
-import net.jeremybrooks.knicker.AccountApi
-import net.jeremybrooks.knicker.WordApi
-import net.jeremybrooks.knicker.dto.Definition
-import net.jeremybrooks.knicker.dto.Related
-import net.jeremybrooks.knicker.dto.TokenStatus
 import java.net.URLEncoder
 
 @Suppress("UNUSED", "TooManyFunctions")
 class Dictionary : Module(isOptional = true) {
     private val gson = Gson()
     private val dataManager = DataManager(this::class)
-    private val config = dataManager.read("config.json") ?: WordnikConfig()
-    private val definitionCache: MutableMap<String, List<Definition>> = mutableMapOf()
-    private val relatedWordsCache: MutableMap<String, List<Related>> = mutableMapOf()
+    private val config = dataManager.read("config.json") ?: DictionaryConfig()
 
     init {
         config.apiKey?.let {
-            System.setProperty("WORDNIK_API_KEY", config.apiKey)
+            WordnikApi.init(it)
         }
 
         command(
             "initDictionary",
             "Initializes the module with a Wordnik API key from https://dev.wordnik.com.",
             Restrictions(Access.BotOwner)
-        ) { evt: MessageReceivedEvent, apiKey: String ->
-            System.setProperty("WORDNIK_API_KEY", apiKey)
-            if (AccountApi.apiTokenStatus().isValid) {
+        ) { evt, apiKey: String ->
+            if (WordnikApi.init(apiKey)) {
                 config.apiKey = apiKey
                 dataManager.write("config.json", config)
                 if (evt.textChannel != null) evt.message.delete().complete()
                 evt.channel.sendMessage("Dictionary module has been initialized.").complete()
             } else {
-                System.clearProperty("WORDNIK_API_KEY")
                 if (evt.textChannel != null) evt.message.delete().complete()
                 evt.channel.sendMessage("The given API key is invalid. Try again, with a valid API key.").complete()
+            }
+        }
+
+        command(
+            "define",
+            description = "Gets the Nth definition of the given query.",
+            delimitLastString = false
+        ) { evt, index: Int, wordOrPhrase: String ->
+            when {
+                !WordnikApi.isInitialized -> evt.channel.sendMessage(
+                    "The Dictionary module is not initialized. Initialize it with the command `initdictionary`."
+                ).complete()
+                WordnikApi.hasDefinitions(wordOrPhrase) -> WordnikApi.getDefinition(wordOrPhrase, index - 1)?.let {
+                    evt.channel.sendEmbed {
+                        setTitle(
+                            "$wordOrPhrase (Definition $index of ${WordnikApi.numDefinitions(wordOrPhrase)})",
+                            "https://www.wordnik.com/words/$wordOrPhrase"
+                        )
+                        setDescription("*${it.partOfSpeech}*\n${it.text}")
+                        setFooter("Powered by Wordnik", "http://www.wordnik.com/img/wordnik_gearheart.png")
+                    }.complete()
+                } ?: evt.channel.sendMessage("No definition was found at that index.").complete()
+                else -> evt.channel.sendMessage("No definitions were found.").queue()
             }
         }
 
@@ -54,103 +69,46 @@ class Dictionary : Module(isOptional = true) {
             "Gets the first definition of the given query.",
             delimitLastString = false
         ) { evt, wordOrPhrase: String ->
-            if (AccountApi.apiTokenStatus().isInvalid) {
-                evt.channel.sendMessage(
-                    "The Dictionary module is not initialized. Initialize it with the command `initdictionary`."
-                ).complete()
-                return@command
-            }
-
-            val definitions = definitionCache.getOrPut(wordOrPhrase) {
-                WordApi.definitions(wordOrPhrase)
-            }
-
-            if (definitions.isEmpty()) {
-                evt.channel.sendMessage(
-                    "No definitions were found for `$wordOrPhrase`. Make sure it's spelled correctly."
-                ).complete()
-                return@command
-            }
-
-            evt.channel.sendEmbed {
-                definitions[0].let {
-                    setTitle(
-                        "${it.word} (Definition 1 of ${definitions.size})",
-                        "https://www.wordnik.com/words/$wordOrPhrase"
-                    )
-                    setDescription("*${it.partOfSpeech}*\n${it.text}")
-                }
-                setFooter("Powered by Wordnik", "http://www.wordnik.com/img/wordnik_gearheart.png")
-            }.complete()
-        }
-
-        command(
-            "define",
-            description = "Gets the Nth definition of the given query.",
-            delimitLastString = false
-        ) { evt, index: Int, wordOrPhrase: String ->
-            if (AccountApi.apiTokenStatus().isInvalid) {
-                evt.channel.sendMessage(
-                    "The Dictionary module is not initialized. Initialize it with the command `initdictionary`."
-                ).complete()
-                return@command
-            }
-
-            val definitions = definitionCache.getOrPut(wordOrPhrase) {
-                WordApi.definitions(wordOrPhrase)
-            }
-
             when {
-                definitions.isEmpty() -> evt.channel.sendMessage(
-                    "No definitions were found for `$wordOrPhrase`. Make sure it's spelled correctly."
+                !WordnikApi.isInitialized -> evt.channel.sendMessage(
+                    "The Dictionary module is not initialized. Initialize it with the command `initdictionary`."
                 ).complete()
-                index - 1 !in definitions.indices -> evt.channel.sendMessage(
-                    "There is no definition for `$wordOrPhrase` with the given index."
-                ).complete()
-                else -> evt.channel.sendEmbed {
-                    definitions[index - 1].let {
+                WordnikApi.hasDefinitions(wordOrPhrase) -> WordnikApi.getDefinition(wordOrPhrase)?.let { definition ->
+                    evt.channel.sendEmbed {
                         setTitle(
-                            "${it.word} (Definition $index of ${definitions.size})",
+                            "$wordOrPhrase (Definition 1 of ${WordnikApi.numDefinitions(wordOrPhrase)})",
                             "https://www.wordnik.com/words/$wordOrPhrase"
                         )
-                        setDescription("*${it.partOfSpeech}*\n${it.text}")
-                    }
-                    setFooter("Powered by Wordnik", "http://www.wordnik.com/img/wordnik_gearheart.png")
-                }.complete()
+                        setDescription("*${definition.partOfSpeech}*\n${definition.text}")
+                        setFooter("Powered by Wordnik", "http://www.wordnik.com/img/wordnik_gearheart.png")
+                    }.complete()
+                }
+                else -> evt.channel.sendMessage("No definitions were found.").queue()
             }
         }
+
 
         command(
             "related",
             description = "Gets synonyms and antonyms for the given query.",
             delimitLastString = false
         ) { evt, wordOrPhrase: String ->
-            if (AccountApi.apiTokenStatus().isInvalid) {
-                evt.channel.sendMessage(
+            when {
+                !WordnikApi.isInitialized -> evt.channel.sendMessage(
                     "The Dictionary module is not initialized. Initialize it with the command `initdictionary`."
                 ).complete()
-                return@command
+                WordnikApi.hasRelatedWords(wordOrPhrase) -> WordnikApi.getRelatedWords(wordOrPhrase)?.let { related ->
+                    evt.channel.sendEmbed {
+                        setTitle("Words related to $wordOrPhrase", "https://www.wordnik.com/words/$wordOrPhrase")
+                        setDescription(related.joinToString("\n") {
+                            // example: "Antonyms: *wet, moisten, soak, water*"
+                            "${it.relationshipType.capitalize()}s: *${it.words.joinToString(", ")}*"
+                        })
+                        setFooter("Powered by Wordnik", "http://www.wordnik.com/img/wordnik_gearheart.png")
+                    }.complete()
+                }
+                else -> evt.channel.sendMessage("No related words were found.").queue()
             }
-
-            val related = relatedWordsCache.getOrPut(wordOrPhrase) {
-                WordApi.related(wordOrPhrase).filter { it.relType in setOf("synonym", "antonym") }
-            }.map { it.relType to it.words }
-
-            if (related.isEmpty()) {
-                evt.channel.sendMessage(
-                    "No words related to `$wordOrPhrase` were found. Make sure it's spelled correctly."
-                ).complete()
-                return@command
-            }
-
-            evt.channel.sendEmbed {
-                setTitle("Words related to $wordOrPhrase", "https://www.wordnik.com/words/$wordOrPhrase")
-                setDescription(related.sortedByDescending { it.first }.joinToString("\n") {
-                    // example: "Antonyms: *wet, moisten, soak, water*"
-                    "${it.first.capitalize()}s: *${it.second.joinToString(", ")}*"
-                })
-                setFooter("Powered by Wordnik", "http://www.wordnik.com/img/wordnik_gearheart.png")
-            }.complete()
         }
 
         command(
@@ -187,13 +145,9 @@ class Dictionary : Module(isOptional = true) {
         } else evt.channel.sendMessage("Couldn't find a definition at that index.").complete()
     }
 
-    private data class WordnikConfig(var apiKey: String? = null)
+    private data class DictionaryConfig(var apiKey: String? = null)
 
-    private data class UrbanDictionaryResult(
-        val list: List<UrbanDictionaryDefinition>
-    )
+    private data class UrbanDictionaryResult(val list: List<UrbanDictionaryDefinition>)
 
     private data class UrbanDictionaryDefinition(val definition: String, val permalink: String, val example: String)
-
-    private val TokenStatus.isInvalid get() = !isValid
 }

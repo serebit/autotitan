@@ -23,15 +23,14 @@ repositories {
 dependencies {
     compile(kotlin("stdlib-jdk8"))
     compile(group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version = "0.22.5")
-    compile(group = "com.serebit", name = "loggerkt", version = "0.2.0")
     compile(group = "net.dv8tion", name = "JDA", version = "3.6.0_355")
     compile(group = "com.sedmelluq", name = "lavaplayer", version = "1.2.63")
+    compile(group = "org.reflections", name = "reflections", version = "0.9.11")
     compile(group = "com.github.salomonbrys.kotson", name = "kotson", version = "2.5.0")
     compile(group = "khttp", name = "khttp", version = "0.1.0")
-    compile(group = "org.reflections", name = "reflections", version = "0.9.11")
+    compile(group = "com.serebit", name = "loggerkt", version = "0.2.0")
     compile(group = "org.slf4j", name = "slf4j-simple", version = "1.8.0-beta2")
     compile(group = "com.github.oshi", name = "oshi-core", version = "3.4.5")
-    compile(group = "net.jeremybrooks", name = "knicker", version = "2.4.1")
     testCompile(group = "io.kotlintest", name = "kotlintest", version = "2.0.7")
 }
 
