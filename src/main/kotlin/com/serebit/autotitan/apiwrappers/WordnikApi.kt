@@ -3,6 +3,7 @@ package com.serebit.autotitan.apiwrappers
 import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.Gson
 import khttp.get
+import java.net.HttpURLConnection
 
 object WordnikApi {
     private val serializer = Gson()
@@ -58,7 +59,7 @@ object WordnikApi {
                 )
             )
 
-            if (response.statusCode == 200) {
+            if (response.statusCode == HttpURLConnection.HTTP_OK) {
                 definitionCache[word] = serializer.fromJson(response.text)
                 true
             } else false
@@ -79,7 +80,7 @@ object WordnikApi {
                 )
             )
 
-            if (response.statusCode == 200) {
+            if (response.statusCode == HttpURLConnection.HTTP_OK) {
                 relatedWordsCache[word] = serializer.fromJson(response.text)
                 true
             } else false

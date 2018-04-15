@@ -12,11 +12,12 @@ data class Restrictions(
     fun isAccessibleFrom(evt: MessageReceivedEvent): Boolean = when (access) {
         Access.All -> true
         Access.BotOwner -> evt.author.isBotOwner
-        is Access.Private -> evt.privateChannel != null && when (access) {
-            Access.Private.All -> true
-            Access.Private.BotOwner -> evt.author.isBotOwner
-        }
-        is Access.Guild -> evt.guild != null && when (access) {
+        is Access.Private -> isAccessibleFromPrivate(evt, access)
+        is Access.Guild -> isAccessibleFromGuild(evt, access)
+    }
+
+    private fun isAccessibleFromGuild(evt: MessageReceivedEvent, access: Access.Guild): Boolean =
+        evt.guild != null && when (access) {
             Access.Guild.All -> true
             Access.Guild.BotOwner -> evt.author.isBotOwner
             Access.Guild.GuildOwner -> evt.member.isOwner
@@ -24,5 +25,10 @@ data class Restrictions(
             Access.Guild.RankSame -> evt.member.roles[0] == evt.guild.selfMember.roles[0]
             Access.Guild.RankBelow -> evt.member.roles[0] < evt.guild.selfMember.roles[0]
         }
-    }
+
+    private fun isAccessibleFromPrivate(evt: MessageReceivedEvent, access: Access.Private): Boolean =
+        evt.privateChannel != null && when (access) {
+            Access.Private.All -> true
+            Access.Private.BotOwner -> evt.author.isBotOwner
+        }
 }
