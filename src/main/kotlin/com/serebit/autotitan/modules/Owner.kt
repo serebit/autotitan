@@ -13,10 +13,15 @@ import com.serebit.loggerkt.Logger
 import net.dv8tion.jda.core.entities.Game
 import net.dv8tion.jda.core.entities.User
 import oshi.SystemInfo
+import java.lang.management.ManagementFactory
 import kotlin.system.exitProcess
+
+
 
 @Suppress("UNUSED", "TooManyFunctions")
 class Owner : Module() {
+    private val info by lazy { SystemInfo() }
+
     init {
         command(
             "shutdown",
@@ -45,7 +50,6 @@ class Owner : Module() {
             "Gets information about the system that the bot is running on.",
             Restrictions(Access.BotOwner)
         ) { evt ->
-            val info = SystemInfo()
             val process = info.operatingSystem.getProcess(info.operatingSystem.processId)
             val processorModel = info.hardware.processor.name.replace("(\\(R\\)|\\(TM\\)|@ .+)".toRegex(), "")
             val processorCores = info.hardware.processor.physicalProcessorCount
@@ -56,7 +60,7 @@ class Owner : Module() {
             val processMemory = process.residentSetSize
             val processMemoryPercentage = processMemory.asPercentageOf(totalMemory)
             val systemUptime = info.hardware.processor.systemUptime
-            val processUptime = process.upTime / millisecondsPerSecond
+            val processUptime = ManagementFactory.getRuntimeMXBean().uptime / millisecondsPerSecond
             evt.channel.sendEmbed {
                 addField(
                     "Processor",

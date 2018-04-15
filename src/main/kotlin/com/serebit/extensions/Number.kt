@@ -21,7 +21,7 @@ fun Number.asMetricUnit(unit: String, base: Int = DEFAULT_METRIC_BASE, decimalPo
 
 fun Number.toBasicTimestamp(): String {
     val asInt = toInt()
-    val hours = asInt / SECONDS_PER_HOUR
+    val hours by lazy { asInt / SECONDS_PER_HOUR }
     val minutes = asInt % SECONDS_PER_HOUR / SECONDS_PER_MINUTE
     val seconds = asInt % SECONDS_PER_MINUTE
     return if (hours == 0) {
@@ -31,9 +31,9 @@ fun Number.toBasicTimestamp(): String {
 
 fun Number.toVerboseTimestamp(): String {
     val asInt = toInt()
-    val days = "${asInt / SECONDS_PER_DAY}d"
-    val hours = "${asInt % SECONDS_PER_DAY / SECONDS_PER_HOUR}h"
-    val minutes = "${asInt % SECONDS_PER_HOUR / SECONDS_PER_MINUTE}m"
+    val days by lazy { "${asInt / SECONDS_PER_DAY}d" }
+    val hours by lazy { "${asInt % SECONDS_PER_DAY / SECONDS_PER_HOUR}h" }
+    val minutes by lazy { "${asInt % SECONDS_PER_HOUR / SECONDS_PER_MINUTE}m" }
     val seconds = "${asInt % SECONDS_PER_MINUTE}s"
     return when {
         asInt < SECONDS_PER_MINUTE -> seconds
