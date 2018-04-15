@@ -14,11 +14,10 @@ import net.dv8tion.jda.core.entities.VoiceChannel
 import net.dv8tion.jda.core.events.guild.voice.GuildVoiceLeaveEvent
 import net.dv8tion.jda.core.events.guild.voice.GuildVoiceMoveEvent
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
-import org.apache.commons.validator.routines.UrlValidator
 
 @Suppress("UNUSED", "TooManyFunctions")
 class Audio : Module() {
-    private val urlValidator = UrlValidator(arrayOf("http", "https"))
+    private val uriRegex = "^https?://[^\\s/\$.?#].[^\\s]*\$".toRegex()
 
     init {
         command(
@@ -63,7 +62,7 @@ class Audio : Module() {
             if (handleVoiceStatus(evt, true)) {
                 val trimmedQuery = query.removeSurrounding("<", ">")
                 val formattedQuery = buildString {
-                    if (!urlValidator.isValid(trimmedQuery)) {
+                    if (!trimmedQuery.matches(uriRegex)) {
                         append("ytsearch: ")
                     }
                     append(trimmedQuery)
@@ -82,7 +81,7 @@ class Audio : Module() {
         ) { evt: MessageReceivedEvent, uri: String ->
             if (handleVoiceStatus(evt, true)) {
                 val trimmedUri = uri.removeSurrounding("<", ">")
-                if (urlValidator.isValid(trimmedUri)) {
+                if (trimmedUri.matches(uriRegex)) {
                     AudioHandler.loadPlaylist(trimmedUri, evt.textChannel) { playlist ->
                         evt.channel.sendMessage(
                             "Adding ${playlist.tracks.size} tracks from ${playlist.name} to queue."

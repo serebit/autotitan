@@ -1,6 +1,5 @@
 package com.serebit.autotitan.listeners
 
-import com.google.common.reflect.ClassPath
 import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.config
 import com.serebit.extensions.jda.sendEmbed
@@ -8,16 +7,16 @@ import com.serebit.loggerkt.Logger
 import kotlinx.coroutines.experimental.launch
 import net.dv8tion.jda.core.events.Event
 import net.dv8tion.jda.core.hooks.ListenerAdapter
+import org.reflections.Reflections
 import kotlin.reflect.full.createInstance
 
 internal object EventListener : ListenerAdapter() {
     var allModules: List<Module> = classpathModules
         private set
     private val classpathModules
-        get() = ClassPath
-            .from(Thread.currentThread().contextClassLoader)
-            .getTopLevelClassesRecursive("com.serebit.autotitan.modules")
-            .mapNotNull { it.load().kotlin.createInstance() as Module } + Help()
+        get() = Reflections("com.serebit.autotitan.modules")
+            .getSubTypesOf(Module::class.java)
+            .mapNotNull { it.kotlin.createInstance() } + Help()
     private val loadedModules get() = allModules.filter { it.isStandard || it.name in config.enabledModules }
 
     fun resetModules() {
