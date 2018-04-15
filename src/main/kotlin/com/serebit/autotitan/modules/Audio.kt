@@ -24,7 +24,7 @@ class Audio : Module() {
         command(
             "joinVoice",
             "Joins the voice channel that the invoker is in.",
-            Restrictions(Access.GUILD_ALL)
+            Restrictions(Access.Guild.All)
         ) { evt: MessageReceivedEvent ->
             val voiceStatus = evt.voiceStatus
             when (voiceStatus) {
@@ -46,7 +46,7 @@ class Audio : Module() {
         command(
             "leaveVoice",
             "Leaves the voice channel that the bot is in.",
-            Restrictions(Access.GUILD_ALL)
+            Restrictions(Access.Guild.All)
         ) { evt: MessageReceivedEvent ->
             val channelName = evt.guild.audioManager.connectedChannel.name
             leaveVoiceChannel(evt.guild) {
@@ -57,7 +57,7 @@ class Audio : Module() {
         command(
             "play",
             "Plays a track from a URI, or searches YouTube for the given search terms.",
-            Restrictions(Access.GUILD_ALL),
+            Restrictions(Access.Guild.All),
             delimitLastString = false
         ) { evt: MessageReceivedEvent, query: String ->
             if (handleVoiceStatus(evt, true)) {
@@ -78,7 +78,7 @@ class Audio : Module() {
         command(
             "playPlaylist",
             "Plays a playlist from the given URI.",
-            Restrictions(Access.GUILD_ALL)
+            Restrictions(Access.Guild.All)
         ) { evt: MessageReceivedEvent, uri: String ->
             if (handleVoiceStatus(evt, true)) {
                 val trimmedUri = uri.removeSurrounding("<", ">")
@@ -98,7 +98,7 @@ class Audio : Module() {
         command(
             "skip",
             "Skips the currently playing song.",
-            Restrictions(Access.GUILD_ALL)
+            Restrictions(Access.Guild.All)
         ) { evt: MessageReceivedEvent ->
             if (handleVoiceStatus(evt)) {
                 if (evt.guild.trackManager.isPlaying) {
@@ -113,7 +113,7 @@ class Audio : Module() {
         command(
             "stop",
             "Stops playing music and clears the queue. Can only be used by members above the bot's role.",
-            Restrictions(Access.GUILD_RANK_ABOVE)
+            Restrictions(Access.Guild.RankAbove)
         ) { evt: MessageReceivedEvent ->
             evt.guild.trackManager.stop()
             evt.channel.sendMessage("Cleared the music queue.").complete()
@@ -122,7 +122,7 @@ class Audio : Module() {
         command(
             "pause",
             "Pauses the currently playing song.",
-            Restrictions(Access.GUILD_ALL)
+            Restrictions(Access.Guild.All)
         ) { evt: MessageReceivedEvent ->
             if (handleVoiceStatus(evt) && evt.guild.trackManager.isNotPaused) {
                 evt.guild.trackManager.pause()
@@ -133,7 +133,7 @@ class Audio : Module() {
         command(
             "unPause",
             "Resumes the currently playing song.",
-            Restrictions(Access.GUILD_ALL)
+            Restrictions(Access.Guild.All)
         ) { evt: MessageReceivedEvent ->
             if (handleVoiceStatus(evt) && evt.guild.trackManager.isPaused) {
                 evt.guild.trackManager.resume()
@@ -144,7 +144,7 @@ class Audio : Module() {
         command(
             "queue",
             "Sends an embed with the list of songs in the queue.",
-            Restrictions(Access.GUILD_ALL)
+            Restrictions(Access.Guild.All)
         ) { evt: MessageReceivedEvent ->
             evt.guild.trackManager.sendQueueEmbed(evt.textChannel)
         }
@@ -152,7 +152,7 @@ class Audio : Module() {
         command(
             "setVolume",
             "Sets the volume.",
-            Restrictions(Access.GUILD_ALL)
+            Restrictions(Access.Guild.All)
         ) { evt: MessageReceivedEvent, volume: Int ->
             if (handleVoiceStatus(evt)) {
                 evt.guild.trackManager.volume = volume

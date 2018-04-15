@@ -149,7 +149,7 @@ abstract class Module(val isOptional: Boolean = false) {
     }
 
     fun getInvokeableCommandList(evt: MessageReceivedEvent): MessageEmbed.Field? {
-        val validCommands = commands.filter { !it.restrictions.hidden && it.isInvokeableByAuthor(evt) }
+        val validCommands = commands.filter { !it.restrictions.hidden && it.restrictions.isAccessibleFrom(evt) }
         return if (validCommands.isNotEmpty()) {
             MessageEmbed.Field(
                 name,

@@ -34,7 +34,7 @@ class Dictionary : Module(isOptional = true) {
         command(
             "initDictionary",
             "Initializes the module with a Wordnik API key from https://dev.wordnik.com.",
-            Restrictions(Access.BOT_OWNER)
+            Restrictions(Access.BotOwner)
         ) { evt: MessageReceivedEvent, apiKey: String ->
             System.setProperty("WORDNIK_API_KEY", apiKey)
             if (AccountApi.apiTokenStatus().isValid) {

@@ -23,7 +23,7 @@ class Quotes : Module(isOptional = true) {
         command(
             "addQuote",
             "Adds the given quote.",
-            Restrictions(Access.GUILD_ALL),
+            Restrictions(Access.Guild.All),
             delimitLastString = false
         ) { evt, quote: String ->
             if (evt.message.mentionsUsers) {
@@ -41,7 +41,7 @@ class Quotes : Module(isOptional = true) {
         command(
             "deleteQuote",
             "Deletes the quote at the given index.",
-            Restrictions(Access.GUILD_ALL)
+            Restrictions(Access.Guild.All)
         ) { evt, index: Int ->
             val quotes = quoteMap[evt.guild]
 
@@ -61,7 +61,7 @@ class Quotes : Module(isOptional = true) {
         command(
             "quote",
             "Gets a random quote, if any exist.",
-            Restrictions(Access.GUILD_ALL)
+            Restrictions(Access.Guild.All)
         ) { evt ->
             val quotes = quoteMap[evt.guild]
 
@@ -76,7 +76,7 @@ class Quotes : Module(isOptional = true) {
         command(
             "quote",
             "Gets the quote at the given index.",
-            Restrictions(Access.GUILD_ALL)
+            Restrictions(Access.Guild.All)
         ) { evt, index: Int ->
             val quotes = quoteMap[evt.guild]
 
@@ -90,7 +90,7 @@ class Quotes : Module(isOptional = true) {
         command(
             "quoteList",
             "Gets the list of quotes that this server has saved.",
-            Restrictions(Access.GUILD_ALL)
+            Restrictions(Access.Guild.All)
         ) { evt ->
             val quotes = quoteMap[evt.guild]
             if (quotes.isNotEmpty()) {

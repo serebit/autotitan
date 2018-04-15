@@ -21,7 +21,7 @@ class Moderation : Module() {
         command(
             "kick",
             "Kicks a member.",
-            Restrictions(Access.GUILD_ALL, listOf(Permission.KICK_MEMBERS))
+            Restrictions(Access.Guild.All, listOf(Permission.KICK_MEMBERS))
         ) { evt, member: Member ->
             evt.guild.controller.kick(member).complete()
             evt.channel.sendMessage("Kicked ${member.effectiveName}.").complete()
@@ -30,7 +30,7 @@ class Moderation : Module() {
         command(
             "ban",
             "Bans a user.",
-            Restrictions(Access.GUILD_ALL, listOf(Permission.BAN_MEMBERS))
+            Restrictions(Access.Guild.All, listOf(Permission.BAN_MEMBERS))
         ) { evt, user: User ->
             evt.guild.controller.ban(user, 0).complete()
             evt.channel.sendMessage("Banned ${user.name}.")
@@ -39,7 +39,7 @@ class Moderation : Module() {
         command(
             "unBan",
             "Un-bans a banned user from the current server.",
-            Restrictions(Access.GUILD_ALL, listOf(Permission.BAN_MEMBERS))
+            Restrictions(Access.Guild.All, listOf(Permission.BAN_MEMBERS))
         ) { evt, user: User ->
             evt.guild.controller.unban(user).complete()
             evt.channel.sendMessage("Unbanned ${user.name}.").complete()
@@ -48,7 +48,7 @@ class Moderation : Module() {
         command(
             "cleanUp",
             "Deletes the last N messages in the channel. N must be in the range of 1..$maximumCleanupCount.",
-            Restrictions(Access.GUILD_ALL, listOf(Permission.MESSAGE_MANAGE))
+            Restrictions(Access.Guild.All, listOf(Permission.MESSAGE_MANAGE))
         ) { evt, number: Int ->
             if (number !in 1..maximumCleanupCount) {
                 evt.channel.sendMessage("The number has to be in the range of `1..$maximumCleanupCount`.").complete()

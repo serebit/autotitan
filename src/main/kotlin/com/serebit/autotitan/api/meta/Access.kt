@@ -1,18 +1,20 @@
 package com.serebit.autotitan.api.meta
 
-/**
- * Represents the different access levels that commands may have.
- * Some access levels are guild-only.
- */
-enum class Access(val description: String) {
-    ALL("Anyone"),
-    BOT_OWNER("Bot owner only"),
-    PRIVATE_ALL("Private messages only"),
-    PRIVATE_BOT_OWNER("Bot owner in private messages only"),
-    GUILD_ALL("Servers only"),
-    GUILD_BOT_OWNER("Bot owner in servers only"),
-    GUILD_OWNER("Server owner only"),
-    GUILD_RANK_ABOVE("Anyone with their top role above the bot's top role"),
-    GUILD_RANK_SAME("Anyone with the same top role as the bot's top role"),
-    GUILD_RANK_BELOW("Anyone with their top role below the bot's top role")
+sealed class Access(val description: String) {
+    object All : Access("Anyone")
+    object BotOwner : Access("Bot owner only")
+
+    sealed class Private(description: String) : Access(description) {
+        object All : Private("In private messages only")
+        object BotOwner : Private("Bot owner in private messages only")
+    }
+
+    sealed class Guild(description: String) : Access(description) {
+        object All : Guild("Servers only")
+        object BotOwner : Guild("Bot owner in servers only")
+        object GuildOwner : Guild("Server owner only")
+        object RankAbove : Guild("Anyone with their top role above the bot's top role")
+        object RankSame : Guild("Anyone with the same top role as the bot's top role")
+        object RankBelow : Guild("Anyone with their top role below the bot's top role")
+    }
 }

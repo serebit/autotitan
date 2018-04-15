@@ -27,7 +27,7 @@ class AutoReact : Module(isOptional = true) {
         command(
             "addReact",
             "Adds an autoreact with the given emote for the given word.",
-            Restrictions(Access.GUILD_ALL, listOf(Permission.MESSAGE_ADD_REACTION))
+            Restrictions(Access.Guild.All, listOf(Permission.MESSAGE_ADD_REACTION))
         ) { evt, word: String, emote: Emote ->
             val value = reactMap[evt.guild].getOrPut(word, ::mutableListOf)
             when {
@@ -44,7 +44,7 @@ class AutoReact : Module(isOptional = true) {
         command(
             "removeReact",
             "Removes the autoreact for the given word from the list.",
-            Restrictions(Access.GUILD_ALL, listOf(Permission.MESSAGE_ADD_REACTION))
+            Restrictions(Access.Guild.All, listOf(Permission.MESSAGE_ADD_REACTION))
         ) { evt, word: String, emote: Emote ->
             val guildReacts = reactMap[evt.guild]
             when {
@@ -61,7 +61,7 @@ class AutoReact : Module(isOptional = true) {
         command(
             "clearReacts",
             "Deletes all autoreacts from the server.",
-            Restrictions(Access.GUILD_ALL, listOf(Permission.MESSAGE_ADD_REACTION, Permission.MANAGE_SERVER)),
+            Restrictions(Access.Guild.All, listOf(Permission.MESSAGE_ADD_REACTION, Permission.MANAGE_SERVER)),
             delimitLastString = false
         ) {
             reactMap[it.guild].clear()
@@ -71,7 +71,7 @@ class AutoReact : Module(isOptional = true) {
         command(
             "reactList",
             "Sends a list of autoreacts for the server to the command invoker.",
-            Restrictions(Access.GUILD_ALL)
+            Restrictions(Access.Guild.All)
         ) { evt ->
             val reacts = reactMap[evt.guild]
             evt.channel.sendMessage("Sending a reaction list in PMs.").queue()

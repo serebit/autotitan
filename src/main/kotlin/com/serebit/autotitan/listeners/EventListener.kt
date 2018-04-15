@@ -71,7 +71,7 @@ internal object EventListener : ListenerAdapter() {
                 val matchingCommands = loadedModules
                     .mapNotNull { it.findCommandsByName(commandName) }
                     .flatten()
-                    .filter { !it.restrictions.hidden && it.isInvokeableByAuthor(evt) }
+                    .filter { !it.restrictions.hidden && it.restrictions.isAccessibleFrom(evt) }
                 if (matchingCommands.isNotEmpty()) {
                     evt.channel.sendEmbed {
                         matchingCommands.forEachIndexed { index, command ->

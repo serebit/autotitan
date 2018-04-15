@@ -21,7 +21,7 @@ class Owner : Module() {
         command(
             "shutdown",
             "Shuts down the bot with an exit code of 0.",
-            Restrictions(Access.BOT_OWNER)
+            Restrictions(Access.BotOwner)
         ) { evt ->
             Logger.info("Shutting down...")
             evt.channel.sendMessage("Shutting down.").complete()
@@ -33,7 +33,7 @@ class Owner : Module() {
         command(
             "reset",
             "Resets the modules of the bot, effectively restarting it.",
-            Restrictions(Access.BOT_OWNER)
+            Restrictions(Access.BotOwner)
         ) { evt ->
             val message = evt.channel.sendMessage("Resetting...").complete()
             EventListener.resetModules()
@@ -43,7 +43,7 @@ class Owner : Module() {
         command(
             "systemInfo",
             "Gets information about the system that the bot is running on.",
-            Restrictions(Access.BOT_OWNER)
+            Restrictions(Access.BotOwner)
         ) { evt ->
             val info = SystemInfo()
             val process = info.operatingSystem.getProcess(info.operatingSystem.processId)
@@ -90,7 +90,7 @@ class Owner : Module() {
         command(
             "setName",
             "Changes the bot's username.",
-            Restrictions(Access.BOT_OWNER),
+            Restrictions(Access.BotOwner),
             delimitLastString = false
         ) { evt, name: String ->
             when (name.length) {
@@ -103,7 +103,7 @@ class Owner : Module() {
         command(
             "setPrefix",
             "Changes the bot's command prefix.",
-            Restrictions(Access.BOT_OWNER)
+            Restrictions(Access.BotOwner)
         ) { evt, prefix: String ->
             if (prefix.isBlank() || prefix.contains("\\s".toRegex())) {
                 evt.channel.sendMessage("Invalid prefix. Prefix must not be empty, and may not contain whitespace.")
@@ -118,7 +118,7 @@ class Owner : Module() {
         command(
             "blackListAdd",
             "Adds a user to the blacklist.",
-            Restrictions(Access.BOT_OWNER)
+            Restrictions(Access.BotOwner)
         ) { evt, user: User ->
             if (user.idLong in config.blackList) {
                 evt.channel.sendMessage("${user.name} is already in the blacklist.").complete()
@@ -132,7 +132,7 @@ class Owner : Module() {
         command(
             "blackListRemove",
             "Removes a user from the blacklist.",
-            Restrictions(Access.BOT_OWNER)
+            Restrictions(Access.BotOwner)
         ) { evt, user: User ->
             if (user.idLong !in config.blackList) {
                 evt.channel.sendMessage("${user.name} is not in the blacklist.").complete()
@@ -146,7 +146,7 @@ class Owner : Module() {
         command(
             "blackList",
             "Sends a list of blacklisted users in an embed.",
-            Restrictions(Access.BOT_OWNER)
+            Restrictions(Access.BotOwner)
         ) { evt ->
             if (config.blackList.isNotEmpty()) {
                 evt.channel.sendEmbed {
@@ -162,7 +162,7 @@ class Owner : Module() {
         command(
             "getInvite",
             "Sends the bot's invite link in a private message.",
-            Restrictions(Access.BOT_OWNER)
+            Restrictions(Access.BotOwner)
         ) { evt ->
             evt.author.openPrivateChannel().complete().sendMessage(
                 "Invite link: ${evt.jda.asBot().getInviteUrl()}"
@@ -172,7 +172,7 @@ class Owner : Module() {
         command(
             "serverList",
             "Sends the list of servers that the bot is in.",
-            Restrictions(Access.BOT_OWNER)
+            Restrictions(Access.BotOwner)
         ) { evt ->
             evt.channel.sendEmbed {
                 evt.jda.guilds.forEach {
@@ -188,7 +188,7 @@ class Owner : Module() {
         command(
             "leaveServer",
             "Leaves the server in which the command is invoked.",
-            Restrictions(Access.BOT_OWNER)
+            Restrictions(Access.BotOwner)
         ) { evt ->
             evt.channel.sendMessage("Leaving the server.").complete()
             evt.guild.leave().complete()
@@ -197,7 +197,7 @@ class Owner : Module() {
         command(
             "moduleList",
             "Sends a list of all the modules.",
-            Restrictions(Access.BOT_OWNER)
+            Restrictions(Access.BotOwner)
         ) { evt ->
             evt.channel.sendEmbed {
                 setTitle("Modules")
@@ -210,7 +210,7 @@ class Owner : Module() {
         command(
             "enableModule",
             "Enables the given optional module.",
-            Restrictions(Access.BOT_OWNER)
+            Restrictions(Access.BotOwner)
         ) { evt, moduleName: String ->
             if (EventListener.allModules.filter { it.isOptional }.none { it.name == moduleName }) return@command
             if (moduleName in config.enabledModules) {
@@ -225,7 +225,7 @@ class Owner : Module() {
         command(
             "disableModule",
             "Disables the given optional module.",
-            Restrictions(Access.BOT_OWNER)
+            Restrictions(Access.BotOwner)
         ) { evt, moduleName: String ->
             if (EventListener.allModules.filter { it.isOptional }.none { it.name == moduleName }) return@command
             if (moduleName !in config.enabledModules) {

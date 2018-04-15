@@ -26,7 +26,7 @@ class General : Module() {
         command(
             "serverInfo",
             "Gets information about the server.",
-            Restrictions(Access.GUILD_ALL)
+            Restrictions(Access.Guild.All)
         ) { evt ->
             val onlineMemberCount = evt.guild.members.count { it.onlineStatus != OnlineStatus.OFFLINE }
             val hoistedRoles = evt.guild.roles
@@ -60,13 +60,13 @@ class General : Module() {
         command(
             "selfInfo",
             "Gets information about the invoker.",
-            Restrictions(Access.GUILD_ALL)
+            Restrictions(Access.Guild.All)
         ) { sendMemberInfo(it, it.member) }
 
         command(
             "memberInfo",
             "Gets information about a specific server member.",
-            Restrictions(Access.GUILD_ALL),
+            Restrictions(Access.Guild.All),
             task = ::sendMemberInfo
         )
     }

@@ -1,6 +1,5 @@
 package com.serebit.autotitan.api
 
-import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.meta.Restrictions
 import com.serebit.autotitan.config
 import com.serebit.autotitan.data.Emote
@@ -51,19 +50,6 @@ internal class Command(
         }
     }
 
-    fun isInvokeableByAuthor(evt: MessageReceivedEvent) = when (restrictions.access) {
-        Access.ALL -> true
-        Access.BOT_OWNER -> evt.author == evt.jda.asBot().applicationInfo.complete().owner
-        Access.PRIVATE_ALL -> evt.guild == null
-        Access.PRIVATE_BOT_OWNER -> evt.guild == null && evt.author == evt.jda.asBot().applicationInfo.complete().owner
-        Access.GUILD_ALL -> evt.guild != null
-        Access.GUILD_OWNER -> evt.member == evt.member?.guild?.owner
-        Access.GUILD_BOT_OWNER -> evt.guild != null && evt.author == evt.jda.asBot().applicationInfo.complete().owner
-        Access.GUILD_RANK_ABOVE -> evt.guild != null && evt.member.roles[0] > evt.guild.selfMember.roles[0]
-        Access.GUILD_RANK_SAME -> evt.guild != null && evt.member.roles[0] == evt.guild.selfMember.roles[0]
-        Access.GUILD_RANK_BELOW -> evt.guild != null && evt.member.roles[0] < evt.guild.selfMember.roles[0]
-    }
-
     private fun tokenizeMessage(message: String): List<String> {
         val splitParameters = message.split(" ").filter(String::isNotBlank)
         return if (splitLastParameter) {
@@ -103,7 +89,7 @@ internal class Command(
 
     private val MessageReceivedEvent.isValidCommandInvocation: Boolean
         get() = if (author.isNotBot && author.notInBlacklist && member.hasPermissions(restrictions.permissions)) {
-            isInvokeableByAuthor(this)
+            restrictions.isAccessibleFrom(this)
         } else false
 
     private val MessageReceivedEvent.isInvalidCommandInvocation: Boolean get() = !isValidCommandInvocation
