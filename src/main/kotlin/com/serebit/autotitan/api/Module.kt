@@ -1,6 +1,7 @@
 package com.serebit.autotitan.api
 
 import com.serebit.autotitan.api.meta.Restrictions
+import com.serebit.autotitan.config
 import com.serebit.autotitan.data.Emote
 import net.dv8tion.jda.core.entities.Channel
 import net.dv8tion.jda.core.entities.Member
@@ -160,13 +161,17 @@ abstract class Module(val isOptional: Boolean = false) {
     }
 
     internal fun invoke(evt: Event) {
-        listeners.filter { it.eventType == evt::class }.forEach { it.invoke(evt) }
-        if (evt is MessageReceivedEvent) {
-            val (command, parameters) = commands.asSequence()
-                .filter { it.looselyMatches(evt.message.contentRaw) }
+        listeners.asSequence()
+            .filter { it.eventType == evt::class }
+            .forEach { it.invoke(evt) }
+        if (evt is MessageReceivedEvent && evt.message.contentRaw.startsWith(config.prefix)) {
+            commands.asSequence()
+                .filter { evt.message.contentRaw.substringBefore(" ") == config.prefix + it.name }
                 .associate { it to it.parseTokensOrNull(evt) }.entries
-                .firstOrNull { it.value != null } ?: return
-            command(evt, parameters!!)
+                .firstOrNull { it.value != null }?.let { (command, parameters) ->
+                    command(evt, parameters!!)
+                }
+
         }
     }
 

@@ -35,9 +35,6 @@ internal class Command(
     operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>) =
         function.invoke(evt, parameters)
 
-    fun looselyMatches(rawMessageContent: String): Boolean =
-        rawMessageContent.split(" ").firstOrNull() == config.prefix + name
-
     fun parseTokensOrNull(evt: MessageReceivedEvent): List<Any>? {
         if (evt.isInvalidCommandInvocation) return null
         val tokens = tokenizeMessage(evt.message.contentRaw)
@@ -51,7 +48,7 @@ internal class Command(
     }
 
     private fun tokenizeMessage(message: String): List<String> {
-        val splitParameters = message.split(" ").filter(String::isNotBlank)
+        val splitParameters = message.split("\\s+".toRegex()).filter(String::isNotBlank)
         return if (splitLastParameter) {
             splitParameters
         } else {
