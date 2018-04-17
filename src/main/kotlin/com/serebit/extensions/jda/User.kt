@@ -14,6 +14,7 @@ val User.inBlacklist get() = idLong in config.blackList
 
 val User.notInBlacklist get() = !inBlacklist
 
-val User.isBotOwner get() = ownerMap.getOrPut(jda) {
-    jda.asBot().applicationInfo.complete().owner
-} == this
+val User.isBotOwner
+    get() = ownerMap.getOrPut(jda) {
+        jda.asBot().applicationInfo.complete().owner
+    } == this

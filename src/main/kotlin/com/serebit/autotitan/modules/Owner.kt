@@ -17,7 +17,6 @@ import java.lang.management.ManagementFactory
 import kotlin.system.exitProcess
 
 
-
 @Suppress("UNUSED", "TooManyFunctions")
 class Owner : Module() {
     private val info by lazy { SystemInfo() }
@@ -68,7 +67,7 @@ class Owner : Module() {
                     Model: `$processorModel`
                     Cores: `$processorCores`
                     Frequency: `${processorFrequency.asMetricUnit("Hz")}`
-                """.trimIndent(),
+                    """.trimIndent(),
                     false
                 )
                 addField(
@@ -77,7 +76,7 @@ class Owner : Module() {
                     Total: `${totalMemory.asMetricUnit("B")}`
                     Used: `${usedMemory.asMetricUnit("B")} ($usedMemoryPercentage%)`
                     Process: `${processMemory.asMetricUnit("B")} ($processMemoryPercentage%)`
-                """.trimIndent(),
+                    """.trimIndent(),
                     false
                 )
                 addField(
@@ -85,7 +84,7 @@ class Owner : Module() {
                     """
                     System: `${systemUptime.toVerboseTimestamp()}`
                     Process: `${processUptime.toVerboseTimestamp()}`
-                """.trimIndent(),
+                    """.trimIndent(),
                     false
                 )
             }.complete()
@@ -97,11 +96,12 @@ class Owner : Module() {
             Restrictions(Access.BotOwner),
             delimitLastString = false
         ) { evt, name: String ->
-            when (name.length) {
-                1 -> evt.channel.sendMessage("Usernames must be between 2 and 32 characters in length.")
+            if (name.length == 1 || name.length in 33..2000) {
+                evt.channel.sendMessage("Usernames must be between 2 and 32 characters in length.").queue()
+            } else {
+                evt.jda.selfUser.manager.setName(name).queue()
+                evt.channel.sendMessage("Renamed to $name.").queue()
             }
-            evt.jda.selfUser.manager.setName(name).complete()
-            evt.channel.sendMessage("Renamed to $name.").complete()
         }
 
         command(

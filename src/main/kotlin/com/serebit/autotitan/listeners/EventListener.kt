@@ -57,7 +57,7 @@ internal object EventListener : ListenerAdapter() {
                         For a list of commands, enter `${config.prefix}commands`.
                         For information on a certain command, enter `${config.prefix}help <command name>`.
                         For a list containing every command, enter `${config.prefix}allcommands`.
-                    """.trimIndent(),
+                        """.trimIndent(),
                         false
                     )
                 }.complete()

@@ -74,22 +74,14 @@ class General : Module() {
     private fun sendMemberInfo(evt: MessageReceivedEvent, member: Member) {
         val title = buildString {
             append("${member.user.name}#${member.user.discriminator}")
-            member.nickname?.let {
-                append(" ($it)")
-            }
-            if (member.user.isBot) {
-                append(" [BOT]")
-            }
+            member.nickname?.let { append(" ($it)") }
+            if (member.user.isBot) append(" [BOT]")
         }
 
         val status = buildString {
             append(member.onlineStatus.readableName)
-            member.game?.let {
-                append(" - Playing ${member.game.name}")
-            }
+            member.game?.let { append(" - Playing ${member.game.name}") }
         }
-
-        val roles = member.roles.joinToString(", ") { it.name }
 
         evt.channel.sendEmbed {
             setTitle(title, null)
@@ -103,7 +95,9 @@ class General : Module() {
             val joinDateDifference = OffsetDateTime.now() - member.joinDate
             addField("Joined this Server", "$joinDate ($joinDateDifference)", true)
             addField("Do they own the server?", member.isOwner.asYesNo.capitalize(), true)
-            if (roles.isNotEmpty()) addField("Roles", roles, true)
+            if (member.roles.isNotEmpty()) {
+                addField("Roles", member.roles.joinToString(", ") { it.name }, true)
+            }
             setFooter("User ID: ${member.user.id}", null)
         }.complete()
     }
