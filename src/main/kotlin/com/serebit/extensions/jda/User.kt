@@ -18,3 +18,5 @@ val User.isBotOwner
     get() = ownerMap.getOrPut(jda) {
         jda.asBot().applicationInfo.complete().owner
     } == this
+
+val User.canInvokeCommands get() = isNotBot && notInBlacklist

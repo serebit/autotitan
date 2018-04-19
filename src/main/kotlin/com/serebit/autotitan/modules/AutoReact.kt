@@ -8,7 +8,7 @@ import com.serebit.autotitan.data.Emote
 import com.serebit.autotitan.data.GuildResourceMap
 import com.serebit.extensions.jda.MESSAGE_EMBED_MAX_FIELDS
 import com.serebit.extensions.jda.addReaction
-import com.serebit.extensions.jda.chunkedBy
+import com.serebit.extensions.chunkedBy
 import com.serebit.extensions.jda.sendEmbed
 import com.serebit.extensions.limitLengthTo
 import net.dv8tion.jda.core.Permission

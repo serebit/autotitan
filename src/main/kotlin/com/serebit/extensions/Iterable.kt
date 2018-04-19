@@ -1,6 +1,6 @@
 @file:JvmName("IterableExtensions")
 
-package com.serebit.extensions.jda
+package com.serebit.extensions
 
 inline fun <T> Iterable<T>.chunkedBy(
     size: Int,

@@ -6,7 +6,7 @@ import com.serebit.autotitan.api.meta.Restrictions
 import com.serebit.autotitan.data.DataManager
 import com.serebit.autotitan.data.GuildResourceMap
 import com.serebit.extensions.jda.MESSAGE_EMBED_MAX_FIELDS
-import com.serebit.extensions.jda.chunkedBy
+import com.serebit.extensions.chunkedBy
 import com.serebit.extensions.jda.mentionsUsers
 import com.serebit.extensions.jda.sendEmbed
 import com.serebit.extensions.limitLengthTo

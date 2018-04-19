@@ -1,5 +1,6 @@
 package com.serebit.autotitan.api
 
+import com.serebit.autotitan.api.meta.Descriptor
 import com.serebit.autotitan.api.meta.Restrictions
 import com.serebit.autotitan.config
 import com.serebit.autotitan.data.Emote
@@ -16,10 +17,10 @@ abstract class Module(val isOptional: Boolean = false) {
         private set
     private val commands: MutableList<Command> = mutableListOf()
     private val listeners: MutableList<Listener> = mutableListOf()
-    val commandListField
+    internal val commandListField
         get() = MessageEmbed.Field(
             name,
-            commands.filter { !it.restrictions.hidden }.joinToString("\n") { it.summary },
+            commands.filter { !it.isHidden }.joinToString("\n") { it.summary },
             false
         )
     val isStandard get() = !isOptional
@@ -31,8 +32,7 @@ abstract class Module(val isOptional: Boolean = false) {
     }
 
     protected fun addCommand(
-        name: String,
-        description: String = "",
+        descriptor: Descriptor,
         restrictions: Restrictions = Restrictions(),
         delimitLastString: Boolean = true,
         parameterTypes: List<KClass<*>>,
@@ -40,7 +40,7 @@ abstract class Module(val isOptional: Boolean = false) {
     ): Boolean = if (parameterTypes.all { it in validParameterTypes }) {
         commands.add(
             Command(
-                name.toLowerCase(), description,
+                descriptor,
                 restrictions,
                 delimitLastString,
                 parameterTypes,
@@ -56,7 +56,7 @@ abstract class Module(val isOptional: Boolean = false) {
         delimitLastString: Boolean = true,
         crossinline task: (MessageReceivedEvent) -> Unit
     ) = addCommand(
-        name, description, restrictions, delimitLastString, emptyList()
+        Descriptor(name.toLowerCase(), description), restrictions, delimitLastString, emptyList()
     ) { evt, _ -> task(evt) }
 
     protected inline fun <reified P0> command(
@@ -66,7 +66,7 @@ abstract class Module(val isOptional: Boolean = false) {
         delimitLastString: Boolean = true,
         crossinline task: (MessageReceivedEvent, P0) -> Unit
     ) = addCommand(
-        name, description, restrictions, delimitLastString, listOf(P0::class)
+        Descriptor(name.toLowerCase(), description), restrictions, delimitLastString, listOf(P0::class)
     ) { evt, args ->
         task(evt, args[0] as P0)
     }
@@ -78,7 +78,7 @@ abstract class Module(val isOptional: Boolean = false) {
         delimitLastString: Boolean = true,
         crossinline task: (MessageReceivedEvent, P0, P1) -> Unit
     ) = addCommand(
-        name, description, restrictions, delimitLastString,
+        Descriptor(name.toLowerCase(), description), restrictions, delimitLastString,
         listOf(P0::class, P1::class)
     ) { evt, args ->
         task(evt, args[0] as P0, args[1] as P1)
@@ -91,7 +91,7 @@ abstract class Module(val isOptional: Boolean = false) {
         delimitLastString: Boolean = true,
         crossinline task: (MessageReceivedEvent, P0, P1, P2) -> Unit
     ) = addCommand(
-        name, description, restrictions, delimitLastString,
+        Descriptor(name.toLowerCase(), description), restrictions, delimitLastString,
         listOf(P0::class, P1::class, P2::class)
     ) { evt, args ->
         @Suppress("MagicNumber")
@@ -105,7 +105,7 @@ abstract class Module(val isOptional: Boolean = false) {
         delimitLastString: Boolean = true,
         crossinline task: (MessageReceivedEvent, P0, P1, P2, P3) -> Unit
     ) = addCommand(
-        name, description, restrictions, delimitLastString,
+        Descriptor(name.toLowerCase(), description), restrictions, delimitLastString,
         listOf(P0::class, P1::class, P2::class, P3::class)
     ) { evt, args ->
         @Suppress("MagicNumber")
@@ -119,7 +119,7 @@ abstract class Module(val isOptional: Boolean = false) {
         delimitLastString: Boolean = true,
         crossinline task: (MessageReceivedEvent, P0, P1, P2, P3, P4) -> Unit
     ) = addCommand(
-        name, description, restrictions, delimitLastString,
+        Descriptor(name.toLowerCase(), description), restrictions, delimitLastString,
         listOf(P0::class, P1::class, P2::class, P3::class, P4::class)
     ) { evt, args ->
         @Suppress("MagicNumber")
@@ -133,24 +133,23 @@ abstract class Module(val isOptional: Boolean = false) {
         delimitLastString: Boolean = true,
         crossinline task: (MessageReceivedEvent, P0, P1, P2, P3, P4, P5) -> Unit
     ) = addCommand(
-        name, description, restrictions, delimitLastString,
+        Descriptor(name.toLowerCase(), description), restrictions, delimitLastString,
         listOf(P0::class, P1::class, P2::class, P3::class, P4::class, P5::class)
     ) { evt, args ->
         @Suppress("MagicNumber")
         task(evt, args[0] as P0, args[1] as P1, args[2] as P2, args[3] as P3, args[4] as P4, args[5] as P5)
     }
 
-    protected fun addListener(eventType: KClass<out Event>, function: (Event) -> Unit) =
-        listeners.add(
-            Listener(eventType, function)
-        )
+    protected fun addListener(eventType: KClass<out Event>, function: (Event) -> Unit) = listeners.add(
+        Listener(eventType, function)
+    )
 
     protected inline fun <reified T : Event> listener(crossinline task: (T) -> Unit) = addListener(T::class) {
         task(it as T)
     }
 
     fun getInvokeableCommandField(evt: MessageReceivedEvent): MessageEmbed.Field? {
-        val validCommands = commands.filter { !it.restrictions.hidden && it.restrictions.matches(evt) }
+        val validCommands = commands.filter { it.isVisibleFrom(evt) }
         return if (validCommands.isNotEmpty()) {
             MessageEmbed.Field(name, validCommands.joinToString("\n") { it.summary }, false)
         } else null
@@ -162,7 +161,7 @@ abstract class Module(val isOptional: Boolean = false) {
             .forEach { it.invoke(evt) }
         if (evt is MessageReceivedEvent && evt.message.contentRaw.startsWith(config.prefix)) {
             commands.asSequence()
-                .filter { evt.message.contentRaw.substringBefore(" ") == config.prefix + it.name }
+                .filter { it.isInvokeableFrom(evt) }
                 .associate { it to it.parseTokensOrNull(evt) }.entries
                 .firstOrNull { it.value != null }?.let { (command, parameters) ->
                     command(evt, parameters!!)
@@ -171,7 +170,8 @@ abstract class Module(val isOptional: Boolean = false) {
         }
     }
 
-    internal fun findCommandsByName(name: String): List<Command>? = commands.filter { it.name == name }
+    internal fun findCommandsByName(name: String): List<Command> =
+        commands.filter { it.matchesName(name) && !it.isHidden }
 
     companion object {
         private val validParameterTypes = setOf(

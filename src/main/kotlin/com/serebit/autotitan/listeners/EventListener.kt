@@ -68,9 +68,9 @@ internal object EventListener : ListenerAdapter() {
                 "Sends an embed with information about the requested command."
             ) { evt, commandName: String ->
                 val matchingCommands = loadedModules
-                    .mapNotNull { it.findCommandsByName(commandName) }
+                    .map { it.findCommandsByName(commandName) }
+                    .filter { it.isNotEmpty() }
                     .flatten()
-                    .filter { !it.restrictions.hidden }
                 if (matchingCommands.isNotEmpty()) {
                     evt.channel.sendEmbed {
                         matchingCommands.forEachIndexed { index, command ->

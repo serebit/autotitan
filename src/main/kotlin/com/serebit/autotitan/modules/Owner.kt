@@ -57,10 +57,7 @@ class Owner : Module() {
             val processorFrequency = info.hardware.processor.vendorFreq
             val totalMemory = info.hardware.memory.total
             val usedMemory = info.hardware.memory.total - info.hardware.memory.available
-            val usedMemoryPercentage = usedMemory.asPercentageOf(totalMemory)
             val processMemory = process.residentSetSize
-            val processMemoryPercentage = processMemory.asPercentageOf(totalMemory)
-            val systemUptime = info.hardware.processor.systemUptime
             val processUptime = ManagementFactory.getRuntimeMXBean().uptime / millisecondsPerSecond
             evt.channel.sendEmbed {
                 addField(
@@ -76,15 +73,15 @@ class Owner : Module() {
                     "Memory",
                     """
                     Total: `${totalMemory.asMetricUnit("B")}`
-                    Used: `${usedMemory.asMetricUnit("B")} ($usedMemoryPercentage%)`
-                    Process: `${processMemory.asMetricUnit("B")} ($processMemoryPercentage%)`
+                    Used: `${usedMemory.asMetricUnit("B")} (${usedMemory.asPercentageOf(totalMemory)}%)`
+                    Process: `${processMemory.asMetricUnit("B")} (${processMemory.asPercentageOf(totalMemory)}%)`
                     """.trimIndent(),
                     false
                 )
                 addField(
                     "Uptime",
                     """
-                    System: `${systemUptime.toVerboseTimestamp()}`
+                    System: `${info.hardware.processor.systemUptime.toVerboseTimestamp()}`
                     Process: `${processUptime.toVerboseTimestamp()}`
                     """.trimIndent(),
                     false
@@ -98,7 +95,7 @@ class Owner : Module() {
             Restrictions(Access.BotOwner),
             delimitLastString = false
         ) { evt, name: String ->
-            if (name.length == 1 || name.length in 33..2000) {
+            if (name.length !in 2..usernameMaxLength) {
                 evt.channel.sendMessage("Usernames must be between 2 and 32 characters in length.").queue()
             } else {
                 evt.jda.selfUser.manager.setName(name).queue()
@@ -248,5 +245,6 @@ class Owner : Module() {
 
     companion object {
         private const val millisecondsPerSecond = 1000
+        private const val usernameMaxLength = 32
     }
 }
