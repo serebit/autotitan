@@ -2,17 +2,9 @@ package com.serebit.autotitan.api
 
 import com.serebit.autotitan.api.meta.Descriptor
 import com.serebit.autotitan.api.meta.Restrictions
-import com.serebit.autotitan.data.Emote
+import com.serebit.autotitan.api.parser.Parser
 import com.serebit.extensions.jda.canInvokeCommands
-import com.serebit.extensions.jda.getMemberByMention
-import com.serebit.extensions.jda.getTextChannelByMention
-import com.serebit.extensions.jda.getUserByMention
-import com.serebit.extensions.toBooleanOrNull
-import com.serebit.extensions.toCharOrNull
-import net.dv8tion.jda.core.entities.Channel
-import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.entities.MessageEmbed
-import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import kotlin.reflect.KClass
 
@@ -59,28 +51,6 @@ internal class Command(
 
     private fun parseTokens(evt: MessageReceivedEvent, tokens: List<String>): List<Any?> =
         parameterTypes.zip(tokens.drop(1)).map { (type, string) ->
-            castParameter(evt, type, string)
+            Parser.castToken(evt, type, string)
         }
-
-    @Suppress("ComplexMethod")
-    private fun castParameter(
-        evt: MessageReceivedEvent,
-        type: KClass<out Any>,
-        string: String
-    ): Any? = when (type) {
-        String::class -> string
-        Int::class -> string.toIntOrNull()
-        Long::class -> string.toLongOrNull()
-        Double::class -> string.toDoubleOrNull()
-        Float::class -> string.toFloatOrNull()
-        Short::class -> string.toShortOrNull()
-        Byte::class -> string.toByteOrNull()
-        Boolean::class -> string.toBooleanOrNull()
-        Char::class -> string.toCharOrNull()
-        User::class -> evt.jda.getUserByMention(string)
-        Member::class -> evt.guild.getMemberByMention(string)
-        Channel::class -> evt.guild.getTextChannelByMention(string)
-        Emote::class -> Emote.from(string, evt.jda)
-        else -> null
-    }
 }

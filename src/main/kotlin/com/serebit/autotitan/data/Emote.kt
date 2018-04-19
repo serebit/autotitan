@@ -4,6 +4,7 @@ import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.Gson
 import com.serebit.extensions.jda.getEmoteByMention
 import net.dv8tion.jda.core.JDA
+import net.dv8tion.jda.core.entities.IMentionable
 import net.dv8tion.jda.core.entities.MessageChannel
 
 data class Emote(val unicodeValue: String? = null, val emoteIdValue: EmoteId? = null) {
@@ -17,11 +18,6 @@ data class Emote(val unicodeValue: String? = null, val emoteIdValue: EmoteId? = 
     fun toString(jda: JDA): String {
         return if (isDiscordEmote) jda.getEmoteById(emoteIdValue!!).asMention else unicodeValue!!
     }
-
-    private val String.isUnicodeEmoji
-        get() = codePoints().toArray().let { codePoints ->
-            emojiCodePoints.any { it.contentEquals(codePoints) }
-        }
 
     companion object {
         private val emojiCodePoints = Gson().fromJson<Set<IntArray>>(
