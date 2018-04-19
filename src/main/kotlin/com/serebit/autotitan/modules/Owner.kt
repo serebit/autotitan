@@ -38,7 +38,8 @@ class Owner : Module() {
             "reset",
             "Resets the modules of the bot, effectively restarting it.",
             Restrictions(Access.BotOwner)
-        ) { evt ->
+        )
+        { evt ->
             val message = evt.channel.sendMessage("Resetting...").complete()
             EventListener.resetModules()
             message.editMessage("Reset commands and listeners.").complete()
@@ -48,7 +49,8 @@ class Owner : Module() {
             "systemInfo",
             "Gets information about the system that the bot is running on.",
             Restrictions(Access.BotOwner)
-        ) { evt ->
+        )
+        { evt ->
             val process = info.operatingSystem.getProcess(info.operatingSystem.processId)
             val processorModel = info.hardware.processor.name.replace("(\\(R\\)|\\(TM\\)|@ .+)".toRegex(), "")
             val processorCores = info.hardware.processor.physicalProcessorCount
@@ -202,7 +204,8 @@ class Owner : Module() {
             "moduleList",
             "Sends a list of all the modules.",
             Restrictions(Access.BotOwner)
-        ) { evt ->
+        )
+        { evt ->
             evt.channel.sendEmbed {
                 setTitle("Modules")
                 setDescription(EventListener.allModules.joinToString("\n") {
@@ -230,7 +233,8 @@ class Owner : Module() {
             "disableModule",
             "Disables the given optional module.",
             Restrictions(Access.BotOwner)
-        ) { evt, moduleName: String ->
+        )
+        { evt, moduleName: String ->
             if (EventListener.allModules.filter { it.isOptional }.none { it.name == moduleName }) return@command
             if (moduleName !in config.enabledModules) {
                 evt.channel.sendMessage("Module `$moduleName` is already disabled.").complete()
