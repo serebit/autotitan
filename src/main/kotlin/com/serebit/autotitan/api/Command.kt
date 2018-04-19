@@ -10,7 +10,6 @@ import com.serebit.extensions.jda.isNotBot
 import com.serebit.extensions.jda.notInBlacklist
 import com.serebit.extensions.toBooleanOrNull
 import com.serebit.extensions.toCharOrNull
-import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Channel
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.entities.MessageEmbed
@@ -27,10 +26,7 @@ internal class Command(
     private val function: (MessageReceivedEvent, List<Any>) -> Unit
 ) {
     val summary = "`$name ${parameterTypes.joinToString(" ") { "<${it.simpleName}>" }}`"
-    val helpField = MessageEmbed.Field(summary, buildString {
-        append("$description\n")
-        append("Access: ${restrictions.access.description}\n")
-    }, false)
+    val helpField = MessageEmbed.Field(summary, "$description\n${restrictions.description}", false)
 
     operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>) =
         function.invoke(evt, parameters)
@@ -85,12 +81,7 @@ internal class Command(
     }
 
     private val MessageReceivedEvent.isValidCommandInvocation: Boolean
-        get() = if (author.isNotBot && author.notInBlacklist && member.hasPermissions(restrictions.permissions)) {
-            restrictions.isAccessibleFrom(this)
-        } else false
+        get() = author.isNotBot && author.notInBlacklist && restrictions.matches(this)
 
     private val MessageReceivedEvent.isInvalidCommandInvocation: Boolean get() = !isValidCommandInvocation
-
-    private fun Member?.hasPermissions(permissions: Collection<Permission>): Boolean =
-        this?.hasPermission(permissions.toMutableList()) ?: false
 }

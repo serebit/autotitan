@@ -5,11 +5,19 @@ import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 
 data class Restrictions(
-    val access: Access = Access.All,
-    val permissions: List<Permission> = emptyList(),
+    private val access: Access = Access.All,
+    private val permissions: List<Permission> = emptyList(),
     val hidden: Boolean = false
 ) {
-    fun isAccessibleFrom(evt: MessageReceivedEvent): Boolean = when (access) {
+    val description get() = """
+        Access: ${access.description}
+        Permissions: ${permissions.joinToString()}
+    """.trimIndent()
+
+    fun matches(evt: MessageReceivedEvent): Boolean =
+         isAccessibleFrom(evt) && evt.member?.hasPermission(permissions.toMutableList()) ?: false
+
+    private fun isAccessibleFrom(evt: MessageReceivedEvent): Boolean = when (access) {
         Access.All -> true
         Access.BotOwner -> evt.author.isBotOwner
         is Access.Private -> isAccessibleFromPrivate(evt, access)

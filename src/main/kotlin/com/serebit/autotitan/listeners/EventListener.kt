@@ -35,7 +35,7 @@ internal object EventListener : ListenerAdapter() {
             command("commands", "Sends an embed with a list of commands that can be used by the invoker.") { evt ->
                 evt.channel.sendEmbed {
                     loadedModules.sortedBy { it.name }
-                        .mapNotNull { it.getInvokeableCommandList(evt) }
+                        .mapNotNull { it.getInvokeableCommandField(evt) }
                         .forEach { addField(it) }
                 }.complete()
             }
@@ -70,14 +70,13 @@ internal object EventListener : ListenerAdapter() {
                 val matchingCommands = loadedModules
                     .mapNotNull { it.findCommandsByName(commandName) }
                     .flatten()
-                    .filter { !it.restrictions.hidden && it.restrictions.isAccessibleFrom(evt) }
+                    .filter { !it.restrictions.hidden }
                 if (matchingCommands.isNotEmpty()) {
                     evt.channel.sendEmbed {
                         matchingCommands.forEachIndexed { index, command ->
                             if (index > 0) addBlankField(false)
                             addField(command.helpField)
                         }
-                        setTimestamp(null)
                     }.complete()
                 } else {
                     evt.channel.sendMessage("Could not find any commands matching `$commandName`.").complete()

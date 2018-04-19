@@ -149,14 +149,10 @@ abstract class Module(val isOptional: Boolean = false) {
         task(it as T)
     }
 
-    fun getInvokeableCommandList(evt: MessageReceivedEvent): MessageEmbed.Field? {
-        val validCommands = commands.filter { !it.restrictions.hidden && it.restrictions.isAccessibleFrom(evt) }
+    fun getInvokeableCommandField(evt: MessageReceivedEvent): MessageEmbed.Field? {
+        val validCommands = commands.filter { !it.restrictions.hidden && it.restrictions.matches(evt) }
         return if (validCommands.isNotEmpty()) {
-            MessageEmbed.Field(
-                name,
-                validCommands.joinToString("\n") { it.summary },
-                false
-            )
+            MessageEmbed.Field(name, validCommands.joinToString("\n") { it.summary }, false)
         } else null
     }
 
