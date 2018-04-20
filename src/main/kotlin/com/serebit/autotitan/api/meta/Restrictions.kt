@@ -15,7 +15,7 @@ data class Restrictions(
     """.trimIndent()
 
     fun matches(evt: MessageReceivedEvent): Boolean =
-         isAccessibleFrom(evt) && evt.member?.hasPermission(permissions.toMutableList()) ?: false
+         isAccessibleFrom(evt) && evt.member?.hasPermission(permissions.toMutableList()) ?: true
 
     private fun isAccessibleFrom(evt: MessageReceivedEvent): Boolean = when (access) {
         Access.All -> true
