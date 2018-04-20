@@ -124,7 +124,7 @@ internal class Command(
     private val MessageReceivedEvent.isInvalidCommandInvocation: Boolean get() = !isValidCommandInvocation
 
     private fun Member?.hasPermissions(permissions: Collection<Permission>): Boolean =
-        this?.hasPermission(permissions.toMutableList()) ?: false
+        this?.hasPermission(permissions.toMutableList()) ?: true
 
     companion object {
         internal val validParameterTypes = setOf(
