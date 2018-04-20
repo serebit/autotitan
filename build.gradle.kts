@@ -12,7 +12,7 @@ plugins {
 }
 
 group = "com.serebit"
-version = "0.5.0"
+version = "0.5.1"
 
 description = "AutoTitan is a modular, self-hosted Discord bot built in Kotlin/JVM using the Java Discord API."
 
