@@ -20,7 +20,6 @@ val config by lazy {
 
 fun main(args: Array<String>) {
     val longFlags = args.filter { it.matches("--\\w+".toRegex()) }
-    val shortFlags = args.filter { it.matches("-\\w+".toRegex()) }
     val subCommands = args.filter { it.matches("\\w+".toRegex()) }
 
     Logger.level = when {
@@ -31,7 +30,7 @@ fun main(args: Array<String>) {
     }
 
     when {
-        "up" in args || "update" in args -> updateAndClose()
+        "up" in args || "update" in subCommands -> updateAndClose()
     }
 
     jda(AccountType.BOT) {
@@ -45,7 +44,7 @@ fun main(args: Array<String>) {
             Username:    ${it.selfUser.name}
             Ping:        ${it.ping}ms
             Invite link: ${it.asBot().getInviteUrl()}
-        """.trimIndent()
+            """.trimIndent()
         )
     }
 }

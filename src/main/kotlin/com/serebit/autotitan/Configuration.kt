@@ -2,10 +2,10 @@ package com.serebit.autotitan
 
 import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.Gson
-import java.io.File
+import com.serebit.autotitan.data.DataManager
 import java.util.*
 
-class Configuration private constructor(
+data class Configuration(
     val token: String,
     var prefix: String,
     val blackList: MutableSet<Long> = mutableSetOf(),
@@ -14,12 +14,10 @@ class Configuration private constructor(
     fun serialize() = file.also { it.createNewFile() }.writeText(Gson().toJson(this))
 
     companion object {
-        private val file = File(this::class.java.protectionDomain.codeSource.location.toURI()).parentFile.let {
-            File("$it/.config")
-        }
+        private val file = DataManager.classpath.resolve(".config")
 
         fun generate(): Configuration = when {
-            System.getenv("AUTOTITAN_TEST_MODE_FLAG") == "true" -> generateDummy()
+            System.getenv("AUTOTITAN_TEST_MODE_FLAG") == "true" -> dummyConfiguration
             file.exists() -> Gson().fromJson(file.readText())
             else -> Scanner(System.`in`).use { scanner ->
                 Configuration(
@@ -29,10 +27,7 @@ class Configuration private constructor(
             }
         }
 
-        private fun generateDummy() = Configuration(
-            "",
-            "!"
-        )
+        private val dummyConfiguration by lazy { Configuration("", "!") }
 
         private tailrec fun prompt(scanner: Scanner, text: String, condition: (String) -> Boolean): String {
             print("$text\n> ")

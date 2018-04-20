@@ -1,31 +1,32 @@
 package com.serebit.autotitan.data
 
 import com.google.gson.Gson
-import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import java.io.File
 import java.lang.reflect.Type
 import kotlin.reflect.KClass
 
 class DataManager(type: KClass<out Any>) {
-    private val dataFolder = File("$classpath/data/${type.simpleName}").also { it.mkdirs() }
+    private val dataFolder = classpath.resolve("data/${type.simpleName}").also { it.mkdirs() }
 
-    /* Uses reified generics to create a TypeToken for the given type */
+    /* Uses reified generics to create a TypeToken for the given type. Circumvents some issues that Gson has with
+    *  generics.
+    */
     inline fun <reified T : Any> read(fileName: String): T? = read(fileName, object : TypeToken<T>() {}.type)
 
-    fun <T : Any> read(fileName: String, type: Type): T? {
-        val file = File("$dataFolder/$fileName")
-        return if (file.exists()) serializer.fromJson(file.readText(), type) else null
+    fun <T : Any> read(fileName: String, type: Type): T? = dataFolder.resolve(fileName).let { file ->
+        if (file.exists()) serializer.fromJson(file.readText(), type) else null
     }
 
-    fun write(fileName: String, obj: Any) = File("$dataFolder/$fileName")
+    fun write(fileName: String, obj: Any) = dataFolder.resolve(fileName)
         .also { it.createNewFile() }
         .writeText(serializer.toJson(obj))
 
     companion object {
-        val classpath: File = File(this::class.java.protectionDomain.codeSource.location.toURI()).parentFile
-        private val serializer: Gson = GsonBuilder().create()
+        val codeSource: File = File(this::class.java.protectionDomain.codeSource.location.toURI())
+        val classpath: File = codeSource.parentFile
+        private val serializer = Gson()
 
-        fun getResource(path: String) = File("$classpath/resources/$path")
+        fun getResource(path: String) = classpath.resolve("resources/$path")
     }
 }

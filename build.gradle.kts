@@ -5,7 +5,7 @@ import org.jetbrains.kotlin.gradle.dsl.Coroutines
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.2.31"
+    kotlin("jvm") version "1.2.40"
     id("com.github.johnrengelman.shadow") version "2.0.3"
     id("com.github.ben-manes.versions") version "0.17.0"
     id("io.gitlab.arturbosch.detekt") version "1.0.0.RC6-4"
@@ -30,7 +30,7 @@ dependencies {
     compile(group = "khttp", name = "khttp", version = "0.1.0")
     compile(group = "com.serebit", name = "loggerkt", version = "0.2.0")
     compile(group = "org.slf4j", name = "slf4j-simple", version = "1.8.0-beta2")
-    compile(group = "com.github.oshi", name = "oshi-core", version = "3.4.5")
+    compile(group = "com.github.oshi", name = "oshi-core", version = "3.5.0")
     testCompile(group = "io.kotlintest", name = "kotlintest", version = "2.0.7")
 }
 

@@ -180,8 +180,8 @@ class Owner : Module() {
             evt.channel.sendEmbed {
                 evt.jda.guilds.forEach {
                     addField(
-                        it.name + "(${it.id})",
-                        "**Text Channels**: ${it.textChannels.size}\n**Members**: ${it.members.size}\n",
+                        "${it.name} (${it.id})",
+                        "Owner: ${it.owner.asMention}\nMembers: ${it.members.size}\n",
                         true
                     )
                 }
