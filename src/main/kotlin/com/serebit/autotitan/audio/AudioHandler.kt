@@ -56,7 +56,7 @@ object AudioHandler : AudioPlayerManager by DefaultAudioPlayerManager() {
         }
 
         override fun trackLoaded(track: AudioTrack) {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            channel.sendMessage("Can't load a playlist from a track URI.").complete()
         }
 
         override fun noMatches() {
