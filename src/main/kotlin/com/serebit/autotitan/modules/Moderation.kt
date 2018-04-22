@@ -17,7 +17,7 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 @Suppress("UNUSED", "TooManyFunctions")
 class Moderation : Module() {
     private val dataManager = DataManager(this::class)
-    private val memberRoleMap: GuildRoleMap = dataManager.read("rolemap.json") ?: GuildRoleMap()
+    private val memberRoleMap = dataManager.read("rolemap.json") ?: GuildRoleMap()
 
     @Command(
         description = "Kicks a member.",
@@ -36,7 +36,7 @@ class Moderation : Module() {
     )
     fun ban(evt: MessageReceivedEvent, user: User) {
         evt.guild.controller.ban(user, 0).complete()
-        evt.channel.sendMessage("Banned ${user.name}.")
+        evt.channel.sendMessage("Banned ${user.name}.").complete()
     }
 
     @Command(

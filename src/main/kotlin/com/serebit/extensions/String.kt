@@ -9,7 +9,8 @@ fun String.toBooleanOrNull() = if (this == "true" || this == "false") toBoolean(
 
 fun String.toCharOrNull() = if (length == 1) this[0] else null
 
-val String.isUnicodeEmoji: Boolean get() = EmojiParser.extractEmojis(this).size == 1
+val String.isUnicodeEmoji: Boolean
+    get() = EmojiParser.extractEmojis(this).size == 1 && EmojiParser.removeAllEmojis(this).isEmpty()
 
 fun String.limitLengthTo(max: Int): String {
     val trimmedString = replace("(\\s){2,}".toRegex(), "$1$1")
