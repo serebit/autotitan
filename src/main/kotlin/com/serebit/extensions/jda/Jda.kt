@@ -2,6 +2,7 @@
 
 package com.serebit.extensions.jda
 
+import com.serebit.loggerkt.Logger
 import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDA
 import net.dv8tion.jda.core.JDABuilder
@@ -18,6 +19,7 @@ fun JDA.getUserByMention(mention: String): User? = try {
             .removePrefix("!")
     )
 } catch (ex: IllegalArgumentException) {
+    Logger.info("Attempted to get user instance from invalid mention $mention.")
     null
 }
 
@@ -28,5 +30,6 @@ fun JDA.getEmoteByMention(mention: String): Emote? = try {
             .replace(":\\S+:".toRegex(), "")
     )
 } catch (ex: IllegalArgumentException) {
+    Logger.info("Attempted to get emote instance from invalid mention $mention.")
     null
 }

@@ -6,15 +6,17 @@ import com.serebit.autotitan.api.meta.Restrictions
 import com.serebit.autotitan.data.DataManager
 import com.serebit.autotitan.data.Emote
 import com.serebit.autotitan.data.GuildResourceMap
-import com.serebit.extensions.jda.MESSAGE_EMBED_MAX_FIELDS
-import com.serebit.extensions.jda.addReaction
 import com.serebit.extensions.chunkedBy
+import com.serebit.extensions.jda.MESSAGE_EMBED_MAX_FIELDS
 import com.serebit.extensions.jda.sendEmbed
 import com.serebit.extensions.limitLengthTo
+import com.serebit.loggerkt.Logger
 import net.dv8tion.jda.core.Permission
+import net.dv8tion.jda.core.entities.Message
 import net.dv8tion.jda.core.entities.MessageEmbed
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.core.requests.RestAction
 import java.time.Clock
 import java.time.OffsetDateTime
 
@@ -80,7 +82,7 @@ class AutoReact : Module(isOptional = true) {
                     reacts
                         .map { (word, emotes) ->
                             word.limitLengthTo(MessageEmbed.TITLE_MAX_LENGTH) to
-                                emotes.joinToString("") { it.emote.toString(evt.jda) }
+                                emotes.joinToString("") { it.emote.asMention(evt.jda) }
                         }
                         .chunkedBy(MessageEmbed.EMBED_MAX_LENGTH_BOT, MESSAGE_EMBED_MAX_FIELDS) {
                             it.first.length + it.second.length
@@ -100,8 +102,17 @@ class AutoReact : Module(isOptional = true) {
                     .filter { it.key in evt.message.contentRaw }
                     .values
                     .flatten()
-                    .forEach { evt.message.addReaction(it.emote).queue() }
+                    .forEach { evt.message?.addReaction(it.emote)?.queue() }
             }
+        }
+    }
+
+    private fun Message.addReaction(emote: Emote): RestAction<Void>? = when {
+        emote.isDiscordEmote -> addReaction(jda.getEmoteById(emote.value as Long))
+        emote.isUnicodeEmote -> addReaction(emote.value as String)
+        else -> {
+            Logger.warn("Attempted to add reaction to a message using an Emote with no value.")
+            null
         }
     }
 
