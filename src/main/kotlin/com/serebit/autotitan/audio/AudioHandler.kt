@@ -8,7 +8,7 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.serebit.loggerkt.Logger
-import net.dv8tion.jda.core.entities.MessageChannel
+import net.dv8tion.jda.core.entities.TextChannel
 import java.util.concurrent.Future
 
 object AudioHandler : AudioPlayerManager by DefaultAudioPlayerManager() {
@@ -19,53 +19,53 @@ object AudioHandler : AudioPlayerManager by DefaultAudioPlayerManager() {
 
     inline fun loadTrack(
         query: String,
-        channel: MessageChannel,
+        channel: TextChannel,
         crossinline onLoad: (AudioTrack) -> Unit
     ): Future<Void> = loadItem(query, object : AudioLoadResultHandler {
         override fun trackLoaded(track: AudioTrack) = onLoad(track)
 
         override fun playlistLoaded(playlist: AudioPlaylist) {
-            if (playlist.isSearchResult) {
-                onLoad(playlist.selectedTrack ?: playlist.tracks[0])
+            if (playlist.isSearchResult && playlist.tracks.isNotEmpty()) {
+                onLoad(playlist.selectedTrack ?: playlist.tracks.first())
             } else {
-                channel.sendMessage("Can't load a track from a playlist URI!").complete()
+                channel.sendMessage("Can't load a track from a playlist URI.").queue()
             }
         }
 
         override fun noMatches() {
-            channel.sendMessage("Couldn't find anything. Maybe you misspelled the query?").complete()
+            channel.sendMessage("Couldn't find anything. Maybe you misspelled the query?").queue()
         }
 
         override fun loadFailed(exception: FriendlyException) {
             Logger.error(exception.message ?: "Failed to load track. No error message available.")
-            channel.sendMessage("Failed to load the track. The exception says `${exception.message}`.").complete()
+            channel.sendMessage("Failed to load the track. The exception says `${exception.message}`.").queue()
         }
     })
 
     inline fun loadPlaylist(
         query: String,
-        channel: MessageChannel,
+        channel: TextChannel,
         crossinline onLoad: (AudioPlaylist) -> Unit
     ): Future<Void> = loadItem(query, object : AudioLoadResultHandler {
         override fun playlistLoaded(playlist: AudioPlaylist) {
             if (playlist.isSearchResult) {
-                channel.sendMessage("Can't load search results as a playlist!").complete()
+                channel.sendMessage("Can't load search results as a playlist!").queue()
             } else {
                 onLoad(playlist)
             }
         }
 
         override fun trackLoaded(track: AudioTrack) {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            channel.sendMessage("Can't load a playlist from a track URI.").queue()
         }
 
         override fun noMatches() {
-            channel.sendMessage("Couldn't find anything. Maybe you misspelled the query?").complete()
+            channel.sendMessage("Couldn't find anything. Maybe you misspelled the query?").queue()
         }
 
         override fun loadFailed(exception: FriendlyException) {
             Logger.error(exception.message ?: "Failed to load playlist. No error message available.")
-            channel.sendMessage("Failed to load the playlist. The exception says `${exception.message}`.").complete()
+            channel.sendMessage("Failed to load the playlist. The exception says `${exception.message}`.").queue()
         }
     })
 }
