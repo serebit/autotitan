@@ -1,7 +1,7 @@
 package com.serebit.autotitan.api
 
+import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.meta.Descriptor
-import com.serebit.autotitan.api.meta.Restrictions
 import com.serebit.autotitan.api.parser.Parser
 import com.serebit.extensions.jda.canInvokeCommands
 import net.dv8tion.jda.core.entities.MessageEmbed
@@ -10,23 +10,23 @@ import kotlin.reflect.KClass
 
 internal class Command(
     private val descriptor: Descriptor,
-    private val restrictions: Restrictions,
+    private val access: Access,
     private val delimitLastString: Boolean,
     private val parameterTypes: List<KClass<*>>,
     private val function: (MessageReceivedEvent, List<Any>) -> Unit
 ) {
     val summary = "`${descriptor.name} ${parameterTypes.joinToString(" ") { "<${it.simpleName}>" }}`"
-    val helpField = MessageEmbed.Field(summary, "${descriptor.description}\n${restrictions.description}", false)
-    val isHidden get() = restrictions.hidden
+    val helpField = MessageEmbed.Field(summary, "${descriptor.description}\n${access.description}", false)
+    val isHidden get() = access.hidden
 
     operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>) = function.invoke(evt, parameters)
 
     fun matchesName(name: String) = descriptor.name == name
 
-    fun isVisibleFrom(evt: MessageReceivedEvent): Boolean = restrictions.matches(evt) && !isHidden
+    fun isVisibleFrom(evt: MessageReceivedEvent): Boolean = access.matches(evt) && !isHidden
 
     fun isInvokeableFrom(evt: MessageReceivedEvent): Boolean =
-        evt.author.canInvokeCommands && restrictions.matches(evt) && descriptor.matches(evt.message.contentRaw)
+        evt.author.canInvokeCommands && access.matches(evt) && descriptor.matches(evt.message.contentRaw)
 
     fun parseTokensOrNull(evt: MessageReceivedEvent): List<Any>? {
         val tokens = tokenizeMessage(evt.message.contentRaw)

@@ -1,7 +1,7 @@
 package com.serebit.autotitan.api
 
+import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.meta.Descriptor
-import com.serebit.autotitan.api.meta.Restrictions
 import com.serebit.autotitan.config
 import com.serebit.autotitan.data.Emote
 import net.dv8tion.jda.core.entities.Channel
@@ -33,7 +33,7 @@ abstract class Module(val isOptional: Boolean = false) {
 
     protected fun addCommand(
         descriptor: Descriptor,
-        restrictions: Restrictions = Restrictions(),
+        access: Access = Access.All(),
         delimitLastString: Boolean = true,
         parameterTypes: List<KClass<*>>,
         function: (MessageReceivedEvent, List<Any>) -> Unit
@@ -41,7 +41,7 @@ abstract class Module(val isOptional: Boolean = false) {
         commands.add(
             Command(
                 descriptor,
-                restrictions,
+                access,
                 delimitLastString,
                 parameterTypes,
                 function
@@ -52,21 +52,21 @@ abstract class Module(val isOptional: Boolean = false) {
     protected inline fun command(
         name: String,
         description: String = "",
-        restrictions: Restrictions = Restrictions(),
+        access: Access = Access.All(),
         delimitLastString: Boolean = true,
         crossinline task: (MessageReceivedEvent) -> Unit
     ) = addCommand(
-        Descriptor(name.toLowerCase(), description), restrictions, delimitLastString, emptyList()
+        Descriptor(name.toLowerCase(), description), access, delimitLastString, emptyList()
     ) { evt, _ -> task(evt) }
 
     protected inline fun <reified P0> command(
         name: String,
         description: String = "",
-        restrictions: Restrictions = Restrictions(),
+        access: Access = Access.All(),
         delimitLastString: Boolean = true,
         crossinline task: (MessageReceivedEvent, P0) -> Unit
     ) = addCommand(
-        Descriptor(name.toLowerCase(), description), restrictions, delimitLastString, listOf(P0::class)
+        Descriptor(name.toLowerCase(), description), access, delimitLastString, listOf(P0::class)
     ) { evt, args ->
         task(evt, args[0] as P0)
     }
@@ -74,11 +74,11 @@ abstract class Module(val isOptional: Boolean = false) {
     protected inline fun <reified P0, reified P1> command(
         name: String,
         description: String = "",
-        restrictions: Restrictions = Restrictions(),
+        access: Access = Access.All(),
         delimitLastString: Boolean = true,
         crossinline task: (MessageReceivedEvent, P0, P1) -> Unit
     ) = addCommand(
-        Descriptor(name.toLowerCase(), description), restrictions, delimitLastString,
+        Descriptor(name.toLowerCase(), description), access, delimitLastString,
         listOf(P0::class, P1::class)
     ) { evt, args ->
         task(evt, args[0] as P0, args[1] as P1)
@@ -87,11 +87,11 @@ abstract class Module(val isOptional: Boolean = false) {
     protected inline fun <reified P0, reified P1, reified P2> command(
         name: String,
         description: String = "",
-        restrictions: Restrictions = Restrictions(),
+        access: Access = Access.All(),
         delimitLastString: Boolean = true,
         crossinline task: (MessageReceivedEvent, P0, P1, P2) -> Unit
     ) = addCommand(
-        Descriptor(name.toLowerCase(), description), restrictions, delimitLastString,
+        Descriptor(name.toLowerCase(), description), access, delimitLastString,
         listOf(P0::class, P1::class, P2::class)
     ) { evt, args ->
         @Suppress("MagicNumber")
@@ -101,11 +101,11 @@ abstract class Module(val isOptional: Boolean = false) {
     protected inline fun <reified P0, reified P1, reified P2, reified P3> command(
         name: String,
         description: String = "",
-        restrictions: Restrictions = Restrictions(),
+        access: Access = Access.All(),
         delimitLastString: Boolean = true,
         crossinline task: (MessageReceivedEvent, P0, P1, P2, P3) -> Unit
     ) = addCommand(
-        Descriptor(name.toLowerCase(), description), restrictions, delimitLastString,
+        Descriptor(name.toLowerCase(), description), access, delimitLastString,
         listOf(P0::class, P1::class, P2::class, P3::class)
     ) { evt, args ->
         @Suppress("MagicNumber")
@@ -115,11 +115,11 @@ abstract class Module(val isOptional: Boolean = false) {
     protected inline fun <reified P0, reified P1, reified P2, reified P3, reified P4> command(
         name: String,
         description: String = "",
-        restrictions: Restrictions = Restrictions(),
+        access: Access = Access.All(),
         delimitLastString: Boolean = true,
         crossinline task: (MessageReceivedEvent, P0, P1, P2, P3, P4) -> Unit
     ) = addCommand(
-        Descriptor(name.toLowerCase(), description), restrictions, delimitLastString,
+        Descriptor(name.toLowerCase(), description), access, delimitLastString,
         listOf(P0::class, P1::class, P2::class, P3::class, P4::class)
     ) { evt, args ->
         @Suppress("MagicNumber")
@@ -129,11 +129,11 @@ abstract class Module(val isOptional: Boolean = false) {
     protected inline fun <reified P0, reified P1, reified P2, reified P3, reified P4, reified P5> command(
         name: String,
         description: String = "",
-        restrictions: Restrictions = Restrictions(),
+        access: Access = Access.All(),
         delimitLastString: Boolean = true,
         crossinline task: (MessageReceivedEvent, P0, P1, P2, P3, P4, P5) -> Unit
     ) = addCommand(
-        Descriptor(name.toLowerCase(), description), restrictions, delimitLastString,
+        Descriptor(name.toLowerCase(), description), access, delimitLastString,
         listOf(P0::class, P1::class, P2::class, P3::class, P4::class, P5::class)
     ) { evt, args ->
         @Suppress("MagicNumber")

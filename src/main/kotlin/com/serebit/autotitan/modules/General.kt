@@ -2,7 +2,6 @@ package com.serebit.autotitan.modules
 
 import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.api.meta.Access
-import com.serebit.autotitan.api.meta.Restrictions
 import com.serebit.extensions.jda.sendEmbed
 import net.dv8tion.jda.core.OnlineStatus
 import net.dv8tion.jda.core.Permission
@@ -23,11 +22,7 @@ class General : Module() {
             it.channel.sendMessage("Pong. The last ping was ${it.jda.ping}ms.").complete()
         }
 
-        command(
-            "serverInfo",
-            "Gets information about the server.",
-            Restrictions(Access.Guild.All)
-        ) { evt ->
+        command("serverInfo", "Gets information about the server.", Access.Guild.All()) { evt ->
             val onlineMemberCount = evt.guild.members.count { it.onlineStatus != OnlineStatus.OFFLINE }
             val hoistedRoles = evt.guild.roles
                 .filter { it.name != "@everyone" && it.isHoisted }
@@ -57,16 +52,12 @@ class General : Module() {
             }.complete()
         }
 
-        command(
-            "selfInfo",
-            "Gets information about the invoker.",
-            Restrictions(Access.Guild.All)
-        ) { sendMemberInfo(it, it.member) }
+        command("selfInfo", "Gets information about the invoker.") { sendMemberInfo(it, it.member) }
 
         command(
             "memberInfo",
             "Gets information about a specific server member.",
-            Restrictions(Access.Guild.All),
+            Access.Guild.All(),
             task = ::sendMemberInfo
         )
     }

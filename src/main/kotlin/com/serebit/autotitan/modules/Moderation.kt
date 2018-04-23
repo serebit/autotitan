@@ -2,7 +2,6 @@ package com.serebit.autotitan.modules
 
 import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.api.meta.Access
-import com.serebit.autotitan.api.meta.Restrictions
 import com.serebit.autotitan.data.DataManager
 import net.dv8tion.jda.core.JDA
 import net.dv8tion.jda.core.Permission
@@ -21,7 +20,7 @@ class Moderation : Module() {
         command(
             "kick",
             "Kicks a member.",
-            Restrictions(Access.Guild.All, listOf(Permission.KICK_MEMBERS))
+            Access.Guild.All(Permission.KICK_MEMBERS)
         ) { evt, member: Member ->
             evt.guild.controller.kick(member).complete()
             evt.channel.sendMessage("Kicked ${member.effectiveName}.").complete()
@@ -30,7 +29,7 @@ class Moderation : Module() {
         command(
             "ban",
             "Bans a user.",
-            Restrictions(Access.Guild.All, listOf(Permission.BAN_MEMBERS))
+            Access.Guild.All(Permission.BAN_MEMBERS)
         ) { evt, user: User ->
             evt.guild.controller.ban(user, 0).complete()
             evt.channel.sendMessage("Banned ${user.name}.")
@@ -39,7 +38,7 @@ class Moderation : Module() {
         command(
             "unBan",
             "Un-bans a banned user from the current server.",
-            Restrictions(Access.Guild.All, listOf(Permission.BAN_MEMBERS))
+            Access.Guild.All(Permission.BAN_MEMBERS)
         ) { evt, user: User ->
             evt.guild.controller.unban(user).complete()
             evt.channel.sendMessage("Unbanned ${user.name}.").complete()
@@ -48,7 +47,7 @@ class Moderation : Module() {
         command(
             "cleanUp",
             "Deletes the last N messages in the channel. N must be in the range of 1..$maximumCleanupCount.",
-            Restrictions(Access.Guild.All, listOf(Permission.MESSAGE_MANAGE))
+            Access.Guild.All(Permission.MESSAGE_MANAGE)
         ) { evt, number: Int ->
             if (number !in 1..maximumCleanupCount) {
                 evt.channel.sendMessage("The number has to be in the range of `1..$maximumCleanupCount`.").complete()
@@ -61,7 +60,7 @@ class Moderation : Module() {
         command(
             "setMemberRole",
             "Sets the role given to new members of the server upon joining.",
-            Restrictions(permissions = listOf(Permission.MANAGE_ROLES)),
+            Access.Guild.All(Permission.MANAGE_ROLES),
             false
         ) { evt, roleName: String ->
             val role = evt.guild.roles.findLast { it.name.toLowerCase() == roleName.toLowerCase() } ?: run {
@@ -76,7 +75,7 @@ class Moderation : Module() {
         command(
             "getMemberRole",
             "Gets the role given to new members of the server upon joining.",
-            Restrictions(permissions = listOf(Permission.MANAGE_ROLES))
+            Access.Guild.All(Permission.MANAGE_ROLES)
         ) { evt ->
             val role = memberRoleMap[evt.jda, evt.guild] ?: run {
                 evt.channel.sendMessage("The member role is not set up for this server.").complete()
@@ -88,7 +87,7 @@ class Moderation : Module() {
         command(
             "smartPrune",
             "Prunes members from the server, including those with the default member role.",
-            Restrictions(permissions = listOf(Permission.MANAGE_SERVER))
+            Access.Guild.All(Permission.MANAGE_SERVER)
         ) { evt ->
             memberRoleMap[evt.jda, evt.guild]?.let { memberRole ->
                 val membersWithBaseRole = evt.guild.getMembersWithRoles(memberRole)

@@ -4,7 +4,6 @@ import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.Gson
 import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.api.meta.Access
-import com.serebit.autotitan.api.meta.Restrictions
 import com.serebit.autotitan.apiwrappers.WordnikApi
 import com.serebit.autotitan.data.DataManager
 import com.serebit.extensions.jda.sendEmbed
@@ -28,7 +27,7 @@ class Dictionary : Module(isOptional = true) {
         command(
             "initDictionary",
             "Initializes the module with a Wordnik API key from https://dev.wordnik.com.",
-            Restrictions(Access.BotOwner)
+            Access.BotOwner()
         ) { evt, apiKey: String ->
             if (WordnikApi.init(apiKey)) {
                 config.apiKey = apiKey
