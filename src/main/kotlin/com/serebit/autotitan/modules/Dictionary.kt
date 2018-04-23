@@ -1,19 +1,17 @@
 package com.serebit.autotitan.modules
 
-import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.Gson
 import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.api.meta.Access
+import com.serebit.autotitan.apiwrappers.UrbanDictionaryApi
 import com.serebit.autotitan.apiwrappers.WordnikApi
 import com.serebit.autotitan.data.DataManager
 import com.serebit.extensions.jda.sendEmbed
 import com.serebit.extensions.limitLengthTo
-import khttp.get
 import net.dv8tion.jda.core.entities.MessageEmbed
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
-import java.net.URLEncoder
 
-@Suppress("UNUSED", "TooManyFunctions")
+@Suppress("UNUSED")
 class Dictionary : Module(isOptional = true) {
     private val gson = Gson()
     private val dataManager = DataManager(this::class)
@@ -112,41 +110,38 @@ class Dictionary : Module(isOptional = true) {
 
         command(
             "urban",
-            description = "Gets the first Urban Dictionary definition of the given query.",
+            description = "Gets the Nth Urban Dictionary definition of the given query.",
             delimitLastString = false
-        ) { evt, query: String -> getUrbanDefinition(evt, 0, query) }
+        ) { evt, index: Int, query: String -> sendUrbanDefinition(evt, query, index) }
 
         command(
             "urban",
-            description = "Gets the Nth Urban Dictionary definition of the given query.",
-            delimitLastString = false,
-            task = this::getUrbanDefinition
-        )
+            description = "Gets the first Urban Dictionary definition of the given query.",
+            delimitLastString = false
+        ) { evt, query: String -> sendUrbanDefinition(evt, query) }
     }
 
-    private fun getUrbanDefinition(evt: MessageReceivedEvent, index: Int, query: String) {
-        val encodedQuery = URLEncoder.encode(query, "UTF-8")
-        val apiResult = get("https://api.urbandictionary.com/v0/define?term=$encodedQuery")
-        if (apiResult.jsonObject["result_type"] != "no_results") {
-            val definitions = gson.fromJson<UrbanDictionaryResult>(apiResult.text).list
-            val definition = definitions[index - 1]
-                .definition
-                .replace("\\[word]".toRegex(), "")
-                .replace("\\[(.+?)]".toRegex(), "$1")
-            evt.channel.sendEmbed {
-                setTitle("$query (Definition $index of ${definitions.size})", definitions[0].permalink)
-                setDescription(definition.limitLengthTo(MessageEmbed.VALUE_MAX_LENGTH))
-                setFooter(
-                    "Powered by Urban Dictionary",
-                    "https://res.cloudinary.com/hrscywv4p/image/upload/v1/1194347/vo5ge6mdw4creyrgaq2m.png"
-                )
-            }.complete()
-        } else evt.channel.sendMessage("Couldn't find a definition at that index.").complete()
+    private fun sendUrbanDefinition(evt: MessageReceivedEvent, query: String, index: Int = 1) {
+        if (UrbanDictionaryApi.hasDefinitions(query)) {
+            UrbanDictionaryApi.getDefinition(query, index - 1)?.let { definition ->
+                val text = definition
+                    .definition
+                    .replace("\\[word]".toRegex(), "")
+                    .replace("\\[(.+?)]".toRegex(), "$1")
+                evt.channel.sendEmbed {
+                    setTitle(
+                        "$query (Definition $index of ${UrbanDictionaryApi.numDefinitions(query)})",
+                        definition.permalink
+                    )
+                    setDescription(text.limitLengthTo(MessageEmbed.VALUE_MAX_LENGTH))
+                    setFooter(
+                        "Powered by Urban Dictionary",
+                        "https://res.cloudinary.com/hrscywv4p/image/upload/v1/1194347/vo5ge6mdw4creyrgaq2m.png"
+                    )
+                }.queue()
+            } ?: evt.channel.sendMessage("No definition was found at that index.").queue()
+        } else evt.channel.sendMessage("No definitions were found.").queue()
     }
 
     private data class DictionaryConfig(var apiKey: String? = null)
-
-    private data class UrbanDictionaryResult(val list: List<UrbanDictionaryDefinition>)
-
-    private data class UrbanDictionaryDefinition(val definition: String, val permalink: String, val example: String)
 }

@@ -5,7 +5,7 @@ import com.google.gson.Gson
 import khttp.get
 import java.net.HttpURLConnection
 
-object WordnikApi {
+internal object WordnikApi {
     private val serializer = Gson()
     private lateinit var apiKey: String
     private val definitionCache: MutableMap<String, List<Definition>> = mutableMapOf()
