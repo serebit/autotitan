@@ -13,14 +13,14 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
 
-object Parser {
+internal object Parser {
     fun castToken(evt: MessageReceivedEvent, type: KClass<out Any>, token: String): Any? = when {
         type.isSubclassOf(Number::class) -> castNumeral(type, token)
-        type.isSubclassOf(IMentionable::class) -> castJdaEntity(evt, type, token)
+        type.isSubclassOf(IMentionable::class) -> castJdaMentionable(evt, type, token)
         else -> castOther(evt, type, token)
     }
 
-    private fun castJdaEntity(
+    private fun castJdaMentionable(
         evt: MessageReceivedEvent,
         type: KClass<out Any>,
         token: String
