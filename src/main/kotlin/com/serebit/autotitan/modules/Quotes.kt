@@ -15,7 +15,7 @@ import java.util.*
 @Suppress("UNUSED", "TooManyFunctions")
 class Quotes : Module(isOptional = true) {
     private val dataManager = DataManager(this::class)
-    private val quoteMap = dataManager.read("quotes.json") ?: GuildResourceMap<String, String>()
+    private val quoteMap = dataManager.readOrDefault("quotes.json") { GuildResourceMap<String, String>() }
     private val random = Random()
 
     init {

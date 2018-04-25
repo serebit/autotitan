@@ -22,7 +22,9 @@ import java.time.OffsetDateTime
 @Suppress("UNUSED")
 class AutoReact : Module(isOptional = true) {
     private val dataManager = DataManager(this::class)
-    private val reactMap = dataManager.read("reacts.json") ?: GuildResourceMap<String, MutableList<EmoteData>>()
+    private val reactMap = dataManager.readOrDefault("reacts.json") {
+        GuildResourceMap<String, MutableList<EmoteData>>()
+    }
 
     init {
         command(

@@ -15,7 +15,7 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 class Dictionary : Module(isOptional = true) {
     private val gson = Gson()
     private val dataManager = DataManager(this::class)
-    private val config = dataManager.read("config.json") ?: DictionaryConfig()
+    private val config = dataManager.readOrDefault("config.json") { DictionaryConfig() }
 
     init {
         config.apiKey?.let {

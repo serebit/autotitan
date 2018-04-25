@@ -14,6 +14,9 @@ class DataManager(type: KClass<out Any>) {
     */
     inline fun <reified T : Any> read(fileName: String): T? = read(fileName, object : TypeToken<T>() {}.type)
 
+    inline fun <reified T : Any> readOrDefault(fileName: String, defaultValue: () -> T) =
+        read(fileName) ?: defaultValue()
+
     fun <T : Any> read(fileName: String, type: Type): T? = dataFolder.resolve(fileName).let { file ->
         if (file.exists()) serializer.fromJson(file.readText(), type) else null
     }
@@ -23,7 +26,7 @@ class DataManager(type: KClass<out Any>) {
         .writeText(serializer.toJson(obj))
 
     companion object {
-        val codeSource: File = File(this::class.java.protectionDomain.codeSource.location.toURI())
+        private val codeSource: File = File(this::class.java.protectionDomain.codeSource.location.toURI())
         val classpath: File = codeSource.parentFile
         private val serializer = Gson()
 
