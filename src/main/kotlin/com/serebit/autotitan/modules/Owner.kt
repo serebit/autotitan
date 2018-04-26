@@ -16,7 +16,7 @@ import java.lang.management.ManagementFactory
 import kotlin.system.exitProcess
 
 
-@Suppress("UNUSED", "TooManyFunctions")
+@Suppress("UNUSED")
 class Owner : Module() {
     private val info by lazy { SystemInfo() }
 

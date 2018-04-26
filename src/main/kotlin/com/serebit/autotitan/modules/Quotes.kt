@@ -12,7 +12,7 @@ import com.serebit.extensions.limitLengthTo
 import net.dv8tion.jda.core.entities.MessageEmbed
 import java.util.*
 
-@Suppress("UNUSED", "TooManyFunctions")
+@Suppress("UNUSED")
 class Quotes : Module(isOptional = true) {
     private val dataManager = DataManager(this::class)
     private val quoteMap = dataManager.readOrDefault("quotes.json") { GuildResourceMap<String, String>() }

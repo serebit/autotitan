@@ -64,7 +64,7 @@ object AudioHandler : AudioPlayerManager by DefaultAudioPlayerManager() {
         }
 
         override fun loadFailed(exception: FriendlyException) {
-            Logger.error(exception.message ?: "Failed to load playlist. No error message available.")
+            Logger.warn(exception.message ?: "Failed to load playlist. No error message available.")
             channel.sendMessage("Failed to load the playlist. The exception says `${exception.message}`.").queue()
         }
     })

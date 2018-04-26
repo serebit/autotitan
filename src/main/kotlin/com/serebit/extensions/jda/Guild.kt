@@ -11,7 +11,7 @@ private val trackManagers = mutableMapOf<Long, GuildTrackManager>()
 
 val Guild.trackManager: GuildTrackManager
     get() = trackManagers.getOrPut(idLong) {
-        GuildTrackManager().also {
+        GuildTrackManager(audioManager).also {
             audioManager.sendingHandler = it.sendHandler
         }
     }

@@ -7,40 +7,37 @@ import com.serebit.autotitan.audio.VoiceStatus
 import com.serebit.extensions.jda.closeAudioConnection
 import com.serebit.extensions.jda.openAudioConnection
 import com.serebit.extensions.jda.trackManager
-import com.serebit.extensions.jda.voiceStatus
 import net.dv8tion.jda.core.entities.Guild
 import net.dv8tion.jda.core.entities.VoiceChannel
 import net.dv8tion.jda.core.events.guild.voice.GuildVoiceLeaveEvent
 import net.dv8tion.jda.core.events.guild.voice.GuildVoiceMoveEvent
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 
-@Suppress("UNUSED", "TooManyFunctions")
+@Suppress("UNUSED")
 class Audio : Module() {
     private val uriRegex = "^https?://[^\\s/\$.?#].[^\\s]*\$".toRegex()
 
     init {
         command("joinVoice", "Joins the voice channel that the invoker is in.", Access.Guild.All()) { evt ->
-            val voiceStatus = evt.voiceStatus
-            when (voiceStatus) {
+            when (VoiceStatus.from(evt)) {
                 VoiceStatus.SELF_DISCONNECTED_USER_CONNECTED -> connectToVoiceChannel(evt.member.voiceState.channel) {
-                    evt.channel.sendMessage("Joined ${evt.guild.audioManager.connectedChannel.name}.").complete()
+                    evt.channel.sendMessage("Joined ${evt.guild.audioManager.connectedChannel.name}.").queue()
                 }
                 VoiceStatus.BOTH_CONNECTED_SAME_CHANNEL -> {
-                    evt.channel.sendMessage("We're already in the same voice channel.").complete()
+                    evt.channel.sendMessage("We're already in the same voice channel.").queue()
                 }
                 VoiceStatus.BOTH_CONNECTED_DIFFERENT_CHANNEL, VoiceStatus.SELF_CONNECTED_USER_DISCONNECTED -> {
-                    evt.channel.sendMessage("I'm already in a voice channel.").complete()
+                    evt.channel.sendMessage("I'm already in a voice channel.").queue()
                 }
                 VoiceStatus.NEITHER_CONNECTED -> {
-                    evt.channel.sendMessage("You need to be in a voice channel for me to do that.").complete()
+                    evt.channel.sendMessage("You need to be in a voice channel for me to do that.").queue()
                 }
             }
         }
 
         command("leaveVoice", "Leaves the voice channel that the bot is in.", Access.Guild.All()) { evt ->
-            val channelName = evt.guild.audioManager.connectedChannel.name
             leaveVoiceChannel(evt.guild) {
-                evt.channel.sendMessage("Left $channelName.").complete()
+                evt.channel.sendMessage("Left ${evt.guild.audioManager.connectedChannel.name}.").queue()
             }
         }
 
@@ -53,13 +50,11 @@ class Audio : Module() {
             if (handleVoiceStatus(evt, true)) {
                 val trimmedQuery = query.removeSurrounding("<", ">")
                 val formattedQuery = buildString {
-                    if (!trimmedQuery.matches(uriRegex)) {
-                        append("ytsearch: ")
-                    }
+                    if (!trimmedQuery.matches(uriRegex)) append("ytsearch: ")
                     append(trimmedQuery)
                 }
                 AudioHandler.loadTrack(formattedQuery, evt.textChannel) { track ->
-                    evt.channel.sendMessage("Adding ${track.info.title} to queue.").complete()
+                    evt.channel.sendMessage("Adding ${track.info.title} to queue.").queue()
                     evt.guild.trackManager.addToQueue(track)
                 }
             }
@@ -72,11 +67,11 @@ class Audio : Module() {
                     AudioHandler.loadPlaylist(trimmedUri, evt.textChannel) { playlist ->
                         evt.channel.sendMessage(
                             "Adding ${playlist.tracks.size} tracks from ${playlist.name} to queue."
-                        ).complete()
+                        ).queue()
                         playlist.tracks.forEach(evt.guild.trackManager::addToQueue)
                     }
                 } else {
-                    evt.channel.sendMessage("That URI isn't a valid playlist.").complete()
+                    evt.channel.sendMessage("That link is invalid.").complete()
                 }
             }
         }
@@ -85,10 +80,8 @@ class Audio : Module() {
             if (handleVoiceStatus(evt)) {
                 if (evt.guild.trackManager.isPlaying) {
                     evt.guild.trackManager.skipTrack()
-                    evt.channel.sendMessage("Skipped.").complete()
-                } else {
-                    evt.channel.sendMessage("Cannot skip. Nothing is playing.").complete()
-                }
+                    evt.channel.sendMessage("Skipped.").queue()
+                } else evt.channel.sendMessage("Can't skip. Nothing is playing.").complete()
             }
         }
 
@@ -119,14 +112,12 @@ class Audio : Module() {
             "queue",
             "Sends an embed with the list of songs in the queue.",
             Access.Guild.All()
-        ) { evt ->
-            evt.guild.trackManager.sendQueueEmbed(evt.textChannel)
-        }
+        ) { evt -> evt.guild.trackManager.sendQueueEmbed(evt.textChannel) }
 
         command("setVolume", "Sets the volume.", Access.Guild.All()) { evt, volume: Int ->
             if (handleVoiceStatus(evt)) {
                 evt.guild.trackManager.volume = volume
-                evt.channel.sendMessage("Set volume to ${evt.guild.trackManager.volume}%.").complete()
+                evt.channel.sendMessage("Set the volume to ${evt.guild.trackManager.volume}%.").complete()
             }
         }
 
@@ -159,23 +150,23 @@ class Audio : Module() {
         }
     }
 
-    private fun handleVoiceStatus(evt: MessageReceivedEvent, shouldConnect: Boolean = false): Boolean {
-        val voiceStatus = evt.voiceStatus
-        return when (evt.voiceStatus) {
-            VoiceStatus.BOTH_CONNECTED_SAME_CHANNEL -> true
-            VoiceStatus.SELF_DISCONNECTED_USER_CONNECTED -> if (shouldConnect) {
-                connectToVoiceChannel(evt.member.voiceState.channel)
-                true
-            } else {
-                voiceStatus.sendErrorMessage(evt.textChannel)
-                false
-            }
-            else -> {
-                voiceStatus.sendErrorMessage(evt.textChannel)
-                false
+    private fun handleVoiceStatus(evt: MessageReceivedEvent, shouldConnect: Boolean = false): Boolean =
+        VoiceStatus.from(evt).let { status ->
+            when (status) {
+                VoiceStatus.BOTH_CONNECTED_SAME_CHANNEL -> true
+                VoiceStatus.SELF_DISCONNECTED_USER_CONNECTED -> if (shouldConnect) {
+                    connectToVoiceChannel(evt.member.voiceState.channel)
+                    true
+                } else {
+                    status.sendErrorMessage(evt.textChannel)
+                    false
+                }
+                else -> {
+                    status.sendErrorMessage(evt.textChannel)
+                    false
+                }
             }
         }
-    }
 
     companion object {
         private const val queueListLength = 8

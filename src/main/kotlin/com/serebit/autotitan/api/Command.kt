@@ -23,9 +23,9 @@ internal class Command(
 
     fun matchesName(name: String) = descriptor.name == name
 
-    fun isVisibleFrom(evt: MessageReceivedEvent): Boolean = access.matches(evt) && !isHidden
+    fun isVisibleFrom(evt: MessageReceivedEvent) = access.matches(evt) && !isHidden
 
-    fun isInvokeableFrom(evt: MessageReceivedEvent): Boolean =
+    fun isInvokeableFrom(evt: MessageReceivedEvent) =
         evt.author.canInvokeCommands && access.matches(evt) && descriptor.matches(evt.message.contentRaw)
 
     fun parseTokensOrNull(evt: MessageReceivedEvent): List<Any>? {

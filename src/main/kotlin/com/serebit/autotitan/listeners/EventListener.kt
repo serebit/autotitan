@@ -78,9 +78,7 @@ internal object EventListener : ListenerAdapter() {
                             addField(command.helpField)
                         }
                     }.complete()
-                } else {
-                    evt.channel.sendMessage("Could not find any commands matching `$commandName`.").complete()
-                }
+                } else evt.channel.sendMessage("Could not find any commands matching `$commandName`.").complete()
             }
         }
     }

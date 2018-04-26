@@ -2,37 +2,33 @@ package com.serebit.autotitan.modules
 
 import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.config
+import com.serebit.extensions.randomEntry
 import java.util.*
 import kotlin.math.roundToInt
 
-@Suppress("UNUSED", "TooManyFunctions")
+@Suppress("UNUSED")
 class Entertainment : Module(isOptional = true) {
     private val deterministicRandom = Random()
     private val random = Random()
 
     init {
-        command(
-            "8",
-            "Answers questions in 8-ball fashion.",
-            delimitLastString = false
-        ) { evt, _: String ->
-            val responseIndex = random.next(eightBallResponses.size - 1)
-            evt.channel.sendMessage(eightBallResponses[responseIndex]).complete()
+        command("8", "Answers questions in 8-ball fashion.", delimitLastString = false) { evt, _: String ->
+            evt.channel.sendMessage(eightBallResponses.randomEntry()).complete()
         }
 
         command(
             "rate",
-            "Rates the given thing on a scale of 0 to $defaultRatingDenominator.",
+            "Rates the given thing on a scale of 0 to $ratingDenominator.",
             delimitLastString = false
         ) { evt, thingToRate: String ->
             deterministicRandom.setSeed(
                 thingToRate.normalize()
                     .hashCode()
-                    .toLong()
                     .plus(config.token.hashCode())
+                    .toLong()
             )
-            val rating = deterministicRandom.next(defaultRatingDenominator)
-            evt.channel.sendMessage("I'd give $thingToRate a `$rating/$defaultRatingDenominator`.").complete()
+            val rating = deterministicRandom.next(ratingDenominator)
+            evt.channel.sendMessage("I'd give $thingToRate a `$rating/$ratingDenominator`.").complete()
         }
     }
 
@@ -43,7 +39,7 @@ class Entertainment : Module(isOptional = true) {
     private fun Random.next(bound: Int) = (nextFloat() * bound).roundToInt()
 
     companion object {
-        private const val defaultRatingDenominator = 10
+        private const val ratingDenominator = 10
         private val eightBallResponses = listOf(
             "It is certain.",
             "It is decidedly so.",

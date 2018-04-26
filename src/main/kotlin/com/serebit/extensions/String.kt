@@ -6,8 +6,6 @@ import net.dv8tion.jda.core.entities.MessageEmbed
 
 fun String.toBooleanOrNull() = if (this == "true" || this == "false") toBoolean() else null
 
-fun String.toCharOrNull() = if (length == 1) this[0] else null
-
 fun String.limitLengthTo(max: Int): String {
     val trimmedString = replace("(\\s){2,}".toRegex(), "$1$1")
     return if (trimmedString.length > max) {

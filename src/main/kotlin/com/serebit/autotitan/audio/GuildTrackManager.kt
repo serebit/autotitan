@@ -9,13 +9,16 @@ import com.serebit.extensions.jda.infoString
 import com.serebit.extensions.jda.sendEmbed
 import net.dv8tion.jda.core.audio.AudioSendHandler
 import net.dv8tion.jda.core.entities.MessageChannel
+import net.dv8tion.jda.core.managers.AudioManager
 
-class GuildTrackManager : AudioEventAdapter() {
+class GuildTrackManager(audioManager: AudioManager) : AudioEventAdapter() {
     private val player: AudioPlayer = AudioHandler.createPlayer().also {
         it.addListener(this)
     }
     private val queue = mutableListOf<AudioTrack>()
-    val sendHandler = AudioPlayerSendHandler()
+    val sendHandler = AudioPlayerSendHandler().also {
+        audioManager.sendingHandler = it
+    }
     var volume: Int
         get() = player.volume
         set(value) {

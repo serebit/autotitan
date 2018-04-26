@@ -7,8 +7,6 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 sealed class Access(val description: String, val hidden: Boolean) {
     abstract fun matches(evt: MessageReceivedEvent): Boolean
 
-    protected open fun preMatch(evt: MessageReceivedEvent): Boolean = true
-
     class All(hidden: Boolean = false) : Access("Anyone", hidden) {
         override fun matches(evt: MessageReceivedEvent): Boolean = true
     }

@@ -140,15 +140,14 @@ abstract class Module(val isOptional: Boolean = false) {
         task(evt, args[0] as P0, args[1] as P1, args[2] as P2, args[3] as P3, args[4] as P4, args[5] as P5)
     }
 
-    protected fun addListener(eventType: KClass<out Event>, function: (Event) -> Unit) = listeners.add(
-        Listener(eventType, function)
-    )
+    protected fun addListener(eventType: KClass<out Event>, function: (Event) -> Unit) =
+        listeners.add(Listener(eventType, function))
 
     protected inline fun <reified T : Event> listener(crossinline task: (T) -> Unit) = addListener(T::class) {
         task(it as T)
     }
 
-    fun getInvokeableCommandField(evt: MessageReceivedEvent): MessageEmbed.Field? {
+    internal fun getInvokeableCommandField(evt: MessageReceivedEvent): MessageEmbed.Field? {
         val validCommands = commands.filter { it.isVisibleFrom(evt) }
         return if (validCommands.isNotEmpty()) {
             MessageEmbed.Field(name, validCommands.joinToString("\n") { it.summary }, false)
@@ -163,10 +162,9 @@ abstract class Module(val isOptional: Boolean = false) {
             commands.asSequence()
                 .filter { it.isInvokeableFrom(evt) }
                 .associate { it to it.parseTokensOrNull(evt) }.entries
-                .firstOrNull { it.value != null }?.let { (command, parameters) ->
+                .find { it.value != null }?.let { (command, parameters) ->
                     command(evt, parameters!!)
                 }
-
         }
     }
 
@@ -176,14 +174,9 @@ abstract class Module(val isOptional: Boolean = false) {
     companion object {
         private val validParameterTypes = setOf(
             Boolean::class,
-            Byte::class,
-            Short::class,
-            Int::class,
-            Long::class,
-            Float::class,
-            Double::class,
-            User::class,
-            Member::class,
+            Byte::class, Short::class, Int::class, Long::class,
+            Float::class, Double::class,
+            User::class, Member::class,
             Channel::class,
             Emote::class,
             Char::class,

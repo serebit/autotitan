@@ -13,7 +13,7 @@ import java.time.temporal.ChronoUnit
 import java.time.temporal.Temporal
 import kotlin.math.absoluteValue
 
-@Suppress("UNUSED", "TooManyFunctions")
+@Suppress("UNUSED")
 class General : Module() {
     private val dateFormat = DateTimeFormatter.ofPattern("d MMM, yyyy")
 
@@ -96,8 +96,7 @@ class General : Module() {
     private val Boolean.asYesNo get() = if (this) "Yes" else "No"
 
     private val OnlineStatus.readableName
-        get() = name
-            .toLowerCase()
+        get() = name.toLowerCase()
             .replace("_", " ")
             .capitalize()
 

@@ -11,7 +11,7 @@ import net.dv8tion.jda.core.entities.Role
 import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent
 
-@Suppress("UNUSED", "TooManyFunctions")
+@Suppress("UNUSED")
 class Moderation : Module() {
     private val dataManager = DataManager(this::class)
     private val memberRoleMap: GuildRoleMap = dataManager.readOrDefault("rolemap.json") { GuildRoleMap() }
@@ -49,12 +49,10 @@ class Moderation : Module() {
             "Deletes the last N messages in the channel. N must be in the range of 1..$maximumCleanupCount.",
             Access.Guild.All(Permission.MESSAGE_MANAGE)
         ) { evt, number: Int ->
-            if (number !in 1..maximumCleanupCount) {
-                evt.channel.sendMessage("The number has to be in the range of `1..$maximumCleanupCount`.").complete()
-                return@command
-            }
-            val messages = evt.textChannel.history.retrievePast(number + 1).complete()
-            evt.textChannel.deleteMessages(messages).complete()
+            if (number in 1..maximumCleanupCount) {
+                val messages = evt.textChannel.history.retrievePast(number + 1).complete()
+                evt.textChannel.deleteMessages(messages).complete()
+            } else evt.channel.sendMessage("The number has to be in the range of `1..$maximumCleanupCount`.").complete()
         }
 
         command(
@@ -63,13 +61,13 @@ class Moderation : Module() {
             Access.Guild.All(Permission.MANAGE_ROLES),
             false
         ) { evt, roleName: String ->
-            val role = evt.guild.roles.findLast { it.name.toLowerCase() == roleName.toLowerCase() } ?: run {
-                evt.channel.sendMessage("`$roleName` does not exist.").complete()
-                return@command
-            }
-            evt.channel.sendMessage("Set the member role to `$roleName`.").complete()
-            memberRoleMap.put(evt.guild, role)
-            dataManager.write("rolemap.json", memberRoleMap)
+            evt.guild.roles
+                .findLast { it.name.toLowerCase() == roleName.toLowerCase() }
+                ?.let { role ->
+                    evt.channel.sendMessage("Set the member role to `$roleName`.").complete()
+                    memberRoleMap.put(evt.guild, role)
+                    dataManager.write("rolemap.json", memberRoleMap)
+                } ?: evt.channel.sendMessage("`$roleName` does not exist.").complete()
         }
 
         command(
@@ -77,11 +75,9 @@ class Moderation : Module() {
             "Gets the role given to new members of the server upon joining.",
             Access.Guild.All(Permission.MANAGE_ROLES)
         ) { evt ->
-            val role = memberRoleMap[evt.jda, evt.guild] ?: run {
-                evt.channel.sendMessage("The member role is not set up for this server.").complete()
-                return@command
-            }
-            evt.channel.sendMessage("The member role for this server is set to `${role.name}`.").complete()
+            memberRoleMap[evt.jda, evt.guild]?.let { role ->
+                evt.channel.sendMessage("The member role for this server is set to `${role.name}`.").complete()
+            } ?: evt.channel.sendMessage("The member role is not set up for this server.").complete()
         }
 
         command(
@@ -105,7 +101,7 @@ class Moderation : Module() {
         }
 
         listener { evt: GuildMemberJoinEvent ->
-            if (memberRoleMap.contains(evt.guild)) {
+            if (evt.guild in memberRoleMap) {
                 evt.guild.controller.addRolesToMember(evt.member, memberRoleMap[evt.jda, evt.guild]).complete()
             }
         }

@@ -4,7 +4,6 @@ import com.serebit.autotitan.data.Emote
 import com.serebit.extensions.jda.getMemberByMention
 import com.serebit.extensions.jda.getTextChannelByMention
 import com.serebit.extensions.jda.getUserByMention
-import com.serebit.extensions.toCharOrNull
 import net.dv8tion.jda.core.entities.Channel
 import net.dv8tion.jda.core.entities.IMentionable
 import net.dv8tion.jda.core.entities.Member
@@ -50,7 +49,7 @@ internal object Parser {
         token: String
     ): Any? = when (type) {
         String::class -> token
-        Char::class -> token.toCharOrNull()
+        Char::class -> token.singleOrNull()
         Emote::class -> Emote.from(token, evt.jda)
         else -> null
     }
