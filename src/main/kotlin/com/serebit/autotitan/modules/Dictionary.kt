@@ -74,7 +74,7 @@ class Dictionary : Module(isOptional = true) {
             definitions[0].let {
                 setTitle(
                     "${it.word} (Definition 1 of ${definitions.size})",
-                    "https://www.wordnik.com/words/$wordOrPhrase"
+                    "https://www.wordnik.com/words/${wordOrPhrase.replace("\\s".toRegex(), "%20")}"
                 )
                 setDescription("*${it.partOfSpeech}*\n${it.text}")
             }
@@ -106,7 +106,7 @@ class Dictionary : Module(isOptional = true) {
                 definitions[index - 1].let {
                     setTitle(
                         "${it.word} (Definition $index of ${definitions.size})",
-                        "https://www.wordnik.com/words/$wordOrPhrase"
+                        "https://www.wordnik.com/words/${wordOrPhrase.replace("\\s".toRegex(), "%20")}"
                     )
                     setDescription("*${it.partOfSpeech}*\n${it.text}")
                 }
@@ -136,7 +136,10 @@ class Dictionary : Module(isOptional = true) {
         }
 
         evt.channel.sendEmbed {
-            setTitle("Words related to $wordOrPhrase", "https://www.wordnik.com/words/$wordOrPhrase")
+            setTitle(
+                "Words related to $wordOrPhrase",
+                "https://www.wordnik.com/words/${wordOrPhrase.replace("\\s".toRegex(), "%20")}"
+            )
             setDescription(related.sortedByDescending { it.first }.joinToString("\n") {
                 // example: "Antonyms: *wet, moisten, soak, water*"
                 "${it.first.capitalize()}s: *${it.second.joinToString(", ")}*"
