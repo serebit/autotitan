@@ -4,6 +4,7 @@ import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.Gson
 import khttp.get
 import java.net.HttpURLConnection
+import java.net.URI
 
 internal object WordnikApi {
     private val serializer = Gson()
@@ -16,10 +17,10 @@ internal object WordnikApi {
         val apiTokenStatus = serializer.fromJson<ApiTokenStatus>(
             get(ApiTokenStatus.endpoint, params = mapOf("api_key" to apiKey)).text
         )
-        if (apiTokenStatus.valid) {
+        return if (apiTokenStatus.valid) {
             this.apiKey = apiKey
-        }
-        return apiTokenStatus.valid
+            true
+        } else false
     }
 
     fun getDefinition(word: String, index: Int = 0): Definition? = when {
@@ -89,13 +90,15 @@ internal object WordnikApi {
 
     data class Definition(val partOfSpeech: String, val text: String) {
         companion object {
-            fun endpointOf(word: String) = "http://api.wordnik.com/v4/word.json/$word/definitions"
+            fun endpointOf(query: String): String =
+                URI("http", "api.wordnik.com", "/v4/word.json/$query/definitions", null).toASCIIString()
         }
     }
 
     data class Related(val relationshipType: String, val words: List<String>) {
         companion object {
-            fun endpointOf(word: String) = "http://api.wordnik.com/v4/word.json/$word/relatedWords"
+            fun endpointOf(word: String): String =
+                URI("http", "api.wordnik.com", "/v4/word.json/$word/relatedWords", null).toASCIIString()
         }
     }
 

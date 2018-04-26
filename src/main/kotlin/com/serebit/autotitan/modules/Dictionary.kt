@@ -23,18 +23,18 @@ class Dictionary : Module(isOptional = true) {
         }
 
         command(
-            "initDictionary",
+            "initWordnik",
             "Initializes the module with a Wordnik API key from https://dev.wordnik.com.",
-            Access.BotOwner()
+            Access.Private.BotOwner()
         ) { evt, apiKey: String ->
             if (WordnikApi.init(apiKey)) {
                 config.apiKey = apiKey
                 dataManager.write("config.json", config)
-                if (evt.textChannel != null) evt.message.delete().complete()
-                evt.channel.sendMessage("Dictionary module has been initialized.").complete()
+                evt.channel.sendMessage("Wordnik has been initialized.").complete()
             } else {
-                if (evt.textChannel != null) evt.message.delete().complete()
-                evt.channel.sendMessage("The given API key is invalid. Try again, with a valid API key.").complete()
+                evt.channel.sendMessage(
+                    "The given API key is invalid. Try again with a valid Wordnik API key."
+                ).complete()
             }
         }
 
@@ -42,61 +42,26 @@ class Dictionary : Module(isOptional = true) {
             "define",
             description = "Gets the Nth definition of the given query.",
             delimitLastString = false
-        ) { evt, index: Int, wordOrPhrase: String ->
-            when {
-                !WordnikApi.isInitialized -> evt.channel.sendMessage(
-                    "The Dictionary module is not initialized. Initialize it with the command `initdictionary`."
-                ).complete()
-                WordnikApi.hasDefinitions(wordOrPhrase) -> WordnikApi.getDefinition(wordOrPhrase, index - 1)?.let {
-                    evt.channel.sendEmbed {
-                        setTitle(
-                            "$wordOrPhrase (Definition $index of ${WordnikApi.numDefinitions(wordOrPhrase)})",
-                            "https://www.wordnik.com/words/$wordOrPhrase"
-                        )
-                        setDescription("*${it.partOfSpeech}*\n${it.text}")
-                        setFooter("Powered by Wordnik", "http://www.wordnik.com/img/wordnik_gearheart.png")
-                    }.complete()
-                } ?: evt.channel.sendMessage("No definition was found at that index.").complete()
-                else -> evt.channel.sendMessage("No definitions were found.").queue()
-            }
-        }
+        ) { evt, index: Int, query: String -> sendWordnikDefinition(evt, query, index) }
 
         command(
             "define",
             "Gets the first definition of the given query.",
             delimitLastString = false
-        ) { evt, wordOrPhrase: String ->
-            when {
-                !WordnikApi.isInitialized -> evt.channel.sendMessage(
-                    "The Dictionary module is not initialized. Initialize it with the command `initdictionary`."
-                ).complete()
-                WordnikApi.hasDefinitions(wordOrPhrase) -> WordnikApi.getDefinition(wordOrPhrase)?.let { definition ->
-                    evt.channel.sendEmbed {
-                        setTitle(
-                            "$wordOrPhrase (Definition 1 of ${WordnikApi.numDefinitions(wordOrPhrase)})",
-                            "https://www.wordnik.com/words/$wordOrPhrase"
-                        )
-                        setDescription("*${definition.partOfSpeech}*\n${definition.text}")
-                        setFooter("Powered by Wordnik", "http://www.wordnik.com/img/wordnik_gearheart.png")
-                    }.complete()
-                }
-                else -> evt.channel.sendMessage("No definitions were found.").queue()
-            }
-        }
-
+        ) { evt, query: String -> sendWordnikDefinition(evt, query) }
 
         command(
             "related",
             description = "Gets synonyms and antonyms for the given query.",
             delimitLastString = false
-        ) { evt, wordOrPhrase: String ->
+        ) { evt, query: String ->
             when {
                 !WordnikApi.isInitialized -> evt.channel.sendMessage(
                     "The Dictionary module is not initialized. Initialize it with the command `initdictionary`."
                 ).complete()
-                WordnikApi.hasRelatedWords(wordOrPhrase) -> WordnikApi.getRelatedWords(wordOrPhrase)?.let { related ->
+                WordnikApi.hasRelatedWords(query) -> WordnikApi.getRelatedWords(query)?.let { related ->
                     evt.channel.sendEmbed {
-                        setTitle("Words related to $wordOrPhrase", "https://www.wordnik.com/words/$wordOrPhrase")
+                        setTitle("Words related to $query", "https://www.wordnik.com/words/$query")
                         setDescription(related.joinToString("\n") {
                             // example: "Antonyms: *wet, moisten, soak, water*"
                             "${it.relationshipType.capitalize()}s: *${it.words.joinToString(", ")}*"
@@ -119,6 +84,25 @@ class Dictionary : Module(isOptional = true) {
             description = "Gets the first Urban Dictionary definition of the given query.",
             delimitLastString = false
         ) { evt, query: String -> sendUrbanDefinition(evt, query) }
+    }
+
+    private fun sendWordnikDefinition(evt: MessageReceivedEvent, query: String, index: Int = 1) {
+        when {
+            !WordnikApi.isInitialized -> evt.channel.sendMessage(
+                "Wordnik is not initialized. Initialize it with the command `initwordnik`."
+            ).complete()
+            WordnikApi.hasDefinitions(query) -> WordnikApi.getDefinition(query, index - 1)?.let { definition ->
+                evt.channel.sendEmbed {
+                    setTitle(
+                        "$query (Definition $index of ${WordnikApi.numDefinitions(query)})",
+                        "https://www.wordnik.com/words/$query"
+                    )
+                    setDescription("*${definition.partOfSpeech}*\n${definition.text}")
+                    setFooter("Powered by Wordnik", "http://www.wordnik.com/img/wordnik_gearheart.png")
+                }.complete()
+            } ?: evt.channel.sendMessage("No definition was found at that index.").complete()
+            else -> evt.channel.sendMessage("No definitions were found.").queue()
+        }
     }
 
     private fun sendUrbanDefinition(evt: MessageReceivedEvent, query: String, index: Int = 1) {
