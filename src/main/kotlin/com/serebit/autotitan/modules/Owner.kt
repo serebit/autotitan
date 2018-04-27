@@ -1,6 +1,6 @@
 package com.serebit.autotitan.modules
 
-import com.serebit.autotitan.api.Module
+import com.serebit.autotitan.api.ModuleTemplate
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.config
 import com.serebit.autotitan.listeners.EventListener
@@ -17,7 +17,7 @@ import kotlin.system.exitProcess
 
 
 @Suppress("UNUSED")
-class Owner : Module() {
+class Owner : ModuleTemplate() {
     private val info by lazy { SystemInfo() }
 
     init {

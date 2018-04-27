@@ -1,6 +1,6 @@
 package com.serebit.autotitan.modules
 
-import com.serebit.autotitan.api.Module
+import com.serebit.autotitan.api.ModuleTemplate
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.extensions.jda.sendEmbed
 import net.dv8tion.jda.core.OnlineStatus
@@ -14,7 +14,7 @@ import java.time.temporal.Temporal
 import kotlin.math.absoluteValue
 
 @Suppress("UNUSED")
-class General : Module() {
+class General : ModuleTemplate() {
     private val dateFormat = DateTimeFormatter.ofPattern("d MMM, yyyy")
 
     init {

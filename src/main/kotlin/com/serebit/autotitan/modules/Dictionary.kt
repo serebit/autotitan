@@ -1,7 +1,7 @@
 package com.serebit.autotitan.modules
 
 import com.google.gson.Gson
-import com.serebit.autotitan.api.Module
+import com.serebit.autotitan.api.ModuleTemplate
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.apiwrappers.UrbanDictionaryApi
 import com.serebit.autotitan.apiwrappers.WordnikApi
@@ -12,7 +12,7 @@ import net.dv8tion.jda.core.entities.MessageEmbed
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 
 @Suppress("UNUSED")
-class Dictionary : Module(isOptional = true) {
+class Dictionary : ModuleTemplate(isOptional = true) {
     private val gson = Gson()
     private val dataManager = DataManager(this::class)
     private val config = dataManager.readOrDefault("config.json") { DictionaryConfig() }

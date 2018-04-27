@@ -1,6 +1,6 @@
 package com.serebit.autotitan.modules
 
-import com.serebit.autotitan.api.Module
+import com.serebit.autotitan.api.ModuleTemplate
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.data.DataManager
 import com.serebit.autotitan.data.GuildResourceMap
@@ -13,7 +13,7 @@ import net.dv8tion.jda.core.entities.MessageEmbed
 import java.util.*
 
 @Suppress("UNUSED")
-class Quotes : Module(isOptional = true) {
+class Quotes : ModuleTemplate(isOptional = true) {
     private val dataManager = DataManager(this::class)
     private val quoteMap = dataManager.readOrDefault("quotes.json") { GuildResourceMap<String, String>() }
     private val random = Random()

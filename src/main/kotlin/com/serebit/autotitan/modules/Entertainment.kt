@@ -1,13 +1,13 @@
 package com.serebit.autotitan.modules
 
-import com.serebit.autotitan.api.Module
+import com.serebit.autotitan.api.ModuleTemplate
 import com.serebit.autotitan.config
 import com.serebit.extensions.randomEntry
 import java.util.*
 import kotlin.math.roundToInt
 
 @Suppress("UNUSED")
-class Entertainment : Module(isOptional = true) {
+class Entertainment : ModuleTemplate(isOptional = true) {
     private val deterministicRandom = Random()
     private val random = Random()
 
