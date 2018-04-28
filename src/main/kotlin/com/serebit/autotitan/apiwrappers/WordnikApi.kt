@@ -29,7 +29,7 @@ internal object WordnikApi {
         else -> null
     }
 
-    fun hasDefinitions(word: String): Boolean = if (isInitialized) existsOrCacheDefinition(word) else false
+    fun hasDefinitions(word: String): Boolean = isInitialized && existsOrCacheDefinition(word)
 
     fun numDefinitions(word: String): Int = when {
         !isInitialized -> -1
@@ -43,7 +43,7 @@ internal object WordnikApi {
         else -> null
     }
 
-    fun hasRelatedWords(word: String): Boolean = if (isInitialized) existsOrCacheRelatedWords(word) else false
+    fun hasRelatedWords(word: String): Boolean = isInitialized && existsOrCacheRelatedWords(word)
 
     private fun existsOrCacheDefinition(word: String): Boolean = when {
         !isInitialized -> false

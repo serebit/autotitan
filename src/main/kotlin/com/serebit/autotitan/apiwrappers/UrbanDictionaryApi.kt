@@ -10,21 +10,28 @@ internal object UrbanDictionaryApi {
     private val serializer = Gson()
     private val resultCache: MutableMap<String, List<Definition>> = mutableMapOf()
 
-    fun hasDefinitions(query: String) = existsOrCacheDefinition(query)
+    fun hasDefinitions(query: String) = existsOrCacheDefinition(query) && resultCache[query]!!.isNotEmpty()
 
     fun numDefinitions(query: String) = if (existsOrCacheDefinition(query)) resultCache[query]!!.size else 0
 
-    fun getDefinition(query: String, index: Int): Definition? = if (hasDefinitions(query)) {
+    fun getDefinition(query: String, index: Int): Definition? = if (existsOrCacheDefinition(query)) {
         resultCache[query]?.getOrNull(index)
     } else null
 
-    private fun existsOrCacheDefinition(query: String): Boolean = if (query !in resultCache) {
+    private fun existsOrCacheDefinition(query: String): Boolean = if (query in resultCache) true else {
         val response = get("https://api.urbandictionary.com/v0/define?term=${URLEncoder.encode(query, "UTF-8")}")
-        if (response.statusCode == HttpURLConnection.HTTP_OK && response.jsonObject["result_type"] != "no_results") {
-            resultCache[query] = serializer.fromJson<Result>(response.text).list
-            true
-        } else false
-    } else true
+        when {
+            response.statusCode == HttpURLConnection.HTTP_OK -> {
+                resultCache[query] = serializer.fromJson<Result>(response.text).list
+                true
+            }
+            response.jsonObject["result_type"] != "no_results" -> {
+                resultCache[query] = emptyList()
+                false
+            }
+            else -> false
+        }
+    }
 
     private data class Result(val list: List<Definition>)
 
