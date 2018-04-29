@@ -1,6 +1,6 @@
 package com.serebit.autotitan.modules
 
-import com.serebit.autotitan.api.Module
+import com.serebit.autotitan.api.ModuleTemplate
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.data.DataManager
 import com.serebit.autotitan.data.Emote
@@ -20,7 +20,7 @@ import java.time.Clock
 import java.time.OffsetDateTime
 
 @Suppress("UNUSED")
-class AutoReact : Module(isOptional = true) {
+class AutoReact : ModuleTemplate(isOptional = true) {
     private val dataManager = DataManager(this::class)
     private val reactMap = dataManager.readOrDefault("reacts.json") {
         GuildResourceMap<String, MutableList<EmoteData>>()

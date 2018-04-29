@@ -1,6 +1,7 @@
 package com.serebit.autotitan.listeners
 
 import com.serebit.autotitan.api.Module
+import com.serebit.autotitan.api.ModuleTemplate
 import com.serebit.autotitan.config
 import com.serebit.extensions.jda.sendEmbed
 import com.serebit.loggerkt.Logger
@@ -15,8 +16,8 @@ internal object EventListener : ListenerAdapter() {
         private set
     private val classpathModules
         get() = Reflections("com.serebit.autotitan.modules")
-            .getSubTypesOf(Module::class.java)
-            .mapNotNull { it.kotlin.createInstance() } + Help()
+            .getSubTypesOf(ModuleTemplate::class.java)
+            .mapNotNull { it.kotlin.createInstance().build() } + Help().build()
     private val loadedModules get() = allModules.filter { it.isStandard || it.name in config.enabledModules }
 
     fun resetModules() {
@@ -30,7 +31,7 @@ internal object EventListener : ListenerAdapter() {
         }
     }
 
-    class Help : Module() {
+    class Help : ModuleTemplate() {
         init {
             command("commands", "Sends an embed with a list of commands that can be used by the invoker.") { evt ->
                 evt.channel.sendEmbed {

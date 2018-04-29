@@ -2,14 +2,14 @@ package com.serebit.autotitan.modules
 
 import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.Gson
-import com.serebit.autotitan.api.Module
+import com.serebit.autotitan.api.ModuleTemplate
 import com.serebit.extensions.jda.sendEmbed
 import com.serebit.extensions.randomEntry
 import khttp.get
 import org.apache.http.HttpStatus
 
 @Suppress("UNUSED")
-class Rule34 : Module(isOptional = true) {
+class Rule34 : ModuleTemplate(isOptional = true) {
     private val gson = Gson()
 
     init {

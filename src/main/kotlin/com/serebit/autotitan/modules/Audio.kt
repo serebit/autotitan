@@ -1,6 +1,6 @@
 package com.serebit.autotitan.modules
 
-import com.serebit.autotitan.api.Module
+import com.serebit.autotitan.api.ModuleTemplate
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.audio.AudioHandler
 import com.serebit.autotitan.audio.VoiceStatus
@@ -14,7 +14,7 @@ import net.dv8tion.jda.core.events.guild.voice.GuildVoiceMoveEvent
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 
 @Suppress("UNUSED")
-class Audio : Module() {
+class Audio : ModuleTemplate() {
     private val uriRegex = "^https?://[^\\s/\$.?#].[^\\s]*\$".toRegex()
 
     init {

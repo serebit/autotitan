@@ -1,6 +1,6 @@
 package com.serebit.autotitan.modules
 
-import com.serebit.autotitan.api.Module
+import com.serebit.autotitan.api.ModuleTemplate
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.data.DataManager
 import net.dv8tion.jda.core.JDA
@@ -12,7 +12,7 @@ import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent
 
 @Suppress("UNUSED")
-class Moderation : Module() {
+class Moderation : ModuleTemplate() {
     private val dataManager = DataManager(this::class)
     private val memberRoleMap: GuildRoleMap = dataManager.readOrDefault("rolemap.json") { GuildRoleMap() }
 
