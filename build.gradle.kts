@@ -5,8 +5,8 @@ import org.jetbrains.kotlin.gradle.dsl.Coroutines
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.2.40"
-    id("com.github.johnrengelman.shadow") version "2.0.3"
+    kotlin("jvm") version "1.2.41"
+    id("com.github.johnrengelman.shadow") version "2.0.4"
     id("com.github.ben-manes.versions") version "0.17.0"
     id("io.gitlab.arturbosch.detekt") version "1.0.0.RC6-4"
 }
@@ -55,6 +55,9 @@ tasks {
         archiveName = "$baseName-$version.$extension"
         manifest {
             attributes["Main-Class"] = "com.serebit.autotitan.MainKt"
+        }
+        exclude {
+            it.relativePath.contains("x86") && !it.relativePath.contains("64")
         }
     }
 
