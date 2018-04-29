@@ -15,7 +15,7 @@ data class Configuration(
 
     companion object {
         private val serializer = Gson()
-        private val file = DataManager.classpath.resolve(".config")
+        private val file = DataManager.classpathResource(".config")
 
         fun generate(): Configuration = when {
             System.getenv("AUTOTITAN_TEST_MODE_FLAG") == "true" -> dummyConfiguration

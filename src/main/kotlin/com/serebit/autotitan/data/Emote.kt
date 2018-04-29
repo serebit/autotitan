@@ -28,7 +28,7 @@ data class Emote(private val unicodeValue: String? = null, private val emoteIdVa
 
     companion object {
         private val emojiCodePoints = Gson().fromJson<Set<IntArray>>(
-            DataManager.getResource("/emoji-code-points.json").readText()
+            DataManager.classpathResource("resources/emoji-code-points.json").readText()
         )
 
         private val String.isUnicodeEmoji

@@ -57,7 +57,7 @@ fun updateAndClose() {
             it.url,
             headers = mapOf("Accept" to "application/octet-stream"),
             stream = true
-        ).raw.copyTo(FileOutputStream(DataManager.classpath.resolve("autotitan.jar")))
+        ).raw.copyTo(FileOutputStream(DataManager.classpathResource("autotitan.jar")))
 
         println("Updated AutoTitan to release ")
     }

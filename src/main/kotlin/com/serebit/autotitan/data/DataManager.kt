@@ -26,10 +26,12 @@ class DataManager(type: KClass<out Any>) {
         .writeText(serializer.toJson(obj))
 
     companion object {
-        private val codeSource: File = File(this::class.java.protectionDomain.codeSource.location.toURI())
-        val classpath: File = codeSource.parentFile
+        val codeSource: File = File(this::class.java.protectionDomain.codeSource.location.toURI())
+        private val classpath: File = codeSource.parentFile
         private val serializer = Gson()
 
-        fun getResource(path: String) = classpath.resolve("resources/$path")
+        fun classpathResource(path: String) = classpath.resolve(path)
+
+        fun internalResource(path: String) = codeSource.resolve(path)
     }
 }
