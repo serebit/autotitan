@@ -4,6 +4,7 @@ import com.serebit.autotitan.data.Emote
 import com.serebit.extensions.jda.getMemberByMention
 import com.serebit.extensions.jda.getTextChannelByMention
 import com.serebit.extensions.jda.getUserByMention
+import com.serebit.extensions.toBooleanOrNull
 import net.dv8tion.jda.core.entities.Channel
 import net.dv8tion.jda.core.entities.IMentionable
 import net.dv8tion.jda.core.entities.Member
@@ -13,6 +14,17 @@ import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
 
 internal object Parser {
+    val validTypes = setOf(
+        Boolean::class,
+        Byte::class, Short::class, Int::class, Long::class,
+        Float::class, Double::class,
+        User::class, Member::class,
+        Channel::class,
+        Emote::class,
+        Char::class,
+        String::class
+    )
+
     fun castToken(evt: MessageReceivedEvent, type: KClass<out Any>, token: String): Any? = when {
         type.isSubclassOf(Number::class) -> castNumeral(type, token)
         type.isSubclassOf(IMentionable::class) -> castJdaMentionable(evt, type, token)
@@ -50,6 +62,7 @@ internal object Parser {
     ): Any? = when (type) {
         String::class -> token
         Char::class -> token.singleOrNull()
+        Boolean::class -> token.toBooleanOrNull()
         Emote::class -> Emote.from(token, evt.jda)
         else -> null
     }

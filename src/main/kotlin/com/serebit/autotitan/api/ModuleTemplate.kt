@@ -2,10 +2,7 @@ package com.serebit.autotitan.api
 
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.meta.Descriptor
-import com.serebit.autotitan.data.Emote
-import net.dv8tion.jda.core.entities.Channel
-import net.dv8tion.jda.core.entities.Member
-import net.dv8tion.jda.core.entities.User
+import com.serebit.autotitan.api.parser.Parser
 import net.dv8tion.jda.core.events.Event
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import kotlin.reflect.KClass
@@ -20,7 +17,7 @@ abstract class ModuleTemplate(val isOptional: Boolean = false) {
         delimitLastString: Boolean = true,
         parameterTypes: List<KClass<*>>,
         function: (MessageReceivedEvent, List<Any>) -> Unit
-    ): Boolean = if (parameterTypes.all { it in validParameterTypes }) {
+    ): Boolean = if (parameterTypes.all { it in Parser.validTypes }) {
         commands.add(
             Command(
                 descriptor,
@@ -33,8 +30,7 @@ abstract class ModuleTemplate(val isOptional: Boolean = false) {
     } else false
 
     protected inline fun command(
-        name: String,
-        description: String = "",
+        name: String, description: String = "",
         access: Access = Access.All(),
         delimitLastString: Boolean = true,
         crossinline task: (MessageReceivedEvent) -> Unit
@@ -43,8 +39,7 @@ abstract class ModuleTemplate(val isOptional: Boolean = false) {
     ) { evt, _ -> task(evt) }
 
     protected inline fun <reified P0> command(
-        name: String,
-        description: String = "",
+        name: String, description: String = "",
         access: Access = Access.All(),
         delimitLastString: Boolean = true,
         crossinline task: (MessageReceivedEvent, P0) -> Unit
@@ -55,8 +50,7 @@ abstract class ModuleTemplate(val isOptional: Boolean = false) {
     }
 
     protected inline fun <reified P0, reified P1> command(
-        name: String,
-        description: String = "",
+        name: String, description: String = "",
         access: Access = Access.All(),
         delimitLastString: Boolean = true,
         crossinline task: (MessageReceivedEvent, P0, P1) -> Unit
@@ -68,8 +62,7 @@ abstract class ModuleTemplate(val isOptional: Boolean = false) {
     }
 
     protected inline fun <reified P0, reified P1, reified P2> command(
-        name: String,
-        description: String = "",
+        name: String, description: String = "",
         access: Access = Access.All(),
         delimitLastString: Boolean = true,
         crossinline task: (MessageReceivedEvent, P0, P1, P2) -> Unit
@@ -82,8 +75,7 @@ abstract class ModuleTemplate(val isOptional: Boolean = false) {
     }
 
     protected inline fun <reified P0, reified P1, reified P2, reified P3> command(
-        name: String,
-        description: String = "",
+        name: String, description: String = "",
         access: Access = Access.All(),
         delimitLastString: Boolean = true,
         crossinline task: (MessageReceivedEvent, P0, P1, P2, P3) -> Unit
@@ -96,8 +88,7 @@ abstract class ModuleTemplate(val isOptional: Boolean = false) {
     }
 
     protected inline fun <reified P0, reified P1, reified P2, reified P3, reified P4> command(
-        name: String,
-        description: String = "",
+        name: String, description: String = "",
         access: Access = Access.All(),
         delimitLastString: Boolean = true,
         crossinline task: (MessageReceivedEvent, P0, P1, P2, P3, P4) -> Unit
@@ -110,8 +101,7 @@ abstract class ModuleTemplate(val isOptional: Boolean = false) {
     }
 
     protected inline fun <reified P0, reified P1, reified P2, reified P3, reified P4, reified P5> command(
-        name: String,
-        description: String = "",
+        name: String, description: String = "",
         access: Access = Access.All(),
         delimitLastString: Boolean = true,
         crossinline task: (MessageReceivedEvent, P0, P1, P2, P3, P4, P5) -> Unit
@@ -126,22 +116,8 @@ abstract class ModuleTemplate(val isOptional: Boolean = false) {
     protected fun addListener(eventType: KClass<out Event>, function: (Event) -> Unit) =
         listeners.add(Listener(eventType, function))
 
-    protected inline fun <reified T : Event> listener(crossinline task: (T) -> Unit) = addListener(T::class) {
-        task(it as T)
-    }
+    protected inline fun <reified T : Event> listener(crossinline task: (T) -> Unit) =
+        addListener(T::class) { task(it as T) }
 
     internal fun build() = Module(this::class.simpleName ?: "Anonymous Module", isOptional, commands, listeners)
-
-    companion object {
-        private val validParameterTypes = setOf(
-            Boolean::class,
-            Byte::class, Short::class, Int::class, Long::class,
-            Float::class, Double::class,
-            User::class, Member::class,
-            Channel::class,
-            Emote::class,
-            Char::class,
-            String::class
-        )
-    }
 }
