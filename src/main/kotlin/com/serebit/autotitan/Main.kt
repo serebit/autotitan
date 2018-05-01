@@ -1,16 +1,14 @@
 package com.serebit.autotitan
 
-import com.github.salomonbrys.kotson.fromJson
-import com.google.gson.Gson
+import com.serebit.autotitan.apiwrappers.GithubApi
 import com.serebit.autotitan.data.DataManager
 import com.serebit.autotitan.listeners.EventListener
 import com.serebit.extensions.jda.jda
 import com.serebit.loggerkt.LogLevel
 import com.serebit.loggerkt.Logger
-import khttp.get
 import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.entities.Game
-import java.io.FileOutputStream
+import kotlin.system.exitProcess
 
 const val NAME = "AutoTitan"
 const val VERSION = "1.0.0"
@@ -25,8 +23,7 @@ fun main(args: Array<String>) {
     Logger.level = when {
         "--trace" in longFlags -> LogLevel.TRACE
         "--debug" in longFlags -> LogLevel.DEBUG
-        "--info" in longFlags -> LogLevel.INFO
-        else -> LogLevel.WARNING
+        else -> LogLevel.INFO
     }
 
     when {
@@ -49,21 +46,14 @@ fun main(args: Array<String>) {
     }
 }
 
-fun updateAndClose() {
-    Gson().fromJson<GithubRelease>(
-        get("https://api.github.com/repos/serebit/autotitan/releases/latest").text
-    ).assets.firstOrNull { it.content_type == "application/x-java-archive" }?.let {
-        get(
-            it.url,
-            headers = mapOf("Accept" to "application/octet-stream"),
-            stream = true
-        ).raw.copyTo(FileOutputStream(DataManager.classpathResource("autotitan.jar")))
-
-        println("Updated AutoTitan to release ")
-    }
-    System.exit(0)
+fun updateAndClose() = GithubApi.getLatestRelease("serebit", "autotitan")?.let { release ->
+    if (release.tag_name != VERSION) {
+        release.assets
+            .firstOrNull { it.content_type == "application/x-java-archive" }
+            ?.let {
+                it.streamTo(DataManager.codeSource)
+                Logger.info("Updated AutoTitan to release ${release.tag_name}")
+            }
+    } else Logger.info("No new updates are available.")
+    exitProcess(0)
 }
-
-private data class GithubRelease(val name: String, val tag_name: String, val assets: Set<GithubAsset>)
-
-private data class GithubAsset(val content_type: String, val url: String)
