@@ -21,6 +21,5 @@ fun Guild.getMemberByMention(mention: String): Member? = getMemberById(
         .removePrefix("!")
 )
 
-fun Guild.getTextChannelByMention(mention: String): TextChannel? = getTextChannelById(
-    mention.removeSurrounding("<#", ">")
-)
+fun Guild.getTextChannelByMention(mention: String): TextChannel? =
+    getTextChannelById(mention.removeSurrounding("<#", ">"))
