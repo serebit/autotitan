@@ -9,6 +9,7 @@ import com.serebit.extensions.jda.MESSAGE_EMBED_MAX_FIELDS
 import com.serebit.extensions.jda.mentionsUsers
 import com.serebit.extensions.jda.sendEmbed
 import com.serebit.extensions.limitLengthTo
+import com.serebit.extensions.trimWhitespace
 import net.dv8tion.jda.core.entities.MessageEmbed
 import java.util.*
 
@@ -98,7 +99,7 @@ class Quotes : ModuleTemplate(isOptional = true) {
                     quotes
                         .map { (index, quote) ->
                             index.limitLengthTo(MessageEmbed.TITLE_MAX_LENGTH) to
-                                quote.limitLengthTo(MessageEmbed.VALUE_MAX_LENGTH)
+                                quote.trimWhitespace().limitLengthTo(MessageEmbed.VALUE_MAX_LENGTH)
                         }
                         .chunkedBy(MessageEmbed.EMBED_MAX_LENGTH_BOT, MESSAGE_EMBED_MAX_FIELDS) {
                             it.first.length + it.second.length
