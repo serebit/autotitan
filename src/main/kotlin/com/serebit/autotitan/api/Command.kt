@@ -3,19 +3,19 @@ package com.serebit.autotitan.api
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.meta.Descriptor
 import com.serebit.autotitan.api.parser.Parser
+import com.serebit.autotitan.api.parser.TokenType
 import com.serebit.extensions.jda.canInvokeCommands
 import net.dv8tion.jda.core.entities.MessageEmbed
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
-import kotlin.reflect.KClass
 
 internal class Command(
     private val descriptor: Descriptor,
     private val access: Access,
     private val delimitLastString: Boolean,
-    private val parameterTypes: List<KClass<*>>,
+    private val tokenTypes: List<TokenType>,
     private val function: (MessageReceivedEvent, List<Any>) -> Unit
 ) {
-    val summary = "`${descriptor.name} ${parameterTypes.joinToString(" ") { "<${it.simpleName}>" }}`"
+    val summary = "`${descriptor.name} ${tokenTypes.joinToString(" ") { "<${it.name}>" }}`"
     val helpField = MessageEmbed.Field(summary, "${descriptor.description}\n${access.description}", false)
     val isHidden get() = access.hidden
 
@@ -32,7 +32,7 @@ internal class Command(
         val tokens = tokenizeMessage(evt.message.contentRaw)
         return when {
             tokens[0] != descriptor.invocation -> null
-            parameterTypes.size != tokens.size - 1 -> null
+            tokenTypes.size != tokens.size - 1 -> null
             else -> parseTokens(evt, tokens).let { parsedTokens ->
                 if (parsedTokens.any { it == null }) null else parsedTokens.filterNotNull()
             }
@@ -44,13 +44,13 @@ internal class Command(
         return if (delimitLastString) {
             splitParameters
         } else {
-            splitParameters.slice(0 until parameterTypes.size) +
-                splitParameters.drop(parameterTypes.size).joinToString(" ")
+            splitParameters.slice(0 until tokenTypes.size) +
+                splitParameters.drop(tokenTypes.size).joinToString(" ")
         }.filter(String::isNotBlank)
     }
 
     private fun parseTokens(evt: MessageReceivedEvent, tokens: List<String>): List<Any?> =
-        parameterTypes.zip(tokens.drop(1)).map { (type, string) ->
+        tokenTypes.zip(tokens.drop(1)).map { (type, string) ->
             Parser.castToken(evt, type, string)
         }
 }

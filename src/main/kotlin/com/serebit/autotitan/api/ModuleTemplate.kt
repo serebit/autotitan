@@ -2,7 +2,7 @@ package com.serebit.autotitan.api
 
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.meta.Descriptor
-import com.serebit.autotitan.api.parser.Parser
+import com.serebit.autotitan.api.parser.TokenType
 import net.dv8tion.jda.core.events.Event
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import kotlin.reflect.KClass
@@ -17,17 +17,17 @@ abstract class ModuleTemplate(val isOptional: Boolean = false) {
         delimitLastString: Boolean = true,
         parameterTypes: List<KClass<*>>,
         function: (MessageReceivedEvent, List<Any>) -> Unit
-    ): Boolean = if (parameterTypes.all { it in Parser.validTypes }) {
-        commands.add(
+    ): Boolean = parameterTypes.map { TokenType.from(it) }.let { tokenTypes ->
+        if (tokenTypes.none { it == null }) commands.add(
             Command(
                 descriptor,
                 access,
                 delimitLastString,
-                parameterTypes,
+                tokenTypes.requireNoNulls(),
                 function
             )
-        )
-    } else false
+        ) else false
+    }
 
     protected inline fun command(
         name: String, description: String = "",

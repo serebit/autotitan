@@ -17,7 +17,7 @@ import kotlin.system.exitProcess
 const val NAME = "AutoTitan"
 const val VERSION = "1.0.0"
 val config by lazy {
-    Configuration.generate()
+    BotConfig.generate()
 }
 
 fun main(args: Array<String>) {
