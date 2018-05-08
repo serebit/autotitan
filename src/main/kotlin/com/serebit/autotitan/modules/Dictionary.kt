@@ -3,8 +3,8 @@ package com.serebit.autotitan.modules
 import com.google.gson.Gson
 import com.serebit.autotitan.api.ModuleTemplate
 import com.serebit.autotitan.api.meta.Access
-import com.serebit.autotitan.apiwrappers.UrbanDictionaryApi
-import com.serebit.autotitan.apiwrappers.WordnikApi
+import com.serebit.autotitan.network.UrbanDictionaryApi
+import com.serebit.autotitan.network.WordnikApi
 import com.serebit.autotitan.data.DataManager
 import com.serebit.extensions.jda.sendEmbed
 import com.serebit.extensions.limitLengthTo

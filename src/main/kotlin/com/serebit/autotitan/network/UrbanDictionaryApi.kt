@@ -1,4 +1,4 @@
-package com.serebit.autotitan.apiwrappers
+package com.serebit.autotitan.network
 
 import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.Gson

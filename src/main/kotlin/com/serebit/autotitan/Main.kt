@@ -1,17 +1,14 @@
 package com.serebit.autotitan
 
-import com.serebit.autotitan.apiwrappers.GithubApi
 import com.serebit.autotitan.data.DataManager
 import com.serebit.autotitan.listeners.EventListener
+import com.serebit.autotitan.network.GithubApi
+import com.serebit.extensions.contentType
 import com.serebit.loggerkt.LogLevel
 import com.serebit.loggerkt.Logger
 import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDABuilder
 import net.dv8tion.jda.core.entities.Game
-import java.io.IOException
-import java.net.InetSocketAddress
-import java.net.Socket
-import java.nio.file.Files
 import kotlin.system.exitProcess
 
 const val NAME = "AutoTitan"
@@ -31,7 +28,10 @@ fun main(args: Array<String>) {
     }
 
     when {
-        "up" in args || "update" in subCommands -> updateAndClose()
+        "up" in args || "update" in subCommands -> {
+            updateAndClose()
+            exitProcess(0)
+        }
     }
 
     JDABuilder(AccountType.BOT).apply {
@@ -50,31 +50,13 @@ fun main(args: Array<String>) {
     }
 }
 
-private fun updateAndClose(): Nothing {
-    when {
-        Files.probeContentType(DataManager.codeSource.toPath()) != "application/x-java-archive" ->
-            Logger.error("Can't update unless running from a jarfile.")
-        !ping("github.com") -> Logger.error("Failed to connect to GitHub.")
-        else -> GithubApi.getLatestRelease("serebit", "autotitan")?.let { release ->
-            if (release.tag_name != VERSION) {
-                release.assets
-                    .firstOrNull { it.content_type == "application/x-java-archive" }
-                    ?.let {
-                        Logger.info("Updating AutoTitan to release ${release.tag_name}...")
-                        it.streamTo(DataManager.codeSource)
-                        Logger.info("Finished updating.")
-                    }
-            } else Logger.info("No new updates are available.")
-        }
-    }
-    exitProcess(0)
-}
-
-private fun ping(host: String): Boolean = try {
-    Socket().use { socket ->
-        socket.connect(InetSocketAddress(host, 80), 4000)
-        true
-    }
-} catch (ex: IOException) {
-    false
-}
+private fun updateAndClose() = if (DataManager.codeSource.contentType == "application/x-java-archive") {
+    GithubApi.getLatestRelease("serebit", "autotitan") { it.tag_name != VERSION }
+        ?.assets
+        ?.find { it.content_type == "application/x-java-archive" }
+        ?.let {
+            Logger.info("Updating AutoTitan to latest release...")
+            it.streamTo(DataManager.codeSource)
+            Logger.info("Finished updating.")
+        } ?: Logger.info("No new updates are available.")
+} else Logger.error("Can't update unless running from a jarfile.")
