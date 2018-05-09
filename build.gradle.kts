@@ -8,7 +8,7 @@ plugins {
     kotlin("jvm") version "1.2.41"
     id("com.github.johnrengelman.shadow") version "2.0.4"
     id("com.github.ben-manes.versions") version "0.17.0"
-    id("io.gitlab.arturbosch.detekt") version "1.0.0.RC6-4"
+    id("io.gitlab.arturbosch.detekt") version "1.0.0.RC7"
 }
 
 group = "com.serebit"

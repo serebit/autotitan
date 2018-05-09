@@ -12,7 +12,7 @@ enum class VoiceStatus(private val errorMessage: String?) {
 
     fun sendErrorMessage(channel: MessageChannel) {
         errorMessage?.let {
-            channel.sendMessage(it).complete()
+            channel.sendMessage(it).queue()
         }
     }
 

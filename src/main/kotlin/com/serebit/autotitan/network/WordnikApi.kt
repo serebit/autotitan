@@ -8,10 +8,10 @@ import java.net.URI
 
 internal object WordnikApi {
     private val serializer = Gson()
-    private lateinit var apiKey: String
+    private var apiKey: String? = null
     private val definitionCache: MutableMap<String, List<Definition>> = mutableMapOf()
     private val relatedWordsCache: MutableMap<String, List<Related>> = mutableMapOf()
-    val isInitialized get() = ::apiKey.isInitialized
+    val isInitialized get() = apiKey != null
 
     fun init(apiKey: String): Boolean {
         val apiTokenStatus = serializer.fromJson<ApiTokenStatus>(
@@ -23,32 +23,24 @@ internal object WordnikApi {
         } else false
     }
 
-    fun getDefinition(word: String, index: Int = 0): Definition? = when {
-        !isInitialized -> null
-        existsOrCacheDefinition(word) -> definitionCache[word]?.getOrNull(index)
-        else -> null
+    fun getDefinition(word: String, index: Int = 0): Definition? = apiKey?.let {
+        if (existsOrCacheDefinition(word)) definitionCache[word]?.getOrNull(index) else null
     }
 
     fun hasDefinitions(word: String): Boolean = isInitialized && existsOrCacheDefinition(word)
 
-    fun numDefinitions(word: String): Int = when {
-        !isInitialized -> -1
-        existsOrCacheDefinition(word) -> definitionCache[word]?.size ?: 0
-        else -> 0
-    }
+    fun numDefinitions(word: String): Int = apiKey?.let {
+        if (existsOrCacheDefinition(word)) definitionCache[word]!!.size else 0
+    } ?: -1
 
-    fun getRelatedWords(word: String): List<Related>? = when {
-        !isInitialized -> null
-        existsOrCacheRelatedWords(word) -> relatedWordsCache[word]
-        else -> null
+    fun getRelatedWords(word: String): List<Related>? = apiKey?.let {
+        if (existsOrCacheRelatedWords(word)) relatedWordsCache[word] else null
     }
 
     fun hasRelatedWords(word: String): Boolean = isInitialized && existsOrCacheRelatedWords(word)
 
-    private fun existsOrCacheDefinition(word: String): Boolean = when {
-        !isInitialized -> false
-        word in definitionCache -> true
-        else -> {
+    private fun existsOrCacheDefinition(word: String): Boolean = apiKey?.let { apiKey ->
+        if (word !in definitionCache) {
             val response = get(
                 Definition.endpointOf(word), params = mapOf(
                     "word" to word,
@@ -64,13 +56,11 @@ internal object WordnikApi {
                 definitionCache[word] = serializer.fromJson(response.text)
                 true
             } else false
-        }
-    }
+        } else true
+    } ?: false
 
-    private fun existsOrCacheRelatedWords(word: String): Boolean = when {
-        !isInitialized -> false
-        word in relatedWordsCache -> true
-        else -> {
+    private fun existsOrCacheRelatedWords(word: String): Boolean = apiKey?.let { apiKey ->
+        if (word !in relatedWordsCache) {
             val response = get(
                 Related.endpointOf(word), params = mapOf(
                     "word" to word,
@@ -85,8 +75,8 @@ internal object WordnikApi {
                 relatedWordsCache[word] = serializer.fromJson(response.text)
                 true
             } else false
-        }
-    }
+        } else true
+    } ?: false
 
     data class Definition(val partOfSpeech: String, val text: String) {
         companion object {

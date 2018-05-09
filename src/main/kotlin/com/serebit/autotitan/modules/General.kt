@@ -19,7 +19,7 @@ class General : ModuleTemplate() {
 
     init {
         command("ping", "Pings the bot.") {
-            it.channel.sendMessage("Pong. The last ping was ${it.jda.ping}ms.").complete()
+            it.channel.sendMessage("Pong. The last ping was ${it.jda.ping}ms.").queue()
         }
 
         command("serverInfo", "Gets information about the server.", Access.Guild.All()) { evt ->
@@ -49,7 +49,7 @@ class General : ModuleTemplate() {
                     )
                 }
                 setFooter("Server ID: ${evt.guild.id}", null)
-            }.complete()
+            }.queue()
         }
 
         command("selfInfo", "Gets information about the invoker.") { sendMemberInfo(it, it.member) }
@@ -90,7 +90,7 @@ class General : ModuleTemplate() {
                 addField("Roles", member.roles.joinToString(", ") { it.name }, true)
             }
             setFooter("User ID: ${member.user.id}", null)
-        }.complete()
+        }.queue()
     }
 
     private val Boolean.asYesNo get() = if (this) "Yes" else "No"

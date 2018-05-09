@@ -35,11 +35,11 @@ class AutoReact : ModuleTemplate(isOptional = true) {
             val value = reactMap[evt.guild].getOrPut(word, ::mutableListOf)
             when {
                 value.size >= maxReactionsPerMessage ->
-                    evt.channel.sendMessage("There are already 20 reactions for that word.").complete()
-                !emote.canInteract(evt.channel) -> evt.channel.sendMessage("I can't use that emote.").complete()
+                    evt.channel.sendMessage("There are already 20 reactions for that word.").queue()
+                !emote.canInteract(evt.channel) -> evt.channel.sendMessage("I can't use that emote.").queue()
                 value.add(EmoteData.from(emote, evt)) -> {
                     dataManager.write("reacts.json", reactMap)
-                    evt.channel.sendMessage("Added reaction.").complete()
+                    evt.channel.sendMessage("Added reaction.").queue()
                 }
             }
         }
@@ -51,9 +51,9 @@ class AutoReact : ModuleTemplate(isOptional = true) {
         ) { evt, word: String, emote: Emote ->
             val guildReacts = reactMap[evt.guild]
             when {
-                word !in guildReacts -> evt.channel.sendMessage("There are no autoreacts for that word.").complete()
+                word !in guildReacts -> evt.channel.sendMessage("There are no autoreacts for that word.").queue()
                 guildReacts[word]?.none { it.emote == emote } ?: false ->
-                    evt.channel.sendMessage("That emote is not an autoreact for that word.").complete()
+                    evt.channel.sendMessage("That emote is not an autoreact for that word.").queue()
                 guildReacts[word]?.removeIf { it.emote == emote } ?: false -> {
                     dataManager.write("reacts.json", reactMap)
                     evt.channel.sendMessage("Removed reaction.")
@@ -68,7 +68,7 @@ class AutoReact : ModuleTemplate(isOptional = true) {
             delimitLastString = false
         ) {
             reactMap[it.guild].clear()
-            it.channel.sendMessage("Cleared all autoreacts from this server.").complete()
+            it.channel.sendMessage("Cleared all autoreacts from this server.").queue()
         }
 
         command(
@@ -93,8 +93,8 @@ class AutoReact : ModuleTemplate(isOptional = true) {
                                 embeds.forEach { addField(it.first, it.second, false) }
                             }.queue()
                         }
-                }, { evt.channel.sendMessage(it.message).complete() })
-            } else evt.channel.sendMessage("This server has no autoreacts saved.").complete()
+                }, { evt.channel.sendMessage(it.message).queue() })
+            } else evt.channel.sendMessage("This server has no autoreacts saved.").queue()
         }
 
         listener { evt: GuildMessageReceivedEvent ->

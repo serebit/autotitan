@@ -23,11 +23,11 @@ class Rule34 : ModuleTemplate(isOptional = true) {
                     evt.channel.sendEmbed {
                         setImage(post.rule34xxxImageUri)
                         setFooter("via Rule34.xxx", "https://rule34.xxx/favicon.png")
-                    }.complete()
+                    }.queue()
                 } ?: evt.channel.sendMessage(
                     "No images found on Rule34.xxx for `${formatTags(tagString, " ")}`."
-                ).complete()
-            } else evt.channel.sendMessage("This command can only be used in channels marked as NSFW.").complete()
+                ).queue()
+            } else evt.channel.sendMessage("This command can only be used in channels marked as NSFW.").queue()
         }
 
         command(
@@ -41,11 +41,11 @@ class Rule34 : ModuleTemplate(isOptional = true) {
                     evt.channel.sendEmbed {
                         setImage(post.gelbooruImageUri)
                         setFooter("via Gelbooru", "https://gelbooru.com/favicon.png")
-                    }.complete()
+                    }.queue()
                 } ?: evt.channel.sendMessage(
                     "No images found on Gelbooru for `${formatTags(tagString, " ")}`."
-                ).complete()
-            } else evt.channel.sendMessage("This command can only be used in channels marked as NSFW.").complete()
+                ).queue()
+            } else evt.channel.sendMessage("This command can only be used in channels marked as NSFW.").queue()
         }
     }
 

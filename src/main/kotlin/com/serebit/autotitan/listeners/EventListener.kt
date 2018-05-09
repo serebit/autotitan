@@ -38,7 +38,7 @@ internal object EventListener : ListenerAdapter() {
                     loadedModules.sortedBy { it.name }
                         .mapNotNull { it.getInvokeableCommandField(evt) }
                         .forEach { addField(it) }
-                }.complete()
+                }.queue()
             }
 
             command("allCommands", description = "Sends an embed with all commands listed.") {
@@ -46,7 +46,7 @@ internal object EventListener : ListenerAdapter() {
                     loadedModules.sortedBy { it.name }.forEach { module ->
                         addField(module.commandListField)
                     }
-                }.complete()
+                }.queue()
             }
 
             command("help", description = "Sends an embed with general information on how to use the bot.") {
@@ -61,7 +61,7 @@ internal object EventListener : ListenerAdapter() {
                         """.trimIndent(),
                         false
                     )
-                }.complete()
+                }.queue()
             }
 
             command(
@@ -78,8 +78,8 @@ internal object EventListener : ListenerAdapter() {
                             if (index > 0) addBlankField(false)
                             addField(command.helpField)
                         }
-                    }.complete()
-                } else evt.channel.sendMessage("Could not find any commands matching `$commandName`.").complete()
+                    }.queue()
+                } else evt.channel.sendMessage("Could not find any commands matching `$commandName`.").queue()
             }
         }
     }

@@ -3,9 +3,9 @@ package com.serebit.autotitan.modules
 import com.google.gson.Gson
 import com.serebit.autotitan.api.ModuleTemplate
 import com.serebit.autotitan.api.meta.Access
+import com.serebit.autotitan.data.DataManager
 import com.serebit.autotitan.network.UrbanDictionaryApi
 import com.serebit.autotitan.network.WordnikApi
-import com.serebit.autotitan.data.DataManager
 import com.serebit.extensions.jda.sendEmbed
 import com.serebit.extensions.limitLengthTo
 import net.dv8tion.jda.core.entities.MessageEmbed
@@ -30,11 +30,11 @@ class Dictionary : ModuleTemplate(isOptional = true) {
             if (WordnikApi.init(apiKey)) {
                 config.apiKey = apiKey
                 dataManager.write("config.json", config)
-                evt.channel.sendMessage("Wordnik has been initialized.").complete()
+                evt.channel.sendMessage("Wordnik has been initialized.").queue()
             } else {
                 evt.channel.sendMessage(
                     "The given API key is invalid. Try again with a valid Wordnik API key."
-                ).complete()
+                ).queue()
             }
         }
 
@@ -58,7 +58,7 @@ class Dictionary : ModuleTemplate(isOptional = true) {
             when {
                 !WordnikApi.isInitialized -> evt.channel.sendMessage(
                     "The Dictionary module is not initialized. Initialize it with the command `initdictionary`."
-                ).complete()
+                ).queue()
                 WordnikApi.hasRelatedWords(query) -> WordnikApi.getRelatedWords(query)?.let { related ->
                     evt.channel.sendEmbed {
                         setTitle("Words related to $query", "https://www.wordnik.com/words/$query")
@@ -67,7 +67,7 @@ class Dictionary : ModuleTemplate(isOptional = true) {
                             "${it.relationshipType.capitalize()}s: *${it.words.joinToString(", ")}*"
                         })
                         setFooter("Powered by Wordnik", "http://www.wordnik.com/img/wordnik_gearheart.png")
-                    }.complete()
+                    }.queue()
                 }
                 else -> evt.channel.sendMessage("No related words were found.").queue()
             }
@@ -90,7 +90,7 @@ class Dictionary : ModuleTemplate(isOptional = true) {
         when {
             !WordnikApi.isInitialized -> evt.channel.sendMessage(
                 "Wordnik is not initialized. Initialize it with the command `initwordnik`."
-            ).complete()
+            ).queue()
             WordnikApi.hasDefinitions(query) -> WordnikApi.getDefinition(query, index - 1)?.let { definition ->
                 evt.channel.sendEmbed {
                     setTitle(
@@ -99,8 +99,8 @@ class Dictionary : ModuleTemplate(isOptional = true) {
                     )
                     setDescription("*${definition.partOfSpeech}*\n${definition.text}")
                     setFooter("Powered by Wordnik", "http://www.wordnik.com/img/wordnik_gearheart.png")
-                }.complete()
-            } ?: evt.channel.sendMessage("No definition was found at that index.").complete()
+                }.queue()
+            } ?: evt.channel.sendMessage("No definition was found at that index.").queue()
             else -> evt.channel.sendMessage("No definitions were found.").queue()
         }
     }

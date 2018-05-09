@@ -71,7 +71,7 @@ class Audio : ModuleTemplate() {
                         playlist.tracks.forEach(evt.guild.trackManager::addToQueue)
                     }
                 } else {
-                    evt.channel.sendMessage("That link is invalid.").complete()
+                    evt.channel.sendMessage("That link is invalid.").queue()
                 }
             }
         }
@@ -81,7 +81,7 @@ class Audio : ModuleTemplate() {
                 if (evt.guild.trackManager.isPlaying) {
                     evt.guild.trackManager.skipTrack()
                     evt.channel.sendMessage("Skipped.").queue()
-                } else evt.channel.sendMessage("Can't skip. Nothing is playing.").complete()
+                } else evt.channel.sendMessage("Can't skip. Nothing is playing.").queue()
             }
         }
 
@@ -91,21 +91,21 @@ class Audio : ModuleTemplate() {
             Access.Guild.RankAbove()
         ) { evt ->
             evt.guild.trackManager.stop()
-            evt.channel.sendMessage("Cleared the music queue.").complete()
+            evt.channel.sendMessage("Cleared the music queue.").queue()
         }
 
         command("pause", "Pauses the currently playing song.", Access.Guild.All()) { evt ->
             if (handleVoiceStatus(evt) && evt.guild.trackManager.isNotPaused) {
                 evt.guild.trackManager.pause()
-                evt.channel.sendMessage("Paused the track.").complete()
-            } else evt.channel.sendMessage("The track is already paused.").complete()
+                evt.channel.sendMessage("Paused the track.").queue()
+            } else evt.channel.sendMessage("The track is already paused.").queue()
         }
 
         command("unPause", "Resumes the currently playing song.", Access.Guild.All()) { evt ->
             if (handleVoiceStatus(evt) && evt.guild.trackManager.isPaused) {
                 evt.guild.trackManager.resume()
-                evt.channel.sendMessage("Unpaused the track.").complete()
-            } else evt.channel.sendMessage("The track is already playing.").complete()
+                evt.channel.sendMessage("Unpaused the track.").queue()
+            } else evt.channel.sendMessage("The track is already playing.").queue()
         }
 
         command(
@@ -117,7 +117,7 @@ class Audio : ModuleTemplate() {
         command("setVolume", "Sets the volume.", Access.Guild.All()) { evt, volume: Int ->
             if (handleVoiceStatus(evt)) {
                 evt.guild.trackManager.volume = volume
-                evt.channel.sendMessage("Set the volume to ${evt.guild.trackManager.volume}%.").complete()
+                evt.channel.sendMessage("Set the volume to ${evt.guild.trackManager.volume}%.").queue()
             }
         }
 

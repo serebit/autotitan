@@ -17,7 +17,7 @@ internal class Command(
 ) {
     val summary = "`${descriptor.name} ${tokenTypes.joinToString(" ") { "<${it.name}>" }}`"
     val helpField = MessageEmbed.Field(summary, "${descriptor.description}\n${access.description}", false)
-    val isHidden get() = access.hidden
+    val isHidden = access.hidden
 
     operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>) = function.invoke(evt, parameters)
 
@@ -39,15 +39,14 @@ internal class Command(
         }
     }
 
-    private fun tokenizeMessage(message: String): List<String> {
-        val splitParameters = message.split("\\s+".toRegex()).filter(String::isNotBlank)
-        return if (delimitLastString) {
-            splitParameters
-        } else {
-            splitParameters.slice(0 until tokenTypes.size) +
-                splitParameters.drop(tokenTypes.size).joinToString(" ")
-        }.filter(String::isNotBlank)
-    }
+    private fun tokenizeMessage(message: String): List<String> =
+        message.split("\\s+".toRegex()).filter(String::isNotBlank).let { splitTokens ->
+            if (delimitLastString) {
+                splitTokens
+            } else {
+                splitTokens.slice(0 until tokenTypes.size) + splitTokens.drop(tokenTypes.size).joinToString(" ")
+            }.filter(String::isNotBlank)
+        }
 
     private fun parseTokens(evt: MessageReceivedEvent, tokens: List<String>): List<Any?> =
         tokenTypes.zip(tokens.drop(1)).map { (type, string) ->

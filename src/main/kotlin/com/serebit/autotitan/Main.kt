@@ -29,7 +29,7 @@ fun main(args: Array<String>) {
 
     when {
         "up" in args || "update" in subCommands -> {
-            updateAndClose()
+            update()
             exitProcess(0)
         }
     }
@@ -38,7 +38,7 @@ fun main(args: Array<String>) {
         setToken(config.token)
         addEventListener(EventListener)
         setGame(Game.playing("${config.prefix}help"))
-    }.buildBlocking().let {
+    }.buildBlocking().also {
         println(
             """
             $NAME v$VERSION
@@ -50,7 +50,7 @@ fun main(args: Array<String>) {
     }
 }
 
-private fun updateAndClose() = if (DataManager.codeSource.contentType == "application/x-java-archive") {
+private fun update() = if (DataManager.codeSource.contentType == "application/x-java-archive") {
     GithubApi.getLatestRelease("serebit", "autotitan") { it.tag_name != VERSION }
         ?.assets
         ?.find { it.content_type == "application/x-java-archive" }

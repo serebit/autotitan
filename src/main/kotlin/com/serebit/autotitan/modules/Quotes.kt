@@ -27,13 +27,13 @@ class Quotes : ModuleTemplate(isOptional = true) {
             delimitLastString = false
         ) { evt, quote: String ->
             if (evt.message.mentionsUsers) {
-                evt.channel.sendMessage("Quotes containing mentions are not permitted.").complete()
+                evt.channel.sendMessage("Quotes containing mentions are not permitted.").queue()
                 return@command
             }
             quoteMap[evt.guild].let {
                 val quoteIndex = it.keys.map { it.toInt() }.max()?.plus(1) ?: 0
                 it[quoteIndex.toString()] = quote
-                evt.channel.sendMessage("Added ${evt.member.asMention}'s quote as number `$quoteIndex`.").complete()
+                evt.channel.sendMessage("Added ${evt.member.asMention}'s quote as number `$quoteIndex`.").queue()
             }
             dataManager.write("quotes.json", quoteMap)
         }
@@ -46,14 +46,14 @@ class Quotes : ModuleTemplate(isOptional = true) {
             val quotes = quoteMap[evt.guild]
 
             when {
-                quotes.isEmpty() -> evt.channel.sendMessage("This server has no quotes saved.").complete()
+                quotes.isEmpty() -> evt.channel.sendMessage("This server has no quotes saved.").queue()
                 index.toString() !in quotes -> {
-                    evt.channel.sendMessage("There is no quote with an index of `$index`.").complete()
+                    evt.channel.sendMessage("There is no quote with an index of `$index`.").queue()
                 }
                 else -> {
                     quotes.remove(index.toString())
                     dataManager.write("quotes.json", quoteMap)
-                    evt.channel.sendMessage("Removed quote `$index`.").complete()
+                    evt.channel.sendMessage("Removed quote `$index`.").queue()
                 }
             }
         }
@@ -69,8 +69,8 @@ class Quotes : ModuleTemplate(isOptional = true) {
                 val quote = quotes.filter { it.value.isNotBlank() }.let {
                     it.values.toList()[random.nextInt(it.size)]
                 }
-                evt.channel.sendMessage(quote).complete()
-            } else evt.channel.sendMessage("This server has no quotes saved.").complete()
+                evt.channel.sendMessage(quote).queue()
+            } else evt.channel.sendMessage("This server has no quotes saved.").queue()
         }
 
         command(
@@ -82,9 +82,9 @@ class Quotes : ModuleTemplate(isOptional = true) {
 
             if (quotes.isNotEmpty()) {
                 quotes[index.toString()]?.let { quote ->
-                    evt.channel.sendMessage(quote).complete()
-                } ?: evt.channel.sendMessage("There is no quote with an index of `$index`.").complete()
-            } else evt.channel.sendMessage("This server has no quotes saved.").complete()
+                    evt.channel.sendMessage(quote).queue()
+                } ?: evt.channel.sendMessage("There is no quote with an index of `$index`.").queue()
+            } else evt.channel.sendMessage("This server has no quotes saved.").queue()
         }
 
         command(
@@ -94,7 +94,7 @@ class Quotes : ModuleTemplate(isOptional = true) {
         ) { evt ->
             val quotes = quoteMap[evt.guild]
             if (quotes.isNotEmpty()) {
-                evt.channel.sendMessage("Sending a quote list in PMs.").complete()
+                evt.channel.sendMessage("Sending a quote list in PMs.").queue()
                 evt.author.openPrivateChannel().queue({ privateChannel ->
                     quotes
                         .map { (index, quote) ->
@@ -112,9 +112,9 @@ class Quotes : ModuleTemplate(isOptional = true) {
                 }, {
                     evt.channel.sendMessage(
                         "Failed to send the quote list. Make sure that you haven't blocked me!"
-                    ).complete()
+                    ).queue()
                 })
-            } else evt.channel.sendMessage("This server has no quotes saved.").complete()
+            } else evt.channel.sendMessage("This server has no quotes saved.").queue()
         }
     }
 }

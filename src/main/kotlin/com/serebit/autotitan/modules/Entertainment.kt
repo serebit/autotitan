@@ -13,7 +13,7 @@ class Entertainment : ModuleTemplate(isOptional = true) {
 
     init {
         command("8", "Answers questions in 8-ball fashion.", delimitLastString = false) { evt, _: String ->
-            evt.channel.sendMessage(eightBallResponses.randomEntry()).complete()
+            evt.channel.sendMessage(eightBallResponses.randomEntry()).queue()
         }
 
         command(
@@ -28,7 +28,7 @@ class Entertainment : ModuleTemplate(isOptional = true) {
                     .toLong()
             )
             val rating = deterministicRandom.next(ratingDenominator)
-            evt.channel.sendMessage("I'd give $thingToRate a `$rating/$ratingDenominator`.").complete()
+            evt.channel.sendMessage("I'd give $thingToRate a `$rating/$ratingDenominator`.").queue()
         }
     }
 

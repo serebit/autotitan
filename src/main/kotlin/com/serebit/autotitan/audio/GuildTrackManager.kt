@@ -83,8 +83,8 @@ class GuildTrackManager(audioManager: AudioManager) : AudioEventAdapter() {
                     },
                     false
                 )
-            }.complete()
-        } ?: channel.sendMessage("No songs are queued.").complete()
+            }.queue()
+        } ?: channel.sendMessage("No songs are queued.").queue()
     }
 
     override fun onTrackEnd(player: AudioPlayer, track: AudioTrack, endReason: AudioTrackEndReason) {

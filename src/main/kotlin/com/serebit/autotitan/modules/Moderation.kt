@@ -22,8 +22,9 @@ class Moderation : ModuleTemplate() {
             "Kicks a member.",
             Access.Guild.All(Permission.KICK_MEMBERS)
         ) { evt, member: Member ->
-            evt.guild.controller.kick(member).complete()
-            evt.channel.sendMessage("Kicked ${member.effectiveName}.").complete()
+            evt.guild.controller.kick(member).queue {
+                evt.channel.sendMessage("Kicked ${member.effectiveName}.").queue()
+            }
         }
 
         command(
@@ -31,8 +32,9 @@ class Moderation : ModuleTemplate() {
             "Bans a user.",
             Access.Guild.All(Permission.BAN_MEMBERS)
         ) { evt, user: User ->
-            evt.guild.controller.ban(user, 0).complete()
-            evt.channel.sendMessage("Banned ${user.name}.")
+            evt.guild.controller.ban(user, 0).queue {
+                evt.channel.sendMessage("Banned ${user.name}.").queue()
+            }
         }
 
         command(
@@ -40,8 +42,9 @@ class Moderation : ModuleTemplate() {
             "Un-bans a banned user from the current server.",
             Access.Guild.All(Permission.BAN_MEMBERS)
         ) { evt, user: User ->
-            evt.guild.controller.unban(user).complete()
-            evt.channel.sendMessage("Unbanned ${user.name}.").complete()
+            evt.guild.controller.unban(user).queue {
+                evt.channel.sendMessage("Unbanned ${user.name}.").complete()
+            }
         }
 
         command(
@@ -50,9 +53,10 @@ class Moderation : ModuleTemplate() {
             Access.Guild.All(Permission.MESSAGE_MANAGE)
         ) { evt, number: Int ->
             if (number in 1..maximumCleanupCount) {
-                val messages = evt.textChannel.history.retrievePast(number + 1).complete()
-                evt.textChannel.deleteMessages(messages).complete()
-            } else evt.channel.sendMessage("The number has to be in the range of `1..$maximumCleanupCount`.").complete()
+                evt.textChannel.history.retrievePast(number + 1).queue { messages ->
+                    evt.textChannel.deleteMessages(messages).queue()
+                }
+            } else evt.channel.sendMessage("The number has to be in the range of `1..$maximumCleanupCount`.").queue()
         }
 
         command(
@@ -64,10 +68,10 @@ class Moderation : ModuleTemplate() {
             evt.guild.roles
                 .findLast { it.name.toLowerCase() == roleName.toLowerCase() }
                 ?.let { role ->
-                    evt.channel.sendMessage("Set the member role to `$roleName`.").complete()
                     memberRoleMap.put(evt.guild, role)
                     dataManager.write("rolemap.json", memberRoleMap)
-                } ?: evt.channel.sendMessage("`$roleName` does not exist.").complete()
+                    evt.channel.sendMessage("Set the member role to `$roleName`.").queue()
+                } ?: evt.channel.sendMessage("`$roleName` does not exist.").queue()
         }
 
         command(
@@ -76,8 +80,8 @@ class Moderation : ModuleTemplate() {
             Access.Guild.All(Permission.MANAGE_ROLES)
         ) { evt ->
             memberRoleMap[evt.jda, evt.guild]?.let { role ->
-                evt.channel.sendMessage("The member role for this server is set to `${role.name}`.").complete()
-            } ?: evt.channel.sendMessage("The member role is not set up for this server.").complete()
+                evt.channel.sendMessage("The member role for this server is set to `${role.name}`.").queue()
+            } ?: evt.channel.sendMessage("The member role is not set up for this server.").queue()
         }
 
         command(
@@ -92,17 +96,17 @@ class Moderation : ModuleTemplate() {
                 evt.guild.controller.prune(daysOfInactivity).complete()
                 val membersWithoutBaseRole = evt.guild.members.filter { it.roles.isEmpty() }
                 membersWithoutBaseRole.forEach { evt.guild.controller.addSingleRoleToMember(it, memberRole).queue() }
-                evt.channel.sendMessage("Pruned $prunableMemberCount members.").complete()
+                evt.channel.sendMessage("Pruned $prunableMemberCount members.").queue()
             } ?: run {
                 val prunableMemberCount = evt.guild.getPrunableMemberCount(daysOfInactivity).complete()
                 evt.guild.controller.prune(daysOfInactivity).complete()
-                evt.channel.sendMessage("Pruned $prunableMemberCount members.").complete()
+                evt.channel.sendMessage("Pruned $prunableMemberCount members.").queue()
             }
         }
 
         listener { evt: GuildMemberJoinEvent ->
             if (evt.guild in memberRoleMap) {
-                evt.guild.controller.addRolesToMember(evt.member, memberRoleMap[evt.jda, evt.guild]).complete()
+                evt.guild.controller.addRolesToMember(evt.member, memberRoleMap[evt.jda, evt.guild]).queue()
             }
         }
     }

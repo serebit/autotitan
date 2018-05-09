@@ -39,6 +39,5 @@ internal data class Module(
         }
     }
 
-    fun findCommandsByName(name: String): List<Command> =
-        commands.filter { it.matchesName(name) && !it.isHidden }
+    fun findCommandsByName(name: String): List<Command> = commands.filter { it.matchesName(name) && !it.isHidden }
 }

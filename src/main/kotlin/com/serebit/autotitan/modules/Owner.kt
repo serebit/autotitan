@@ -27,7 +27,7 @@ class Owner : ModuleTemplate() {
             Access.BotOwner()
         ) { evt ->
             Logger.info("Shutting down...")
-            evt.channel.sendMessage("Shutting down.").complete()
+            evt.channel.sendMessage("Shutting down.").queue()
             evt.jda.shutdown()
             config.serialize()
             exitProcess(0)
@@ -37,11 +37,11 @@ class Owner : ModuleTemplate() {
             "reset",
             "Resets the modules of the bot, effectively restarting it.",
             Access.BotOwner()
-        )
-        { evt ->
-            val message = evt.channel.sendMessage("Resetting...").complete()
-            EventListener.resetModules()
-            message.editMessage("Reset commands and listeners.").complete()
+        ) { evt ->
+            evt.channel.sendMessage("Resetting...").queue { message ->
+                EventListener.resetModules()
+                message.editMessage("Reset commands and listeners.").queue()
+            }
         }
 
         command(
@@ -85,7 +85,7 @@ class Owner : ModuleTemplate() {
                     """.trimIndent(),
                     false
                 )
-            }.complete()
+            }.queue()
         }
 
         command(
@@ -114,7 +114,7 @@ class Owner : ModuleTemplate() {
             config.prefix = prefix
             config.serialize()
             evt.jda.presence.game = Game.playing("${prefix}help")
-            evt.channel.sendMessage("Set prefix to `${config.prefix}`.").complete()
+            evt.channel.sendMessage("Set prefix to `${config.prefix}`.").queue()
         }
 
         command(
@@ -123,11 +123,11 @@ class Owner : ModuleTemplate() {
             Access.BotOwner()
         ) { evt, user: User ->
             if (user.idLong in config.blackList) {
-                evt.channel.sendMessage("${user.name} is already in the blacklist.").complete()
+                evt.channel.sendMessage("${user.name} is already in the blacklist.").queue()
                 return@command
             }
             config.blackList.add(user.idLong)
-            evt.channel.sendMessage("Added ${user.name} to the blacklist.").complete()
+            evt.channel.sendMessage("Added ${user.name} to the blacklist.").queue()
             config.serialize()
         }
 
@@ -137,11 +137,11 @@ class Owner : ModuleTemplate() {
             Access.BotOwner()
         ) { evt, user: User ->
             if (user.idLong !in config.blackList) {
-                evt.channel.sendMessage("${user.name} is not in the blacklist.").complete()
+                evt.channel.sendMessage("${user.name} is not in the blacklist.").queue()
                 return@command
             }
             config.blackList.remove(user.idLong)
-            evt.channel.sendMessage("Removed ${user.name} from the blacklist.").complete()
+            evt.channel.sendMessage("Removed ${user.name} from the blacklist.").queue()
             config.serialize()
         }
 
@@ -155,9 +155,9 @@ class Owner : ModuleTemplate() {
                     addField("Blacklisted Users", config.blackList.joinToString("\n") {
                         evt.jda.getUserById(it).asMention
                     }, true)
-                }.complete()
+                }.queue()
             } else {
-                evt.channel.sendMessage("The blacklist is empty.").complete()
+                evt.channel.sendMessage("The blacklist is empty.").queue()
             }
         }
 
@@ -166,9 +166,9 @@ class Owner : ModuleTemplate() {
             "Sends the bot's invite link in a private message.",
             Access.BotOwner()
         ) { evt ->
-            evt.author.openPrivateChannel().complete().sendMessage(
-                "Invite link: ${evt.jda.asBot().getInviteUrl()}"
-            ).complete()
+            evt.author.openPrivateChannel().queue {
+                it.sendMessage("Invite link: ${evt.jda.asBot().getInviteUrl()}").queue()
+            }
         }
 
         command(
@@ -184,7 +184,7 @@ class Owner : ModuleTemplate() {
                         true
                     )
                 }
-            }.complete()
+            }.queue()
         }
 
         command(
@@ -193,7 +193,7 @@ class Owner : ModuleTemplate() {
             Access.BotOwner()
         ) { evt ->
             evt.channel.sendMessage("Leaving the server.").complete()
-            evt.guild.leave().complete()
+            evt.guild.leave().queue()
         }
 
         command(
@@ -207,7 +207,7 @@ class Owner : ModuleTemplate() {
                 setDescription(EventListener.allModules.joinToString("\n") {
                     it.name + if (it.isOptional) " (Optional)" else ""
                 })
-            }.complete()
+            }.queue()
         }
 
         command(
@@ -217,12 +217,12 @@ class Owner : ModuleTemplate() {
         ) { evt, moduleName: String ->
             if (EventListener.allModules.filter { it.isOptional }.none { it.name == moduleName }) return@command
             if (moduleName in config.enabledModules) {
-                evt.channel.sendMessage("Module `$moduleName` is already enabled.").complete()
+                evt.channel.sendMessage("Module `$moduleName` is already enabled.").queue()
                 return@command
             }
             config.enabledModules.add(moduleName)
             config.serialize()
-            evt.channel.sendMessage("Enabled the `$moduleName` module.").complete()
+            evt.channel.sendMessage("Enabled the `$moduleName` module.").queue()
         }
 
         command(
@@ -233,12 +233,12 @@ class Owner : ModuleTemplate() {
         { evt, moduleName: String ->
             if (EventListener.allModules.filter { it.isOptional }.none { it.name == moduleName }) return@command
             if (moduleName !in config.enabledModules) {
-                evt.channel.sendMessage("Module `$moduleName` is already disabled.").complete()
+                evt.channel.sendMessage("Module `$moduleName` is already disabled.").queue()
                 return@command
             }
             config.enabledModules.remove(moduleName)
             config.serialize()
-            evt.channel.sendMessage("Disabled the `$moduleName` module.").complete()
+            evt.channel.sendMessage("Disabled the `$moduleName` module.").queue()
         }
     }
 
