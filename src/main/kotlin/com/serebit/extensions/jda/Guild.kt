@@ -16,10 +16,8 @@ val Guild.trackManager: GuildTrackManager
         }
     }
 
-fun Guild.getMemberByMention(mention: String): Member? = getMemberById(
-    mention.removeSurrounding("<@", ">")
-        .removePrefix("!")
-)
+fun Guild.getMemberByMention(mention: String): Member? =
+    getMemberById(mention.removeSurrounding("<@", ">").removePrefix("!"))
 
 fun Guild.getTextChannelByMention(mention: String): TextChannel? =
     getTextChannelById(mention.removeSurrounding("<#", ">"))

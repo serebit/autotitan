@@ -48,8 +48,7 @@ class Owner : ModuleTemplate() {
             "systemInfo",
             "Gets information about the system that the bot is running on.",
             Access.BotOwner()
-        )
-        { evt ->
+        ) { evt ->
             val process = info.operatingSystem.getProcess(info.operatingSystem.processId)
             val processorModel = info.hardware.processor.name.replace("(\\(R\\)|\\(TM\\)|@ .+)".toRegex(), "")
             val processorCores = info.hardware.processor.physicalProcessorCount
@@ -136,13 +135,12 @@ class Owner : ModuleTemplate() {
             "Removes a user from the blacklist.",
             Access.BotOwner()
         ) { evt, user: User ->
-            if (user.idLong !in config.blackList) {
-                evt.channel.sendMessage("${user.name} is not in the blacklist.").queue()
-                return@command
-            }
-            config.blackList.remove(user.idLong)
-            evt.channel.sendMessage("Removed ${user.name} from the blacklist.").queue()
-            config.serialize()
+            if (user.idLong in config.blackList) {
+                config.blackList.remove(user.idLong)
+                config.serialize()
+                evt.channel.sendMessage("Removed ${user.name} from the blacklist.").queue()
+
+            } else evt.channel.sendMessage("${user.name} is not in the blacklist.").queue()
         }
 
         command(
@@ -156,9 +154,7 @@ class Owner : ModuleTemplate() {
                         evt.jda.getUserById(it).asMention
                     }, true)
                 }.queue()
-            } else {
-                evt.channel.sendMessage("The blacklist is empty.").queue()
-            }
+            } else evt.channel.sendMessage("The blacklist is empty.").queue()
         }
 
         command(
@@ -179,7 +175,7 @@ class Owner : ModuleTemplate() {
             evt.channel.sendEmbed {
                 evt.jda.guilds.forEach {
                     addField(
-                        "${it.name} (${it.id})",
+                        it.name,
                         "Owner: ${it.owner.asMention}\nMembers: ${it.members.size}\n",
                         true
                     )
@@ -216,13 +212,11 @@ class Owner : ModuleTemplate() {
             Access.BotOwner()
         ) { evt, moduleName: String ->
             if (EventListener.allModules.filter { it.isOptional }.none { it.name == moduleName }) return@command
-            if (moduleName in config.enabledModules) {
-                evt.channel.sendMessage("Module `$moduleName` is already enabled.").queue()
-                return@command
-            }
-            config.enabledModules.add(moduleName)
-            config.serialize()
-            evt.channel.sendMessage("Enabled the `$moduleName` module.").queue()
+            if (moduleName !in config.enabledModules) {
+                config.enabledModules.add(moduleName)
+                config.serialize()
+                evt.channel.sendMessage("Enabled the `$moduleName` module.").queue()
+            } else evt.channel.sendMessage("Module `$moduleName` is already enabled.").queue()
         }
 
         command(
@@ -232,13 +226,11 @@ class Owner : ModuleTemplate() {
         )
         { evt, moduleName: String ->
             if (EventListener.allModules.filter { it.isOptional }.none { it.name == moduleName }) return@command
-            if (moduleName !in config.enabledModules) {
-                evt.channel.sendMessage("Module `$moduleName` is already disabled.").queue()
-                return@command
-            }
-            config.enabledModules.remove(moduleName)
-            config.serialize()
-            evt.channel.sendMessage("Disabled the `$moduleName` module.").queue()
+            if (moduleName in config.enabledModules) {
+                config.enabledModules.remove(moduleName)
+                config.serialize()
+                evt.channel.sendMessage("Disabled the `$moduleName` module.").queue()
+            } else evt.channel.sendMessage("Module `$moduleName` is already disabled.").queue()
         }
     }
 
