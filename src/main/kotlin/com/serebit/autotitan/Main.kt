@@ -3,6 +3,7 @@ package com.serebit.autotitan
 import com.serebit.autotitan.data.DataManager
 import com.serebit.autotitan.listeners.EventListener
 import com.serebit.autotitan.network.GithubApi
+import com.serebit.autotitan.network.ping
 import com.serebit.extensions.contentType
 import com.serebit.loggerkt.LogLevel
 import com.serebit.loggerkt.Logger
@@ -34,20 +35,22 @@ fun main(args: Array<String>) {
         }
     }
 
-    JDABuilder(AccountType.BOT).apply {
-        setToken(config.token)
-        addEventListener(EventListener)
-        setGame(Game.playing("${config.prefix}help"))
-    }.buildBlocking().also {
-        println(
-            """
-            $NAME v$VERSION
-            Username:    ${it.selfUser.name}
-            Ping:        ${it.ping}ms
-            Invite link: ${it.asBot().getInviteUrl()}
-            """.trimIndent()
-        )
-    }
+    if (ping("discordapp.com")) {
+        JDABuilder(AccountType.BOT).apply {
+            setToken(config.token)
+            addEventListener(EventListener)
+            setGame(Game.playing("${config.prefix}help"))
+        }.buildBlocking().also {
+            println(
+                """
+                $NAME v$VERSION
+                Username:    ${it.selfUser.name}
+                Ping:        ${it.ping}ms
+                Invite link: ${it.asBot().getInviteUrl()}
+                """.trimIndent()
+            )
+        }
+    } else Logger.error("Failed to connect to Discord.")
 }
 
 private fun update() = if (DataManager.codeSource.contentType == "application/x-java-archive") {
