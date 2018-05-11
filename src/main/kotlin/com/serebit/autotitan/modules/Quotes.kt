@@ -16,7 +16,7 @@ import java.util.*
 
 @Suppress("UNUSED")
 class Quotes : ModuleTemplate(isOptional = true, defaultAccess = Access.Guild.All()) {
-    private val dataManager = DataManager(this::class)
+    private val dataManager = DataManager(this)
     private val quoteMap = dataManager.readOrDefault("quotes.json") { GuildResourceMap<String, String>() }
     private val random = Random()
 

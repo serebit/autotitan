@@ -15,7 +15,7 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 @Suppress("UNUSED")
 class Dictionary : ModuleTemplate(isOptional = true) {
     private val gson = Gson()
-    private val dataManager = DataManager(this::class)
+    private val dataManager = DataManager(this)
     private val config = dataManager.readOrDefault("config.json") { DictionaryConfig() }
 
     init {

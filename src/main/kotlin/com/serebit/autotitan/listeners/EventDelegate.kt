@@ -11,7 +11,7 @@ import net.dv8tion.jda.core.hooks.ListenerAdapter
 import org.reflections.Reflections
 import kotlin.reflect.full.createInstance
 
-internal object EventListener : ListenerAdapter() {
+internal object EventDelegate : ListenerAdapter() {
     var allModules: List<Module> = classpathModules
         private set
     private val classpathModules

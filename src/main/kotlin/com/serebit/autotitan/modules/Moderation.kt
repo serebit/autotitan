@@ -14,7 +14,7 @@ import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent
 
 @Suppress("UNUSED")
 class Moderation : ModuleTemplate() {
-    private val dataManager = DataManager(this::class)
+    private val dataManager = DataManager(this)
     private val memberRoleMap: GuildRoleMap = dataManager.readOrDefault("rolemap.json") { GuildRoleMap() }
 
     init {

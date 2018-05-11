@@ -4,7 +4,7 @@ import com.serebit.autotitan.api.ModuleTemplate
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.parameters.LongString
 import com.serebit.autotitan.config
-import com.serebit.autotitan.listeners.EventListener
+import com.serebit.autotitan.listeners.EventDelegate
 import com.serebit.extensions.asMetricUnit
 import com.serebit.extensions.asPercentageOf
 import com.serebit.extensions.jda.sendEmbed
@@ -32,7 +32,7 @@ class Owner : ModuleTemplate(defaultAccess = Access.BotOwner()) {
 
         command("reset", "Resets the modules of the bot, effectively restarting it.") { evt ->
             evt.channel.sendMessage("Resetting...").queue { message ->
-                EventListener.resetModules()
+                EventDelegate.resetModules()
                 message.editMessage("Reset commands and listeners.").queue()
             }
         }

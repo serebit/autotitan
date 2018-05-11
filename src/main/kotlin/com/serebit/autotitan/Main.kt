@@ -1,7 +1,7 @@
 package com.serebit.autotitan
 
-import com.serebit.autotitan.data.DataManager
-import com.serebit.autotitan.listeners.EventListener
+import com.serebit.autotitan.data.FileManager
+import com.serebit.autotitan.listeners.EventDelegate
 import com.serebit.autotitan.network.GithubApi
 import com.serebit.autotitan.network.ping
 import com.serebit.extensions.contentType
@@ -38,7 +38,7 @@ fun main(args: Array<String>) {
     if (ping("discordapp.com")) {
         JDABuilder(AccountType.BOT).apply {
             setToken(config.token)
-            addEventListener(EventListener)
+            addEventListener(EventDelegate)
             setGame(Game.playing("${config.prefix}help"))
         }.buildBlocking().also {
             println(
@@ -53,13 +53,13 @@ fun main(args: Array<String>) {
     } else Logger.error("Failed to connect to Discord.")
 }
 
-private fun update() = if (DataManager.codeSource.contentType == "application/x-java-archive") {
+private fun update() = if (FileManager.codeSource.contentType == "application/x-java-archive") {
     GithubApi.getLatestRelease("serebit", "autotitan") { it.tag_name != VERSION }
         ?.assets
         ?.find { it.content_type == "application/x-java-archive" }
         ?.let {
             Logger.info("Updating AutoTitan to latest release...")
-            it.streamTo(DataManager.codeSource)
+            it.streamTo(FileManager.codeSource)
             Logger.info("Finished updating.")
         } ?: Logger.info("No new updates are available.")
 } else Logger.error("Can't update unless running from a jarfile.")

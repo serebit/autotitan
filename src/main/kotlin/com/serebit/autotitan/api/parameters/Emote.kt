@@ -2,7 +2,7 @@ package com.serebit.autotitan.api.parameters
 
 import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.Gson
-import com.serebit.autotitan.data.DataManager
+import com.serebit.autotitan.data.FileManager
 import com.serebit.extensions.jda.getEmoteByMention
 import net.dv8tion.jda.core.JDA
 import net.dv8tion.jda.core.entities.MessageChannel
@@ -29,7 +29,7 @@ data class Emote(private val unicodeValue: String? = null, private val emoteIdVa
 
     companion object {
         private val emojiCodePoints = Gson().fromJson<Set<IntArray>>(
-            DataManager.classpathResource("resources/emoji-code-points.json").readText()
+            FileManager.classpathResource("resources/emoji-code-points.json").readText()
         )
 
         private val String.isUnicodeEmoji

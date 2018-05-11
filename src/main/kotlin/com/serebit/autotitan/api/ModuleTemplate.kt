@@ -8,6 +8,7 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import kotlin.reflect.KClass
 
 abstract class ModuleTemplate(val isOptional: Boolean = false, protected val defaultAccess: Access = Access.All()) {
+    internal val name get() = this::class.simpleName ?: "Abstract Module"
     private val commands: MutableList<Command> = mutableListOf()
     private val listeners: MutableList<Listener> = mutableListOf()
 
@@ -107,5 +108,5 @@ abstract class ModuleTemplate(val isOptional: Boolean = false, protected val def
     protected inline fun <reified T : Event> listener(crossinline task: (T) -> Unit) =
         addListener(T::class) { task(it as T) }
 
-    internal fun build() = Module(this::class.simpleName ?: "Anonymous Module", isOptional, commands, listeners)
+    internal fun build() = Module(name, isOptional, commands, listeners)
 }
