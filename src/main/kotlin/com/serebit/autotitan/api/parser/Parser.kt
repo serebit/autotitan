@@ -1,6 +1,6 @@
 package com.serebit.autotitan.api.parser
 
-import com.serebit.autotitan.data.Emote
+import com.serebit.autotitan.api.parameters.Emote
 import com.serebit.extensions.jda.getMemberByMention
 import com.serebit.extensions.jda.getTextChannelByMention
 import com.serebit.extensions.jda.getUserByMention

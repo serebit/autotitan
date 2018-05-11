@@ -3,7 +3,7 @@ package com.serebit.autotitan.modules
 import com.serebit.autotitan.api.ModuleTemplate
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.data.DataManager
-import com.serebit.autotitan.data.Emote
+import com.serebit.autotitan.api.parameters.Emote
 import com.serebit.autotitan.data.GuildResourceMap
 import com.serebit.extensions.chunkedBy
 import com.serebit.extensions.jda.MESSAGE_EMBED_MAX_FIELDS

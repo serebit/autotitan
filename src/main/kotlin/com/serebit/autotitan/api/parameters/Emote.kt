@@ -1,7 +1,8 @@
-package com.serebit.autotitan.data
+package com.serebit.autotitan.api.parameters
 
 import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.Gson
+import com.serebit.autotitan.data.DataManager
 import com.serebit.extensions.jda.getEmoteByMention
 import net.dv8tion.jda.core.JDA
 import net.dv8tion.jda.core.entities.MessageChannel

@@ -1,6 +1,6 @@
 package com.serebit.autotitan.api.parser
 
-import com.serebit.autotitan.data.Emote
+import com.serebit.autotitan.api.parameters.Emote
 import net.dv8tion.jda.core.entities.Channel
 import net.dv8tion.jda.core.entities.IMentionable
 import net.dv8tion.jda.core.entities.Member
