@@ -3,19 +3,24 @@ package com.serebit.autotitan.data
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.serebit.autotitan.api.ModuleTemplate
-import java.io.File
 import java.lang.reflect.Type
 
 class DataManager(template: ModuleTemplate) {
     private val folder = FileManager.classpathResource("data/${template.name}").also { it.mkdirs() }
 
-    fun <T : Any> read(fileName: String): T? = read(folder.resolve(fileName), object : TypeToken<T>() {}.type)
+    /*
+     * This function *needs* to be reified to work with Gson. Gson has issues with Kotlin generics, so if T is of a
+     * type that uses generics, and T isn't reified when passed to the TypeToken, Gson fails to cast the JSON to the
+     * input type and throws an exception. Keep it in.
+     */
+    inline fun <reified T : Any> read(fileName: String): T? = read(fileName, object : TypeToken<T>() {}.type)
 
     inline fun <reified T : Any> readOrDefault(fileName: String, defaultValue: () -> T) =
         read(fileName) ?: defaultValue()
 
-    private fun <T : Any> read(file: File, type: Type): T? =
+    fun <T : Any> read(fileName: String, type: Type): T? = folder.resolve(fileName).let { file ->
         if (file.exists()) serializer.fromJson(file.readText(), type) else null
+    }
 
     fun write(fileName: String, obj: Any) = folder.resolve(fileName)
         .also { it.createNewFile() }
