@@ -125,12 +125,6 @@ class Owner : ModuleTemplate(defaultAccess = Access.BotOwner()) {
             } else evt.channel.sendMessage("The blacklist is empty.").queue()
         }
 
-        command("getInvite", "Sends the bot's invite link in a private message.") { evt ->
-            evt.author.openPrivateChannel().queue {
-                it.sendMessage("Invite link: ${evt.jda.asBot().getInviteUrl()}").queue()
-            }
-        }
-
         command("serverList", "Sends the list of servers that the bot is in.") { evt ->
             evt.channel.sendEmbed {
                 evt.jda.guilds.forEach {

@@ -41,7 +41,7 @@ internal object EventDelegate : ListenerAdapter() {
                 }.queue()
             }
 
-            command("allCommands", description = "Sends an embed with all commands listed.") {
+            command("allCommands", "Sends an embed with all commands listed.") {
                 it.channel.sendEmbed {
                     loadedModules.sortedBy { it.name }.forEach { module ->
                         addField(module.commandListField)
@@ -49,7 +49,7 @@ internal object EventDelegate : ListenerAdapter() {
                 }.queue()
             }
 
-            command("help", description = "Sends an embed with general information on how to use the bot.") {
+            command("help", "Sends an embed with general information on how to use the bot.") {
                 it.channel.sendEmbed {
                     addField(
                         "Help",

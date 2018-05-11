@@ -22,16 +22,14 @@ class Quotes : ModuleTemplate(isOptional = true, defaultAccess = Access.Guild.Al
 
     init {
         command("addQuote", "Adds the given quote.") { evt, quote: LongString ->
-            if (evt.message.mentionsUsers) {
-                evt.channel.sendMessage("Quotes containing mentions are not permitted.").queue()
-                return@command
-            }
-            quoteMap[evt.guild].let {
-                val quoteIndex = it.keys.map { it.toInt() }.max()?.plus(1) ?: 0
-                it[quoteIndex.toString()] = quote.value
-                evt.channel.sendMessage("Added ${evt.member.asMention}'s quote as number `$quoteIndex`.").queue()
-            }
-            dataManager.write("quotes.json", quoteMap)
+            if (!evt.message.mentionsUsers) {
+                quoteMap[evt.guild].let {
+                    val quoteIndex = it.keys.map { it.toInt() }.max()?.plus(1) ?: 0
+                    it[quoteIndex.toString()] = quote.value
+                    evt.channel.sendMessage("Added ${evt.member.asMention}'s quote as number `$quoteIndex`.").queue()
+                }
+                dataManager.write("quotes.json", quoteMap)
+            } else evt.channel.sendMessage("Quotes containing mentions are not permitted.").queue()
         }
 
         command("deleteQuote", "Deletes the quote at the given index.") { evt, index: Int ->

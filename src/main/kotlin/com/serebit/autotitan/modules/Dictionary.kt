@@ -33,26 +33,19 @@ class Dictionary : ModuleTemplate(isOptional = true) {
                 dataManager.write("config.json", config)
                 evt.channel.sendMessage("Wordnik has been initialized.").queue()
             } else {
-                evt.channel.sendMessage(
-                    "The given API key is invalid. Try again with a valid Wordnik API key."
-                ).queue()
+                evt.channel.sendMessage("The given API key is invalid. Try again with a valid Wordnik API key.").queue()
             }
         }
 
-        command(
-            "define",
-            description = "Gets the Nth definition of the given query."
-        ) { evt, index: Int, query: LongString -> sendWordnikDefinition(evt, query.value, index) }
+        command("define", "Gets the Nth definition of the given query.") { evt, index: Int, query: LongString ->
+            sendWordnikDefinition(evt, query.value, index)
+        }
 
-        command(
-            "define",
-            "Gets the first definition of the given query."
-        ) { evt, query: LongString -> sendWordnikDefinition(evt, query.value) }
+        command("define", "Gets the first definition of the given query.") { evt, query: LongString ->
+            sendWordnikDefinition(evt, query.value)
+        }
 
-        command(
-            "related",
-            description = "Gets synonyms and antonyms for the given query."
-        ) { evt, query: LongString ->
+        command("related", "Gets synonyms and antonyms for the given query.") { evt, query: LongString ->
             when {
                 !WordnikApi.isInitialized -> evt.channel.sendMessage(
                     "The Dictionary module is not initialized. Initialize it with the command `initdictionary`."
@@ -73,13 +66,12 @@ class Dictionary : ModuleTemplate(isOptional = true) {
 
         command(
             "urban",
-            description = "Gets the Nth Urban Dictionary definition of the given query."
+            "Gets the Nth Urban Dictionary definition of the given query."
         ) { evt, index: Int, query: LongString -> sendUrbanDefinition(evt, query.value, index) }
 
-        command(
-            "urban",
-            description = "Gets the first Urban Dictionary definition of the given query."
-        ) { evt, query: LongString -> sendUrbanDefinition(evt, query.value) }
+        command("urban", "Gets the first Urban Dictionary definition of the given query.") { evt, query: LongString ->
+            sendUrbanDefinition(evt, query.value)
+        }
     }
 
     private fun sendWordnikDefinition(evt: MessageReceivedEvent, query: String, index: Int = 1) {

@@ -18,31 +18,19 @@ class Moderation : ModuleTemplate() {
     private val memberRoleMap: GuildRoleMap = dataManager.readOrDefault("rolemap.json") { GuildRoleMap() }
 
     init {
-        command(
-            "kick",
-            "Kicks a member.",
-            Access.Guild.All(Permission.KICK_MEMBERS)
-        ) { evt, member: Member ->
+        command("kick", "Kicks a member.", Access.Guild.All(Permission.KICK_MEMBERS)) { evt, member: Member ->
             evt.guild.controller.kick(member).queue {
                 evt.channel.sendMessage("Kicked ${member.effectiveName}.").queue()
             }
         }
 
-        command(
-            "ban",
-            "Bans a user.",
-            Access.Guild.All(Permission.BAN_MEMBERS)
-        ) { evt, user: User ->
+        command("ban", "Bans a user.", Access.Guild.All(Permission.BAN_MEMBERS)) { evt, user: User ->
             evt.guild.controller.ban(user, 0).queue {
                 evt.channel.sendMessage("Banned ${user.name}.").queue()
             }
         }
 
-        command(
-            "unBan",
-            "Un-bans a banned user from the current server.",
-            Access.Guild.All(Permission.BAN_MEMBERS)
-        ) { evt, user: User ->
+        command("unBan", "Un-bans a banned user.", Access.Guild.All(Permission.BAN_MEMBERS)) { evt, user: User ->
             evt.guild.controller.unban(user).queue {
                 evt.channel.sendMessage("Unbanned ${user.name}.").complete()
             }
@@ -50,7 +38,7 @@ class Moderation : ModuleTemplate() {
 
         command(
             "cleanUp",
-            "Deletes the last N messages in the channel. N must be in the range of 1..$maximumCleanupCount.",
+            "Deletes the last N messages in the channel. N must be in the range of 1 to $maximumCleanupCount.",
             Access.Guild.All(Permission.MESSAGE_MANAGE)
         ) { evt, number: Int ->
             if (number in 1..maximumCleanupCount) {

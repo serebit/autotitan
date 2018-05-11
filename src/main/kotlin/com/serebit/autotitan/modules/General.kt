@@ -2,6 +2,7 @@ package com.serebit.autotitan.modules
 
 import com.serebit.autotitan.api.ModuleTemplate
 import com.serebit.autotitan.api.meta.Access
+import com.serebit.extensions.jda.isBotOwner
 import com.serebit.extensions.jda.sendEmbed
 import net.dv8tion.jda.core.OnlineStatus
 import net.dv8tion.jda.core.Permission
@@ -60,6 +61,26 @@ class General : ModuleTemplate() {
             Access.Guild.All(),
             task = ::sendMemberInfo
         )
+
+        command("invite", "Sends the bot's invite link.") { evt ->
+            val inviteMessage = """
+                Invite link: <${evt.jda.asBot().getInviteUrl()}>. Remember, you need Manage Server permissions to
+                add me to a server.
+                """.trimIndent()
+            evt.jda.asBot().applicationInfo.queue { applicationInfo ->
+                when {
+                    applicationInfo.isBotPublic ->
+                        evt.channel.sendMessage(inviteMessage).queue()
+                    evt.author.isBotOwner -> evt.author.openPrivateChannel().queue { channel ->
+                        evt.channel.sendMessage("Sent the invite link in PMs.").queue()
+                        channel.sendMessage(inviteMessage).queue()
+                    }
+                    else -> evt.channel.sendMessage(
+                        "I'm set to private. Contact the bot owner if you want me to join your server."
+                    ).queue()
+                }
+            }
+        }
     }
 
     private fun sendMemberInfo(evt: MessageReceivedEvent, member: Member) {
