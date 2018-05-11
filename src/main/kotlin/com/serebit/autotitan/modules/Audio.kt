@@ -2,6 +2,7 @@ package com.serebit.autotitan.modules
 
 import com.serebit.autotitan.api.ModuleTemplate
 import com.serebit.autotitan.api.meta.Access
+import com.serebit.autotitan.api.parameters.LongString
 import com.serebit.autotitan.audio.AudioHandler
 import com.serebit.autotitan.audio.VoiceStatus
 import com.serebit.extensions.jda.closeAudioConnection
@@ -43,11 +44,10 @@ class Audio : ModuleTemplate(defaultAccess = Access.Guild.All()) {
 
         command(
             "play",
-            "Plays a track from a URI, or searches YouTube for the given search terms.",
-            delimitLastString = false
-        ) { evt, query: String ->
+            "Plays a track from a URI, or searches YouTube for the given search terms."
+        ) { evt, query: LongString ->
             if (handleVoiceStatus(evt, true)) {
-                val trimmedQuery = query.removeSurrounding("<", ">")
+                val trimmedQuery = query.value.removeSurrounding("<", ">")
                 val formattedQuery = buildString {
                     if (!trimmedQuery.matches(uriRegex)) append("ytsearch: ")
                     append(trimmedQuery)

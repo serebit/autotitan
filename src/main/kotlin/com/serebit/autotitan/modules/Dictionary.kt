@@ -3,6 +3,7 @@ package com.serebit.autotitan.modules
 import com.google.gson.Gson
 import com.serebit.autotitan.api.ModuleTemplate
 import com.serebit.autotitan.api.meta.Access
+import com.serebit.autotitan.api.parameters.LongString
 import com.serebit.autotitan.data.DataManager
 import com.serebit.autotitan.network.UrbanDictionaryApi
 import com.serebit.autotitan.network.WordnikApi
@@ -40,26 +41,23 @@ class Dictionary : ModuleTemplate(isOptional = true) {
 
         command(
             "define",
-            description = "Gets the Nth definition of the given query.",
-            delimitLastString = false
-        ) { evt, index: Int, query: String -> sendWordnikDefinition(evt, query, index) }
+            description = "Gets the Nth definition of the given query."
+        ) { evt, index: Int, query: LongString -> sendWordnikDefinition(evt, query.value, index) }
 
         command(
             "define",
-            "Gets the first definition of the given query.",
-            delimitLastString = false
-        ) { evt, query: String -> sendWordnikDefinition(evt, query) }
+            "Gets the first definition of the given query."
+        ) { evt, query: LongString -> sendWordnikDefinition(evt, query.value) }
 
         command(
             "related",
-            description = "Gets synonyms and antonyms for the given query.",
-            delimitLastString = false
-        ) { evt, query: String ->
+            description = "Gets synonyms and antonyms for the given query."
+        ) { evt, query: LongString ->
             when {
                 !WordnikApi.isInitialized -> evt.channel.sendMessage(
                     "The Dictionary module is not initialized. Initialize it with the command `initdictionary`."
                 ).queue()
-                WordnikApi.hasRelatedWords(query) -> WordnikApi.getRelatedWords(query)?.let { related ->
+                WordnikApi.hasRelatedWords(query.value) -> WordnikApi.getRelatedWords(query.value)?.let { related ->
                     evt.channel.sendEmbed {
                         setTitle("Words related to $query", "https://www.wordnik.com/words/$query")
                         setDescription(related.joinToString("\n") {
@@ -75,15 +73,13 @@ class Dictionary : ModuleTemplate(isOptional = true) {
 
         command(
             "urban",
-            description = "Gets the Nth Urban Dictionary definition of the given query.",
-            delimitLastString = false
-        ) { evt, index: Int, query: String -> sendUrbanDefinition(evt, query, index) }
+            description = "Gets the Nth Urban Dictionary definition of the given query."
+        ) { evt, index: Int, query: LongString -> sendUrbanDefinition(evt, query.value, index) }
 
         command(
             "urban",
-            description = "Gets the first Urban Dictionary definition of the given query.",
-            delimitLastString = false
-        ) { evt, query: String -> sendUrbanDefinition(evt, query) }
+            description = "Gets the first Urban Dictionary definition of the given query."
+        ) { evt, query: LongString -> sendUrbanDefinition(evt, query.value) }
     }
 
     private fun sendWordnikDefinition(evt: MessageReceivedEvent, query: String, index: Int = 1) {

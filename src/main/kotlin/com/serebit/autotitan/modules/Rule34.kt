@@ -3,6 +3,7 @@ package com.serebit.autotitan.modules
 import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.Gson
 import com.serebit.autotitan.api.ModuleTemplate
+import com.serebit.autotitan.api.parameters.LongString
 import com.serebit.extensions.jda.sendEmbed
 import com.serebit.extensions.randomEntry
 import khttp.get
@@ -15,35 +16,33 @@ class Rule34 : ModuleTemplate(isOptional = true) {
     init {
         command(
             "rule34",
-            "Searches Rule34.xxx for the given tags and returns a random image.",
-            delimitLastString = false
-        ) { evt, tagString: String ->
+            "Searches Rule34.xxx for the given tags and returns a random image."
+        ) { evt, tagString: LongString ->
             if (evt.guild != null && evt.textChannel.isNSFW || evt.privateChannel != null) {
-                randomPostOrNull(ImageProvider.RULE34XXX, formatTags(tagString))?.let { post ->
+                randomPostOrNull(ImageProvider.RULE34XXX, formatTags(tagString.value))?.let { post ->
                     evt.channel.sendEmbed {
                         setImage(post.rule34xxxImageUri)
                         setFooter("via Rule34.xxx", "https://rule34.xxx/favicon.png")
                     }.queue()
                 } ?: evt.channel.sendMessage(
-                    "No images found on Rule34.xxx for `${formatTags(tagString, " ")}`."
+                    "No images found on Rule34.xxx for `${formatTags(tagString.value, " ")}`."
                 ).queue()
             } else evt.channel.sendMessage("This command can only be used in channels marked as NSFW.").queue()
         }
 
         command(
             "gelbooru",
-            "Searches Gelbooru.com for the given tags and returns a random image.",
-            delimitLastString = false
-        ) { evt, tagString: String ->
+            "Searches Gelbooru.com for the given tags and returns a random image."
+        ) { evt, tagString: LongString ->
             if (evt.guild != null && evt.textChannel.isNSFW || evt.privateChannel != null) {
-                val formattedTags = formatTags(tagString)
+                val formattedTags = formatTags(tagString.value)
                 randomPostOrNull(ImageProvider.GELBOORU, formattedTags)?.let { post ->
                     evt.channel.sendEmbed {
                         setImage(post.gelbooruImageUri)
                         setFooter("via Gelbooru", "https://gelbooru.com/favicon.png")
                     }.queue()
                 } ?: evt.channel.sendMessage(
-                    "No images found on Gelbooru for `${formatTags(tagString, " ")}`."
+                    "No images found on Gelbooru for `${formatTags(tagString.value, " ")}`."
                 ).queue()
             } else evt.channel.sendMessage("This command can only be used in channels marked as NSFW.").queue()
         }

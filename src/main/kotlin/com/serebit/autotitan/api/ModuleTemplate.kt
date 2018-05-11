@@ -14,7 +14,6 @@ abstract class ModuleTemplate(val isOptional: Boolean = false, protected val def
     protected fun addCommand(
         descriptor: Descriptor,
         access: Access = defaultAccess,
-        delimitLastString: Boolean = true,
         parameterTypes: List<KClass<*>>,
         function: (MessageReceivedEvent, List<Any>) -> Unit
     ): Boolean = parameterTypes.map { TokenType.from(it) }.let { tokenTypes ->
@@ -22,7 +21,6 @@ abstract class ModuleTemplate(val isOptional: Boolean = false, protected val def
             Command(
                 descriptor,
                 access,
-                delimitLastString,
                 tokenTypes.requireNoNulls(),
                 function
             )
@@ -32,19 +30,17 @@ abstract class ModuleTemplate(val isOptional: Boolean = false, protected val def
     protected inline fun command(
         name: String, description: String = "",
         access: Access = defaultAccess,
-        delimitLastString: Boolean = true,
         crossinline task: (MessageReceivedEvent) -> Unit
     ) = addCommand(
-        Descriptor(name.toLowerCase(), description), access, delimitLastString, emptyList()
+        Descriptor(name.toLowerCase(), description), access, emptyList()
     ) { evt, _ -> task(evt) }
 
     protected inline fun <reified P0> command(
         name: String, description: String = "",
         access: Access = defaultAccess,
-        delimitLastString: Boolean = true,
         crossinline task: (MessageReceivedEvent, P0) -> Unit
     ) = addCommand(
-        Descriptor(name.toLowerCase(), description), access, delimitLastString, listOf(P0::class)
+        Descriptor(name.toLowerCase(), description), access, listOf(P0::class)
     ) { evt, args ->
         task(evt, args[0] as P0)
     }
@@ -52,11 +48,9 @@ abstract class ModuleTemplate(val isOptional: Boolean = false, protected val def
     protected inline fun <reified P0, reified P1> command(
         name: String, description: String = "",
         access: Access = defaultAccess,
-        delimitLastString: Boolean = true,
         crossinline task: (MessageReceivedEvent, P0, P1) -> Unit
     ) = addCommand(
-        Descriptor(name.toLowerCase(), description), access, delimitLastString,
-        listOf(P0::class, P1::class)
+        Descriptor(name.toLowerCase(), description), access, listOf(P0::class, P1::class)
     ) { evt, args ->
         task(evt, args[0] as P0, args[1] as P1)
     }
@@ -64,11 +58,9 @@ abstract class ModuleTemplate(val isOptional: Boolean = false, protected val def
     protected inline fun <reified P0, reified P1, reified P2> command(
         name: String, description: String = "",
         access: Access = defaultAccess,
-        delimitLastString: Boolean = true,
         crossinline task: (MessageReceivedEvent, P0, P1, P2) -> Unit
     ) = addCommand(
-        Descriptor(name.toLowerCase(), description), access, delimitLastString,
-        listOf(P0::class, P1::class, P2::class)
+        Descriptor(name.toLowerCase(), description), access, listOf(P0::class, P1::class, P2::class)
     ) { evt, args ->
         @Suppress("MagicNumber")
         task(evt, args as P0, args[1] as P1, args[2] as P2)
@@ -77,11 +69,9 @@ abstract class ModuleTemplate(val isOptional: Boolean = false, protected val def
     protected inline fun <reified P0, reified P1, reified P2, reified P3> command(
         name: String, description: String = "",
         access: Access = defaultAccess,
-        delimitLastString: Boolean = true,
         crossinline task: (MessageReceivedEvent, P0, P1, P2, P3) -> Unit
     ) = addCommand(
-        Descriptor(name.toLowerCase(), description), access, delimitLastString,
-        listOf(P0::class, P1::class, P2::class, P3::class)
+        Descriptor(name.toLowerCase(), description), access, listOf(P0::class, P1::class, P2::class, P3::class)
     ) { evt, args ->
         @Suppress("MagicNumber")
         task(evt, args[0] as P0, args[1] as P1, args[2] as P2, args[3] as P3)
@@ -90,10 +80,9 @@ abstract class ModuleTemplate(val isOptional: Boolean = false, protected val def
     protected inline fun <reified P0, reified P1, reified P2, reified P3, reified P4> command(
         name: String, description: String = "",
         access: Access = defaultAccess,
-        delimitLastString: Boolean = true,
         crossinline task: (MessageReceivedEvent, P0, P1, P2, P3, P4) -> Unit
     ) = addCommand(
-        Descriptor(name.toLowerCase(), description), access, delimitLastString,
+        Descriptor(name.toLowerCase(), description), access,
         listOf(P0::class, P1::class, P2::class, P3::class, P4::class)
     ) { evt, args ->
         @Suppress("MagicNumber")
@@ -103,10 +92,9 @@ abstract class ModuleTemplate(val isOptional: Boolean = false, protected val def
     protected inline fun <reified P0, reified P1, reified P2, reified P3, reified P4, reified P5> command(
         name: String, description: String = "",
         access: Access = defaultAccess,
-        delimitLastString: Boolean = true,
         crossinline task: (MessageReceivedEvent, P0, P1, P2, P3, P4, P5) -> Unit
     ) = addCommand(
-        Descriptor(name.toLowerCase(), description), access, delimitLastString,
+        Descriptor(name.toLowerCase(), description), access,
         listOf(P0::class, P1::class, P2::class, P3::class, P4::class, P5::class)
     ) { evt, args ->
         @Suppress("MagicNumber")

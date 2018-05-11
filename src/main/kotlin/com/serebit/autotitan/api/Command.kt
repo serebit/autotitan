@@ -11,7 +11,6 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 internal class Command(
     private val descriptor: Descriptor,
     private val access: Access,
-    private val delimitLastString: Boolean,
     private val tokenTypes: List<TokenType>,
     private val function: (MessageReceivedEvent, List<Any>) -> Unit
 ) {
@@ -41,11 +40,11 @@ internal class Command(
 
     private fun tokenizeMessage(message: String): List<String> =
         message.split("\\s+".toRegex()).filter(String::isNotBlank).let { splitTokens ->
-            if (delimitLastString) {
-                splitTokens
-            } else {
+            (if (tokenTypes.lastOrNull() == TokenType.OtherToken.LongStringToken) {
                 splitTokens.slice(0 until tokenTypes.size) + splitTokens.drop(tokenTypes.size).joinToString(" ")
-            }.filter(String::isNotBlank)
+            } else {
+                splitTokens
+            }).filter(String::isNotBlank)
         }
 
     private fun parseTokens(evt: MessageReceivedEvent, tokens: List<String>): List<Any?> =

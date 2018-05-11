@@ -1,6 +1,7 @@
 package com.serebit.autotitan.api.parser
 
 import com.serebit.autotitan.api.parameters.Emote
+import com.serebit.autotitan.api.parameters.LongString
 import com.serebit.extensions.jda.getMemberByMention
 import com.serebit.extensions.jda.getTextChannelByMention
 import com.serebit.extensions.jda.getUserByMention
@@ -32,7 +33,8 @@ internal object Parser {
     }
 
     private fun castOther(evt: MessageReceivedEvent, type: TokenType.OtherToken, token: String): Any? = when (type) {
-        TokenType.OtherToken.StringToken -> token
+        TokenType.OtherToken.StringToken -> if (token.contains("\\s".toRegex())) null else token
+        TokenType.OtherToken.LongStringToken -> LongString(token)
         TokenType.OtherToken.CharToken -> token.singleOrNull()
         TokenType.OtherToken.BooleanToken -> token.toBooleanOrNull()
         TokenType.OtherToken.EmoteToken -> Emote.from(token, evt.jda)

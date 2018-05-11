@@ -2,6 +2,7 @@ package com.serebit.autotitan.modules
 
 import com.serebit.autotitan.api.ModuleTemplate
 import com.serebit.autotitan.api.meta.Access
+import com.serebit.autotitan.api.parameters.LongString
 import com.serebit.autotitan.data.DataManager
 import net.dv8tion.jda.core.JDA
 import net.dv8tion.jda.core.Permission
@@ -62,11 +63,10 @@ class Moderation : ModuleTemplate() {
         command(
             "setMemberRole",
             "Sets the role given to new members of the server upon joining.",
-            Access.Guild.All(Permission.MANAGE_ROLES),
-            delimitLastString = false
-        ) { evt, roleName: String ->
+            Access.Guild.All(Permission.MANAGE_ROLES)
+        ) { evt, roleName: LongString ->
             evt.guild.roles
-                .findLast { it.name.toLowerCase() == roleName.toLowerCase() }
+                .findLast { it.name.toLowerCase() == roleName.value.toLowerCase() }
                 ?.let { role ->
                     memberRoleMap.put(evt.guild, role)
                     dataManager.write("rolemap.json", memberRoleMap)

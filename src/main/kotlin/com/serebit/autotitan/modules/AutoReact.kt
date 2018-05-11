@@ -2,8 +2,8 @@ package com.serebit.autotitan.modules
 
 import com.serebit.autotitan.api.ModuleTemplate
 import com.serebit.autotitan.api.meta.Access
-import com.serebit.autotitan.data.DataManager
 import com.serebit.autotitan.api.parameters.Emote
+import com.serebit.autotitan.data.DataManager
 import com.serebit.autotitan.data.GuildResourceMap
 import com.serebit.extensions.chunkedBy
 import com.serebit.extensions.jda.MESSAGE_EMBED_MAX_FIELDS
@@ -64,8 +64,7 @@ class AutoReact : ModuleTemplate(isOptional = true) {
         command(
             "clearReacts",
             "Deletes all autoreacts from the server.",
-            Access.Guild.All(Permission.MESSAGE_ADD_REACTION, Permission.MANAGE_SERVER),
-            delimitLastString = false
+            Access.Guild.All(Permission.MESSAGE_ADD_REACTION, Permission.MANAGE_SERVER)
         ) {
             reactMap[it.guild].clear()
             it.channel.sendMessage("Cleared all autoreacts from this server.").queue()

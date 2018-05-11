@@ -2,6 +2,7 @@ package com.serebit.autotitan.modules
 
 import com.serebit.autotitan.api.ModuleTemplate
 import com.serebit.autotitan.api.meta.Access
+import com.serebit.autotitan.api.parameters.LongString
 import com.serebit.autotitan.data.DataManager
 import com.serebit.autotitan.data.GuildResourceMap
 import com.serebit.extensions.chunkedBy
@@ -20,18 +21,14 @@ class Quotes : ModuleTemplate(isOptional = true, defaultAccess = Access.Guild.Al
     private val random = Random()
 
     init {
-        command(
-            "addQuote",
-            "Adds the given quote.",
-            delimitLastString = false
-        ) { evt, quote: String ->
+        command("addQuote", "Adds the given quote.") { evt, quote: LongString ->
             if (evt.message.mentionsUsers) {
                 evt.channel.sendMessage("Quotes containing mentions are not permitted.").queue()
                 return@command
             }
             quoteMap[evt.guild].let {
                 val quoteIndex = it.keys.map { it.toInt() }.max()?.plus(1) ?: 0
-                it[quoteIndex.toString()] = quote
+                it[quoteIndex.toString()] = quote.value
                 evt.channel.sendMessage("Added ${evt.member.asMention}'s quote as number `$quoteIndex`.").queue()
             }
             dataManager.write("quotes.json", quoteMap)

@@ -2,6 +2,7 @@ package com.serebit.autotitan.modules
 
 import com.serebit.autotitan.api.ModuleTemplate
 import com.serebit.autotitan.api.meta.Access
+import com.serebit.autotitan.api.parameters.LongString
 import com.serebit.autotitan.config
 import com.serebit.autotitan.listeners.EventListener
 import com.serebit.extensions.asMetricUnit
@@ -75,11 +76,11 @@ class Owner : ModuleTemplate(defaultAccess = Access.BotOwner()) {
             }.queue()
         }
 
-        command("setName", "Changes the bot's username.", delimitLastString = false) { evt, name: String ->
-            if (name.length !in 2..usernameMaxLength) {
+        command("setName", "Changes the bot's username.") { evt, name: LongString ->
+            if (name.value.length !in 2..usernameMaxLength) {
                 evt.channel.sendMessage("Usernames must be between 2 and 32 characters in length.").queue()
             } else {
-                evt.jda.selfUser.manager.setName(name).queue()
+                evt.jda.selfUser.manager.setName(name.value).queue()
                 evt.channel.sendMessage("Renamed to $name.").queue()
             }
         }

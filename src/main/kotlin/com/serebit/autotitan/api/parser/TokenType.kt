@@ -1,6 +1,7 @@
 package com.serebit.autotitan.api.parser
 
 import com.serebit.autotitan.api.parameters.Emote
+import com.serebit.autotitan.api.parameters.LongString
 import net.dv8tion.jda.core.entities.Channel
 import net.dv8tion.jda.core.entities.IMentionable
 import net.dv8tion.jda.core.entities.Member
@@ -48,6 +49,7 @@ sealed class TokenType(val name: String) {
     sealed class OtherToken(name: String) : TokenType(name) {
         object EmoteToken : OtherToken("Emote")
         object StringToken : OtherToken("String")
+        object LongStringToken : OtherToken("LongString")
         object BooleanToken : OtherToken("Boolean")
         object CharToken : OtherToken("Char")
 
@@ -55,6 +57,7 @@ sealed class TokenType(val name: String) {
             fun from(type: KClass<out Any>): OtherToken? = when(type) {
                 Emote::class -> EmoteToken
                 String::class -> StringToken
+                LongString::class -> LongStringToken
                 Boolean::class -> BooleanToken
                 Char::class -> CharToken
                 else -> null

@@ -1,6 +1,7 @@
 package com.serebit.autotitan.modules
 
 import com.serebit.autotitan.api.ModuleTemplate
+import com.serebit.autotitan.api.parameters.LongString
 import com.serebit.autotitan.config
 import com.serebit.extensions.randomEntry
 import java.util.*
@@ -12,17 +13,16 @@ class Entertainment : ModuleTemplate(isOptional = true) {
     private val random = Random()
 
     init {
-        command("8", "Answers questions in 8-ball fashion.", delimitLastString = false) { evt, _: String ->
+        command("8", "Answers questions in 8-ball fashion.") { evt, _: LongString ->
             evt.channel.sendMessage(eightBallResponses.randomEntry()).queue()
         }
 
         command(
             "rate",
-            "Rates the given thing on a scale of 0 to $ratingDenominator.",
-            delimitLastString = false
-        ) { evt, thingToRate: String ->
+            "Rates the given thing on a scale of 0 to $ratingDenominator."
+        ) { evt, thingToRate: LongString ->
             deterministicRandom.setSeed(
-                thingToRate.normalize()
+                thingToRate.value.normalize()
                     .hashCode()
                     .plus(config.token.hashCode())
                     .toLong()
