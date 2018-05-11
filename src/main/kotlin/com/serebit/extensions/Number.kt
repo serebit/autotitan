@@ -8,14 +8,13 @@ import kotlin.math.roundToInt
 private const val SECONDS_PER_DAY = 86400
 private const val SECONDS_PER_HOUR = 3600
 private const val SECONDS_PER_MINUTE = 60
-private const val METRIC_BASE = 1000
+private const val METRIC_BASE = 1000f
 private const val PERCENT_FACTOR = 100
 
-fun Long.asMetricUnit(unit: String, base: Int = METRIC_BASE, decimalPoints: Int = 1): String {
-    val baseAsFloat = base.toFloat()
-    val exponent = floor(log(toFloat() - 1, baseAsFloat)).roundToInt()
+fun Long.asMetricUnit(unit: String, decimalPoints: Int = 1): String {
+    val exponent = floor(log(toFloat() - 1, METRIC_BASE)).roundToInt()
     val unitPrefix = listOf("", "K", "M", "G", "T", "P", "E")[exponent]
-    return "%.${decimalPoints}f $unitPrefix$unit".format(this / baseAsFloat.pow(exponent))
+    return "%.${decimalPoints}f $unitPrefix$unit".format(this / METRIC_BASE.pow(exponent))
 }
 
 fun Long.toBasicTimestamp(): String {
