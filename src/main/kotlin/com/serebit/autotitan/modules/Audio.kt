@@ -14,11 +14,11 @@ import net.dv8tion.jda.core.events.guild.voice.GuildVoiceMoveEvent
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 
 @Suppress("UNUSED")
-class Audio : ModuleTemplate() {
+class Audio : ModuleTemplate(defaultAccess = Access.Guild.All()) {
     private val uriRegex = "^https?://[^\\s/\$.?#].[^\\s]*\$".toRegex()
 
     init {
-        command("joinVoice", "Joins the voice channel that the invoker is in.", Access.Guild.All()) { evt ->
+        command("joinVoice", "Joins the voice channel that the invoker is in.") { evt ->
             when (VoiceStatus.from(evt)) {
                 VoiceStatus.SELF_DISCONNECTED_USER_CONNECTED -> connectToVoiceChannel(evt.member.voiceState.channel) {
                     evt.channel.sendMessage("Joined ${evt.guild.audioManager.connectedChannel.name}.").queue()
@@ -35,7 +35,7 @@ class Audio : ModuleTemplate() {
             }
         }
 
-        command("leaveVoice", "Leaves the voice channel that the bot is in.", Access.Guild.All()) { evt ->
+        command("leaveVoice", "Leaves the voice channel that the bot is in.") { evt ->
             leaveVoiceChannel(evt.guild) {
                 evt.channel.sendMessage("Left ${evt.guild.audioManager.connectedChannel.name}.").queue()
             }
@@ -44,7 +44,6 @@ class Audio : ModuleTemplate() {
         command(
             "play",
             "Plays a track from a URI, or searches YouTube for the given search terms.",
-            Access.Guild.All(),
             delimitLastString = false
         ) { evt, query: String ->
             if (handleVoiceStatus(evt, true)) {
@@ -60,7 +59,7 @@ class Audio : ModuleTemplate() {
             }
         }
 
-        command("playPlaylist", "Plays a playlist from the given URI.", Access.Guild.All()) { evt, uri: String ->
+        command("playPlaylist", "Plays a playlist from the given URI.") { evt, uri: String ->
             if (handleVoiceStatus(evt, true)) {
                 val trimmedUri = uri.removeSurrounding("<", ">")
                 if (trimmedUri.matches(uriRegex)) {
@@ -76,7 +75,7 @@ class Audio : ModuleTemplate() {
             }
         }
 
-        command("skip", "Skips the currently playing song.", Access.Guild.All()) { evt ->
+        command("skip", "Skips the currently playing song.") { evt ->
             if (handleVoiceStatus(evt)) {
                 if (evt.guild.trackManager.isPlaying) {
                     evt.guild.trackManager.skipTrack()
@@ -94,14 +93,14 @@ class Audio : ModuleTemplate() {
             evt.channel.sendMessage("Cleared the music queue.").queue()
         }
 
-        command("pause", "Pauses the currently playing song.", Access.Guild.All()) { evt ->
+        command("pause", "Pauses the currently playing song.") { evt ->
             if (handleVoiceStatus(evt) && evt.guild.trackManager.isNotPaused) {
                 evt.guild.trackManager.pause()
                 evt.channel.sendMessage("Paused the track.").queue()
             } else evt.channel.sendMessage("The track is already paused.").queue()
         }
 
-        command("unPause", "Resumes the currently playing song.", Access.Guild.All()) { evt ->
+        command("unPause", "Resumes the currently playing song.") { evt ->
             if (handleVoiceStatus(evt) && evt.guild.trackManager.isPaused) {
                 evt.guild.trackManager.resume()
                 evt.channel.sendMessage("Unpaused the track.").queue()
@@ -110,11 +109,10 @@ class Audio : ModuleTemplate() {
 
         command(
             "queue",
-            "Sends an embed with the list of songs in the queue.",
-            Access.Guild.All()
+            "Sends an embed with the list of songs in the queue."
         ) { evt -> evt.guild.trackManager.sendQueueEmbed(evt.textChannel) }
 
-        command("setVolume", "Sets the volume.", Access.Guild.All()) { evt, volume: Int ->
+        command("setVolume", "Sets the volume.") { evt, volume: Int ->
             if (handleVoiceStatus(evt)) {
                 evt.guild.trackManager.volume = volume
                 evt.channel.sendMessage("Set the volume to ${evt.guild.trackManager.volume}%.").queue()

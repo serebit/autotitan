@@ -63,7 +63,7 @@ class Moderation : ModuleTemplate() {
             "setMemberRole",
             "Sets the role given to new members of the server upon joining.",
             Access.Guild.All(Permission.MANAGE_ROLES),
-            false
+            delimitLastString = false
         ) { evt, roleName: String ->
             evt.guild.roles
                 .findLast { it.name.toLowerCase() == roleName.toLowerCase() }

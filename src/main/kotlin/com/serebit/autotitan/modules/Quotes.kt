@@ -14,7 +14,7 @@ import net.dv8tion.jda.core.entities.MessageEmbed
 import java.util.*
 
 @Suppress("UNUSED")
-class Quotes : ModuleTemplate(isOptional = true) {
+class Quotes : ModuleTemplate(isOptional = true, defaultAccess = Access.Guild.All()) {
     private val dataManager = DataManager(this::class)
     private val quoteMap = dataManager.readOrDefault("quotes.json") { GuildResourceMap<String, String>() }
     private val random = Random()
@@ -23,7 +23,6 @@ class Quotes : ModuleTemplate(isOptional = true) {
         command(
             "addQuote",
             "Adds the given quote.",
-            Access.Guild.All(),
             delimitLastString = false
         ) { evt, quote: String ->
             if (evt.message.mentionsUsers) {
@@ -38,11 +37,7 @@ class Quotes : ModuleTemplate(isOptional = true) {
             dataManager.write("quotes.json", quoteMap)
         }
 
-        command(
-            "deleteQuote",
-            "Deletes the quote at the given index.",
-            Access.Guild.All()
-        ) { evt, index: Int ->
+        command("deleteQuote", "Deletes the quote at the given index.") { evt, index: Int ->
             val quotes = quoteMap[evt.guild]
 
             when {
@@ -58,11 +53,7 @@ class Quotes : ModuleTemplate(isOptional = true) {
             }
         }
 
-        command(
-            "quote",
-            "Gets a random quote, if any exist.",
-            Access.Guild.All()
-        ) { evt ->
+        command("quote", "Gets a random quote, if any exist.") { evt ->
             val quotes = quoteMap[evt.guild]
 
             if (quotes.isNotEmpty()) {
@@ -73,11 +64,7 @@ class Quotes : ModuleTemplate(isOptional = true) {
             } else evt.channel.sendMessage("This server has no quotes saved.").queue()
         }
 
-        command(
-            "quote",
-            "Gets the quote at the given index.",
-            Access.Guild.All()
-        ) { evt, index: Int ->
+        command("quote", "Gets the quote at the given index.") { evt, index: Int ->
             val quotes = quoteMap[evt.guild]
 
             if (quotes.isNotEmpty()) {
@@ -87,11 +74,7 @@ class Quotes : ModuleTemplate(isOptional = true) {
             } else evt.channel.sendMessage("This server has no quotes saved.").queue()
         }
 
-        command(
-            "quoteList",
-            "Gets the list of quotes that this server has saved.",
-            Access.Guild.All()
-        ) { evt ->
+        command("quoteList", "Gets the list of quotes that this server has saved.") { evt ->
             val quotes = quoteMap[evt.guild]
             if (quotes.isNotEmpty()) {
                 evt.channel.sendMessage("Sending a quote list in PMs.").queue()

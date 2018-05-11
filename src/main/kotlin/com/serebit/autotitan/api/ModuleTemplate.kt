@@ -7,13 +7,13 @@ import net.dv8tion.jda.core.events.Event
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import kotlin.reflect.KClass
 
-abstract class ModuleTemplate(val isOptional: Boolean = false) {
+abstract class ModuleTemplate(val isOptional: Boolean = false, protected val defaultAccess: Access = Access.All()) {
     private val commands: MutableList<Command> = mutableListOf()
     private val listeners: MutableList<Listener> = mutableListOf()
 
     protected fun addCommand(
         descriptor: Descriptor,
-        access: Access = Access.All(),
+        access: Access = defaultAccess,
         delimitLastString: Boolean = true,
         parameterTypes: List<KClass<*>>,
         function: (MessageReceivedEvent, List<Any>) -> Unit
@@ -31,7 +31,7 @@ abstract class ModuleTemplate(val isOptional: Boolean = false) {
 
     protected inline fun command(
         name: String, description: String = "",
-        access: Access = Access.All(),
+        access: Access = defaultAccess,
         delimitLastString: Boolean = true,
         crossinline task: (MessageReceivedEvent) -> Unit
     ) = addCommand(
@@ -40,7 +40,7 @@ abstract class ModuleTemplate(val isOptional: Boolean = false) {
 
     protected inline fun <reified P0> command(
         name: String, description: String = "",
-        access: Access = Access.All(),
+        access: Access = defaultAccess,
         delimitLastString: Boolean = true,
         crossinline task: (MessageReceivedEvent, P0) -> Unit
     ) = addCommand(
@@ -51,7 +51,7 @@ abstract class ModuleTemplate(val isOptional: Boolean = false) {
 
     protected inline fun <reified P0, reified P1> command(
         name: String, description: String = "",
-        access: Access = Access.All(),
+        access: Access = defaultAccess,
         delimitLastString: Boolean = true,
         crossinline task: (MessageReceivedEvent, P0, P1) -> Unit
     ) = addCommand(
@@ -63,7 +63,7 @@ abstract class ModuleTemplate(val isOptional: Boolean = false) {
 
     protected inline fun <reified P0, reified P1, reified P2> command(
         name: String, description: String = "",
-        access: Access = Access.All(),
+        access: Access = defaultAccess,
         delimitLastString: Boolean = true,
         crossinline task: (MessageReceivedEvent, P0, P1, P2) -> Unit
     ) = addCommand(
@@ -76,7 +76,7 @@ abstract class ModuleTemplate(val isOptional: Boolean = false) {
 
     protected inline fun <reified P0, reified P1, reified P2, reified P3> command(
         name: String, description: String = "",
-        access: Access = Access.All(),
+        access: Access = defaultAccess,
         delimitLastString: Boolean = true,
         crossinline task: (MessageReceivedEvent, P0, P1, P2, P3) -> Unit
     ) = addCommand(
@@ -89,7 +89,7 @@ abstract class ModuleTemplate(val isOptional: Boolean = false) {
 
     protected inline fun <reified P0, reified P1, reified P2, reified P3, reified P4> command(
         name: String, description: String = "",
-        access: Access = Access.All(),
+        access: Access = defaultAccess,
         delimitLastString: Boolean = true,
         crossinline task: (MessageReceivedEvent, P0, P1, P2, P3, P4) -> Unit
     ) = addCommand(
@@ -102,7 +102,7 @@ abstract class ModuleTemplate(val isOptional: Boolean = false) {
 
     protected inline fun <reified P0, reified P1, reified P2, reified P3, reified P4, reified P5> command(
         name: String, description: String = "",
-        access: Access = Access.All(),
+        access: Access = defaultAccess,
         delimitLastString: Boolean = true,
         crossinline task: (MessageReceivedEvent, P0, P1, P2, P3, P4, P5) -> Unit
     ) = addCommand(

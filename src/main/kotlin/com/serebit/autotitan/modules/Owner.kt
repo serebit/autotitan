@@ -17,15 +17,11 @@ import kotlin.system.exitProcess
 
 
 @Suppress("UNUSED")
-class Owner : ModuleTemplate() {
+class Owner : ModuleTemplate(defaultAccess = Access.BotOwner()) {
     private val info by lazy { SystemInfo() }
 
     init {
-        command(
-            "shutdown",
-            "Shuts down the bot with an exit code of 0.",
-            Access.BotOwner()
-        ) { evt ->
+        command("shutdown", "Shuts down the bot with an exit code of 0.") { evt ->
             Logger.info("Shutting down...")
             evt.channel.sendMessage("Shutting down.").queue()
             evt.jda.shutdown()
@@ -33,22 +29,14 @@ class Owner : ModuleTemplate() {
             exitProcess(0)
         }
 
-        command(
-            "reset",
-            "Resets the modules of the bot, effectively restarting it.",
-            Access.BotOwner()
-        ) { evt ->
+        command("reset", "Resets the modules of the bot, effectively restarting it.") { evt ->
             evt.channel.sendMessage("Resetting...").queue { message ->
                 EventListener.resetModules()
                 message.editMessage("Reset commands and listeners.").queue()
             }
         }
 
-        command(
-            "systemInfo",
-            "Gets information about the system that the bot is running on.",
-            Access.BotOwner()
-        ) { evt ->
+        command("systemInfo", "Gets information about the system that the bot is running on.") { evt ->
             val process = info.operatingSystem.getProcess(info.operatingSystem.processId)
             val processorModel = info.hardware.processor.name.replace("(\\(R\\)|\\(TM\\)|@ .+)".toRegex(), "")
             val processorCores = info.hardware.processor.physicalProcessorCount
@@ -87,12 +75,7 @@ class Owner : ModuleTemplate() {
             }.queue()
         }
 
-        command(
-            "setName",
-            "Changes the bot's username.",
-            Access.BotOwner(),
-            delimitLastString = false
-        ) { evt, name: String ->
+        command("setName", "Changes the bot's username.", delimitLastString = false) { evt, name: String ->
             if (name.length !in 2..usernameMaxLength) {
                 evt.channel.sendMessage("Usernames must be between 2 and 32 characters in length.").queue()
             } else {
@@ -101,11 +84,7 @@ class Owner : ModuleTemplate() {
             }
         }
 
-        command(
-            "setPrefix",
-            "Changes the bot's command prefix.",
-            Access.BotOwner()
-        ) { evt, prefix: String ->
+        command("setPrefix", "Changes the bot's command prefix.") { evt, prefix: String ->
             if (prefix.isBlank() || prefix.contains("\\s".toRegex())) {
                 evt.channel.sendMessage("Invalid prefix. Prefix must not be empty, and may not contain whitespace.")
                 return@command
@@ -116,11 +95,7 @@ class Owner : ModuleTemplate() {
             evt.channel.sendMessage("Set prefix to `${config.prefix}`.").queue()
         }
 
-        command(
-            "blackListAdd",
-            "Adds a user to the blacklist.",
-            Access.BotOwner()
-        ) { evt, user: User ->
+        command("blackListAdd", "Adds a user to the blacklist.") { evt, user: User ->
             if (user.idLong in config.blackList) {
                 evt.channel.sendMessage("${user.name} is already in the blacklist.").queue()
                 return@command
@@ -130,11 +105,7 @@ class Owner : ModuleTemplate() {
             config.serialize()
         }
 
-        command(
-            "blackListRemove",
-            "Removes a user from the blacklist.",
-            Access.BotOwner()
-        ) { evt, user: User ->
+        command("blackListRemove", "Removes a user from the blacklist.") { evt, user: User ->
             if (user.idLong in config.blackList) {
                 config.blackList.remove(user.idLong)
                 config.serialize()
@@ -143,11 +114,7 @@ class Owner : ModuleTemplate() {
             } else evt.channel.sendMessage("${user.name} is not in the blacklist.").queue()
         }
 
-        command(
-            "blackList",
-            "Sends a list of blacklisted users in an embed.",
-            Access.BotOwner()
-        ) { evt ->
+        command("blackList", "Sends a list of blacklisted users in an embed.") { evt ->
             if (config.blackList.isNotEmpty()) {
                 evt.channel.sendEmbed {
                     addField("Blacklisted Users", config.blackList.joinToString("\n") {
@@ -157,21 +124,13 @@ class Owner : ModuleTemplate() {
             } else evt.channel.sendMessage("The blacklist is empty.").queue()
         }
 
-        command(
-            "getInvite",
-            "Sends the bot's invite link in a private message.",
-            Access.BotOwner()
-        ) { evt ->
+        command("getInvite", "Sends the bot's invite link in a private message.") { evt ->
             evt.author.openPrivateChannel().queue {
                 it.sendMessage("Invite link: ${evt.jda.asBot().getInviteUrl()}").queue()
             }
         }
 
-        command(
-            "serverList",
-            "Sends the list of servers that the bot is in.",
-            Access.BotOwner()
-        ) { evt ->
+        command("serverList", "Sends the list of servers that the bot is in.") { evt ->
             evt.channel.sendEmbed {
                 evt.jda.guilds.forEach {
                     addField(
@@ -183,54 +142,9 @@ class Owner : ModuleTemplate() {
             }.queue()
         }
 
-        command(
-            "leaveServer",
-            "Leaves the server in which the command is invoked.",
-            Access.BotOwner()
-        ) { evt ->
+        command("leaveServer", "Leaves the server in which the command is invoked.") { evt ->
             evt.channel.sendMessage("Leaving the server.").complete()
             evt.guild.leave().queue()
-        }
-
-        command(
-            "moduleList",
-            "Sends a list of all the modules.",
-            Access.BotOwner()
-        )
-        { evt ->
-            evt.channel.sendEmbed {
-                setTitle("Modules")
-                setDescription(EventListener.allModules.joinToString("\n") {
-                    it.name + if (it.isOptional) " (Optional)" else ""
-                })
-            }.queue()
-        }
-
-        command(
-            "enableModule",
-            "Enables the given optional module.",
-            Access.BotOwner()
-        ) { evt, moduleName: String ->
-            if (EventListener.allModules.filter { it.isOptional }.none { it.name == moduleName }) return@command
-            if (moduleName !in config.enabledModules) {
-                config.enabledModules.add(moduleName)
-                config.serialize()
-                evt.channel.sendMessage("Enabled the `$moduleName` module.").queue()
-            } else evt.channel.sendMessage("Module `$moduleName` is already enabled.").queue()
-        }
-
-        command(
-            "disableModule",
-            "Disables the given optional module.",
-            Access.BotOwner()
-        )
-        { evt, moduleName: String ->
-            if (EventListener.allModules.filter { it.isOptional }.none { it.name == moduleName }) return@command
-            if (moduleName in config.enabledModules) {
-                config.enabledModules.remove(moduleName)
-                config.serialize()
-                evt.channel.sendMessage("Disabled the `$moduleName` module.").queue()
-            } else evt.channel.sendMessage("Module `$moduleName` is already disabled.").queue()
         }
     }
 
