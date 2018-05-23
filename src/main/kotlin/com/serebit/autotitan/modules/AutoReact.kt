@@ -101,7 +101,7 @@ class AutoReact : Module(isOptional = true) {
                 .filter { it.key in evt.message.contentRaw }
                 .values
                 .flatten()
-                .forEach { evt.message.addReaction(it.emote).queue() }
+                .forEach { evt.message.addReaction(it.emote)?.queue() }
         }
     }
 
