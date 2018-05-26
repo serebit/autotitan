@@ -108,7 +108,7 @@ class AutoReact : ModuleTemplate(isOptional = true) {
     }
 
     private fun Message.addReaction(emote: Emote): RestAction<Void>? = when {
-        emote.isDiscordEmote -> addReaction(jda.getEmoteById(emote.value as Long))
+        emote.isDiscordEmote -> jda.getEmoteById(emote.value as Long)?.let { addReaction(it) }
         emote.isUnicodeEmote -> addReaction(emote.value as String)
         else -> {
             Logger.warn("Attempted to add reaction to a message using an Emote with no value.")
