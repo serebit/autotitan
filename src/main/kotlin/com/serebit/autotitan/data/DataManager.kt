@@ -1,8 +1,11 @@
 package com.serebit.autotitan.data
 
-import com.google.gson.Gson
+import com.github.salomonbrys.kotson.jsonDeserializer
+import com.github.salomonbrys.kotson.registerTypeAdapter
+import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import com.serebit.autotitan.api.ModuleTemplate
+import com.serebit.autotitan.api.parameters.Emote
 import java.lang.reflect.Type
 
 class DataManager(template: ModuleTemplate) {
@@ -27,6 +30,14 @@ class DataManager(template: ModuleTemplate) {
         .writeText(serializer.toJson(obj))
 
     companion object {
-        private val serializer = Gson()
+        private val serializer = GsonBuilder().apply {
+            registerTypeAdapter(jsonDeserializer { (json, _, _) ->
+                when {
+                    json.asJsonObject.has("id") -> Emote.Jda(json.asJsonObject["id"].asLong)
+                    json.asJsonObject.has("unicode") -> Emote.Unicode(json.asJsonObject["unicode"].asString)
+                    else -> null
+                }
+            })
+        }.create()
     }
 }

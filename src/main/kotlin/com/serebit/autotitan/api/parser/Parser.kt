@@ -34,7 +34,7 @@ internal object Parser {
     }
 
     private fun castOther(evt: MessageReceivedEvent, type: TokenType.OtherToken, token: String): Any? = when (type) {
-        TokenType.OtherToken.StringToken -> if (token.contains("\\s".toRegex())) null else token
+        TokenType.OtherToken.StringToken -> if (token.any { it.isWhitespace() }) null else token
         TokenType.OtherToken.LongStringToken -> LongString(token)
         TokenType.OtherToken.CharToken -> token.singleOrNull()
         TokenType.OtherToken.BooleanToken -> token.toBooleanOrNull()

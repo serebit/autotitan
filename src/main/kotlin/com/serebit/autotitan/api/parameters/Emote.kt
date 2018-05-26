@@ -7,23 +7,26 @@ import net.dv8tion.jda.core.JDA
 import net.dv8tion.jda.core.entities.MessageChannel
 import net.dv8tion.jda.core.entities.Emote as JdaEmote
 
-private typealias EmoteId = Long
+sealed class Emote {
+    abstract fun canInteract(channel: MessageChannel): Boolean
 
-data class Emote(private val unicodeValue: String? = null, private val emoteIdValue: EmoteId? = null) {
-    val value get() = unicodeValue ?: emoteIdValue
-    val isDiscordEmote get() = emoteIdValue != null
-    val isUnicodeEmote get() = unicodeValue != null
+    abstract fun asMention(jda: JDA): String
 
-    fun canInteract(channel: MessageChannel) = if (isDiscordEmote) {
-        channel.jda.getEmoteById(emoteIdValue!!).canInteract(channel.jda.selfUser, channel, true)
-    } else true
+    data class Jda(private val id: Long) : Emote() {
+        val value: Long = id
 
-    fun asMention(jda: JDA): String {
-        return when {
-            isDiscordEmote -> jda.getEmoteById(emoteIdValue!!).asMention
-            isUnicodeEmote -> unicodeValue!!
-            else -> ""
-        }
+        override fun canInteract(channel: MessageChannel) =
+            channel.jda.getEmoteById(id).canInteract(channel.jda.selfUser, channel, true)
+
+        override fun asMention(jda: JDA): String = jda.getEmoteById(id).asMention
+    }
+
+    data class Unicode(private val unicode: String) : Emote() {
+        val value: String = unicode
+
+        override fun canInteract(channel: MessageChannel) = true
+
+        override fun asMention(jda: JDA): String = unicode
     }
 
     companion object {
@@ -36,10 +39,8 @@ data class Emote(private val unicodeValue: String? = null, private val emoteIdVa
             }
 
         fun from(string: String, jda: JDA? = null): Emote? = if (string.isUnicodeEmoji) {
-            Emote(string)
-        } else {
-            jda?.getEmoteByMention(string)?.let { Emote(emoteIdValue = it.idLong) }
-        }
+            Unicode(string)
+        } else jda?.getEmoteByMention(string)?.let { Jda(it.idLong) }
 
         private fun JDA.getEmoteByMention(mention: String): JdaEmote? =
             getEmoteById(mention.removeSurrounding("<", ">").replace(":\\S+:".toRegex(), ""))

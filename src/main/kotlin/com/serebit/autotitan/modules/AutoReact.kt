@@ -9,7 +9,6 @@ import com.serebit.extensions.chunkedBy
 import com.serebit.extensions.jda.MESSAGE_EMBED_MAX_FIELDS
 import com.serebit.extensions.jda.sendEmbed
 import com.serebit.extensions.limitLengthTo
-import com.serebit.loggerkt.Logger
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Message
 import net.dv8tion.jda.core.entities.MessageEmbed
@@ -107,13 +106,9 @@ class AutoReact : ModuleTemplate(isOptional = true) {
         }
     }
 
-    private fun Message.addReaction(emote: Emote): RestAction<Void>? = when {
-        emote.isDiscordEmote -> jda.getEmoteById(emote.value as Long)?.let { addReaction(it) }
-        emote.isUnicodeEmote -> addReaction(emote.value as String)
-        else -> {
-            Logger.warn("Attempted to add reaction to a message using an Emote with no value.")
-            null
-        }
+    private fun Message.addReaction(emote: Emote): RestAction<Void>? = when (emote) {
+        is Emote.Jda -> jda.getEmoteById(emote.value)?.let { addReaction(it) }
+        is Emote.Unicode -> addReaction(emote.value)
     }
 
     private data class EmoteData(
