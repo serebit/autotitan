@@ -19,7 +19,7 @@ sealed class TokenType(val name: String) {
         object DoubleToken : NumberToken("Double")
 
         companion object {
-            fun from(type: KClass<out Any>): NumberToken? = when(type) {
+            fun from(type: KClass<out Any>): NumberToken? = when (type) {
                 Byte::class -> ByteToken
                 Short::class -> ShortToken
                 Int::class -> IntToken
@@ -37,7 +37,7 @@ sealed class TokenType(val name: String) {
         object ChannelToken : JdaToken("Channel")
 
         companion object {
-            fun from(type: KClass<out Any>): JdaToken? = when(type) {
+            fun from(type: KClass<out Any>): JdaToken? = when (type) {
                 User::class -> UserToken
                 Member::class -> MemberToken
                 Channel::class -> ChannelToken
@@ -54,7 +54,7 @@ sealed class TokenType(val name: String) {
         object CharToken : OtherToken("Char")
 
         companion object {
-            fun from(type: KClass<out Any>): OtherToken? = when(type) {
+            fun from(type: KClass<out Any>): OtherToken? = when (type) {
                 Emote::class -> EmoteToken
                 String::class -> StringToken
                 LongString::class -> LongStringToken

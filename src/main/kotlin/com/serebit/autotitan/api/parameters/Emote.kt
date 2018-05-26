@@ -3,7 +3,7 @@ package com.serebit.autotitan.api.parameters
 import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.Gson
 import com.serebit.autotitan.data.FileManager
-import com.serebit.extensions.jda.getEmoteByMention
+import com.serebit.loggerkt.Logger
 import net.dv8tion.jda.core.JDA
 import net.dv8tion.jda.core.entities.MessageChannel
 import net.dv8tion.jda.core.entities.Emote as JdaEmote
@@ -31,7 +31,6 @@ data class Emote(private val unicodeValue: String? = null, private val emoteIdVa
         private val emojiCodePoints = Gson().fromJson<Set<IntArray>>(
             FileManager.classpathResource("resources/emoji-code-points.json").readText()
         )
-
         private val String.isUnicodeEmoji
             get() = codePoints().toArray().let { codePoints ->
                 emojiCodePoints.any { it.contentEquals(codePoints) }
@@ -41,6 +40,13 @@ data class Emote(private val unicodeValue: String? = null, private val emoteIdVa
             Emote(string)
         } else {
             jda?.getEmoteByMention(string)?.let { Emote(emoteIdValue = it.idLong) }
+        }
+
+        private fun JDA.getEmoteByMention(mention: String): net.dv8tion.jda.core.entities.Emote? = try {
+            getEmoteById(mention.removeSurrounding("<", ">").replace(":\\S+:".toRegex(), ""))
+        } catch (ex: IllegalArgumentException) {
+            Logger.debug("Attempted to get emote instance from invalid mention $mention.")
+            null
         }
     }
 }

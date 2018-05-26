@@ -5,15 +5,17 @@ import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.parameters.LongString
 import com.serebit.autotitan.config
 import com.serebit.autotitan.listeners.EventDelegate
-import com.serebit.extensions.asMetricUnit
-import com.serebit.extensions.asPercentageOf
 import com.serebit.extensions.jda.sendEmbed
-import com.serebit.extensions.toVerboseTimestamp
 import com.serebit.loggerkt.Logger
 import net.dv8tion.jda.core.entities.Game
 import net.dv8tion.jda.core.entities.User
 import oshi.SystemInfo
 import java.lang.management.ManagementFactory
+import java.time.Duration
+import kotlin.math.floor
+import kotlin.math.log
+import kotlin.math.pow
+import kotlin.math.roundToInt
 import kotlin.system.exitProcess
 
 
@@ -45,7 +47,7 @@ class Owner : ModuleTemplate(defaultAccess = Access.BotOwner()) {
             val totalMemory = info.hardware.memory.total
             val usedMemory = info.hardware.memory.total - info.hardware.memory.available
             val processMemory = process.residentSetSize
-            val processUptime = ManagementFactory.getRuntimeMXBean().uptime / millisecondsPerSecond
+            val processUptime = Duration.ofMillis(ManagementFactory.getRuntimeMXBean().uptime).toVerboseTimestamp()
             evt.channel.sendEmbed {
                 addField(
                     "Processor",
@@ -68,8 +70,8 @@ class Owner : ModuleTemplate(defaultAccess = Access.BotOwner()) {
                 addField(
                     "Uptime",
                     """
-                    System: `${info.hardware.processor.systemUptime.toVerboseTimestamp()}`
-                    Process: `${processUptime.toVerboseTimestamp()}`
+                    System: `${Duration.ofMillis(info.hardware.processor.systemUptime).toVerboseTimestamp()}`
+                    Process: `$processUptime`
                     """.trimIndent(),
                     false
                 )
@@ -143,8 +145,25 @@ class Owner : ModuleTemplate(defaultAccess = Access.BotOwner()) {
         }
     }
 
+    private fun Long.asMetricUnit(unit: String, decimalPoints: Int = 1): String {
+        val exponent = floor(log(toFloat() - 1, metricBase)).roundToInt()
+        val unitPrefix = listOf("", "K", "M", "G", "T", "P", "E")[exponent]
+        return "%.${decimalPoints}f $unitPrefix$unit".format(this / metricBase.pow(exponent))
+    }
+
     companion object {
         private const val millisecondsPerSecond = 1000
+        private const val metricBase = 100f
+        private const val percentFactor = 100
         private const val usernameMaxLength = 32
+
+        private fun Duration.toVerboseTimestamp(): String = buildString {
+            append("${minusMinutes(toMinutes()).seconds}s")
+            if (toMinutes() > 0L) append(" ${minusHours(toHours()).toMinutes()}m")
+            if (toHours() > 0L) append(" ${minusDays(toDays()).toHours()}h")
+            if (toDays() > 0L) append(" ${toDays()}d")
+        }
+
+        private fun Long.asPercentageOf(total: Long): Long = this / total * percentFactor
     }
 }

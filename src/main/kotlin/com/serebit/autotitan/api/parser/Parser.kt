@@ -2,11 +2,12 @@ package com.serebit.autotitan.api.parser
 
 import com.serebit.autotitan.api.parameters.Emote
 import com.serebit.autotitan.api.parameters.LongString
-import com.serebit.extensions.jda.getMemberByMention
-import com.serebit.extensions.jda.getTextChannelByMention
-import com.serebit.extensions.jda.getUserByMention
-import com.serebit.extensions.toBooleanOrNull
+import net.dv8tion.jda.core.JDA
+import net.dv8tion.jda.core.entities.Guild
 import net.dv8tion.jda.core.entities.IMentionable
+import net.dv8tion.jda.core.entities.Member
+import net.dv8tion.jda.core.entities.TextChannel
+import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 
 internal object Parser {
@@ -39,4 +40,15 @@ internal object Parser {
         TokenType.OtherToken.BooleanToken -> token.toBooleanOrNull()
         TokenType.OtherToken.EmoteToken -> Emote.from(token, evt.jda)
     }
+
+    private fun String.toBooleanOrNull() = if (this == "true" || this == "false") toBoolean() else null
+
+    private fun Guild.getMemberByMention(mention: String): Member? =
+        getMemberById(mention.removeSurrounding("<@", ">").removePrefix("!"))
+
+    private fun JDA.getUserByMention(mention: String): User? =
+        retrieveUserById(mention.removeSurrounding("<@", ">").removePrefix("!")).complete()
+
+    private fun Guild.getTextChannelByMention(mention: String): TextChannel? =
+        getTextChannelById(mention.removeSurrounding("<#", ">"))
 }

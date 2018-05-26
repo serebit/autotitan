@@ -4,12 +4,12 @@ import com.serebit.autotitan.data.FileManager
 import com.serebit.autotitan.listeners.EventDelegate
 import com.serebit.autotitan.network.GithubApi
 import com.serebit.autotitan.network.ping
-import com.serebit.extensions.contentType
 import com.serebit.loggerkt.LogLevel
 import com.serebit.loggerkt.Logger
 import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDABuilder
 import net.dv8tion.jda.core.entities.Game
+import java.nio.file.Files
 import kotlin.system.exitProcess
 
 const val NAME = "AutoTitan"
@@ -53,7 +53,7 @@ fun main(args: Array<String>) {
     } else Logger.error("Failed to connect to Discord.")
 }
 
-private fun update() = if (FileManager.codeSource.contentType == "application/x-java-archive") {
+private fun update() = if (Files.probeContentType(FileManager.codeSource.toPath()) == "application/x-java-archive") {
     GithubApi.getLatestRelease("serebit", "autotitan") { it.tag_name != VERSION }
         ?.assets
         ?.find { it.content_type == "application/x-java-archive" }

@@ -10,7 +10,6 @@ import com.serebit.extensions.jda.MESSAGE_EMBED_MAX_FIELDS
 import com.serebit.extensions.jda.mentionsUsers
 import com.serebit.extensions.jda.sendEmbed
 import com.serebit.extensions.limitLengthTo
-import com.serebit.extensions.trimWhitespace
 import net.dv8tion.jda.core.entities.MessageEmbed
 import java.util.*
 
@@ -95,4 +94,6 @@ class Quotes : ModuleTemplate(isOptional = true, defaultAccess = Access.Guild.Al
             } else evt.channel.sendMessage("This server has no quotes saved.").queue()
         }
     }
+
+    private fun String.trimWhitespace(): String = replace("(\\s){2,}".toRegex(), "$1$1")
 }

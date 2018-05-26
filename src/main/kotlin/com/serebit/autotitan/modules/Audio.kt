@@ -4,10 +4,10 @@ import com.serebit.autotitan.api.ModuleTemplate
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.parameters.LongString
 import com.serebit.autotitan.audio.AudioHandler
+import com.serebit.autotitan.audio.GuildTrackManager
 import com.serebit.autotitan.audio.VoiceStatus
 import com.serebit.extensions.jda.closeAudioConnection
 import com.serebit.extensions.jda.openAudioConnection
-import com.serebit.extensions.jda.trackManager
 import net.dv8tion.jda.core.entities.Guild
 import net.dv8tion.jda.core.entities.VoiceChannel
 import net.dv8tion.jda.core.events.guild.voice.GuildVoiceLeaveEvent
@@ -167,7 +167,15 @@ class Audio : ModuleTemplate(defaultAccess = Access.Guild.All()) {
         }
 
     companion object {
+        private val trackManagers = mutableMapOf<Long, GuildTrackManager>()
         private const val queueListLength = 8
         private const val millisecondsPerSecond = 1000
+
+        val Guild.trackManager: GuildTrackManager
+            get() = trackManagers.getOrPut(idLong) {
+                GuildTrackManager(audioManager).also {
+                    audioManager.sendingHandler = it.sendHandler
+                }
+            }
     }
 }
