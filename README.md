@@ -1,6 +1,6 @@
 # AutoTitan
 [![Discord Server](https://discordapp.com/api/guilds/279777865434660865/widget.png?style=shield)](https://goo.gl/RGvvbM)
-[![Build Status](https://travis-ci.org/serebit/autotitan.svg?branch=master)](https://goo.gl/0Gm2gy)
+[![Pipeline Status](https://gitlab.com/serebit/autotitan/badges/master/pipeline.svg)](https://gitlab.com/serebit/autotitan/commits/master)
 [![Codacy Grade](https://img.shields.io/codacy/grade/4d9ef218ebde4807bb58d6aba7a61772.svg)](https://app.codacy.com/app/serebit/LoggerKt)
 [![License](https://img.shields.io/github/license/serebit/loggerkt.svg)](https://github.com/serebit/loggerkt/tree/master/LICENSE.md)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg)](https://goo.gl/OWpJxJ)
