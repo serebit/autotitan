@@ -26,6 +26,7 @@ class General : ModuleTemplate() {
         command("serverInfo", "Gets information about the server.", Access.Guild.All()) { evt ->
             val onlineMemberCount = evt.guild.members.count { it.onlineStatus != OnlineStatus.OFFLINE }
             val hoistedRoles = evt.guild.roles
+                .asSequence()
                 .filter { it.name != "@everyone" && it.isHoisted }
                 .joinToString(", ") { it.name }
 

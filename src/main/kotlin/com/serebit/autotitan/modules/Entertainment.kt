@@ -3,31 +3,24 @@ package com.serebit.autotitan.modules
 import com.serebit.autotitan.api.ModuleTemplate
 import com.serebit.autotitan.api.parameters.LongString
 import com.serebit.autotitan.config
-import com.serebit.extensions.randomEntry
-import java.util.*
-import kotlin.math.roundToInt
+import kotlin.random.Random
 
 @Suppress("UNUSED")
 class Entertainment : ModuleTemplate(isOptional = true) {
-    private val deterministicRandom = Random()
-    private val random = Random()
-
     init {
         command("8", "Answers questions in 8-ball fashion.") { evt, _: LongString ->
-            evt.channel.sendMessage(eightBallResponses.randomEntry()).queue()
+            evt.channel.sendMessage(eightBallResponses.random()).queue()
         }
 
         command(
             "rate",
             "Rates the given thing on a scale of 0 to $ratingDenominator."
         ) { evt, thingToRate: LongString ->
-            deterministicRandom.setSeed(
-                thingToRate.value.normalize()
-                    .hashCode()
-                    .plus(config.token.hashCode())
-                    .toLong()
-            )
-            val rating = deterministicRandom.next(ratingDenominator)
+            val seed = thingToRate.value.normalize()
+                .hashCode()
+                .plus(config.token.hashCode())
+                .toLong()
+            val rating = Random(seed).nextInt(ratingDenominator)
             evt.channel.sendMessage("I'd give $thingToRate a `$rating/$ratingDenominator`.").queue()
         }
     }
@@ -35,8 +28,6 @@ class Entertainment : ModuleTemplate(isOptional = true) {
     private fun String.normalize(): String = this
         .toLowerCase()
         .filter { it.isLetterOrDigit() }
-
-    private fun Random.next(bound: Int) = (nextFloat() * bound).roundToInt()
 
     companion object {
         private const val ratingDenominator = 10

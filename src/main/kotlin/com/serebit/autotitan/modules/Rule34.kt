@@ -5,7 +5,6 @@ import com.google.gson.Gson
 import com.serebit.autotitan.api.ModuleTemplate
 import com.serebit.autotitan.api.parameters.LongString
 import com.serebit.extensions.jda.sendEmbed
-import com.serebit.extensions.randomEntry
 import khttp.get
 import org.apache.http.HttpStatus
 
@@ -53,7 +52,7 @@ class Rule34 : ModuleTemplate(isOptional = true) {
         return if (response.statusCode == HttpStatus.SC_OK && response.text.isNotBlank()) {
             gson.fromJson<List<ApiPost>>(response.text)
                 .filter { !it.image.endsWith(".webm") }
-                .randomEntry()
+                .random()
         } else null
     }
 

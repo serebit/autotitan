@@ -5,7 +5,7 @@ import com.serebit.autotitan.api.ModuleTemplate
 import com.serebit.autotitan.config
 import com.serebit.extensions.jda.sendEmbed
 import com.serebit.loggerkt.Logger
-import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.launch
 import net.dv8tion.jda.core.events.Event
 import net.dv8tion.jda.core.hooks.ListenerAdapter
 import org.reflections.Reflections
@@ -14,6 +14,7 @@ import kotlin.reflect.full.createInstance
 internal object EventDelegate : ListenerAdapter() {
     var allModules: List<Module> = classpathModules
         private set
+    internal val optionalModules get() = allModules.filter { it.isOptional }
     private val classpathModules
         get() = Reflections("com.serebit.autotitan.modules")
             .getSubTypesOf(ModuleTemplate::class.java)
@@ -35,14 +36,15 @@ internal object EventDelegate : ListenerAdapter() {
         init {
             command("commands", "Sends an embed with a list of commands that can be used by the invoker.") { evt ->
                 evt.channel.sendEmbed {
-                    loadedModules.sortedBy { it.name }
-                        .mapNotNull { it.getInvokeableCommandField(evt) }
+                    loadedModules.asSequence()
+                        .sortedBy { it.name }
+                        .mapNotNull { it.getInvokeableCommandField(evt) }.toList()
                         .forEach { addField(it) }
                 }.queue()
             }
 
-            command("allCommands", "Sends an embed with all commands listed.") {
-                it.channel.sendEmbed {
+            command("allCommands", "Sends an embed with all commands listed.") { evt ->
+                evt.channel.sendEmbed {
                     loadedModules.sortedBy { it.name }.forEach { module ->
                         addField(module.commandListField)
                     }
@@ -64,13 +66,11 @@ internal object EventDelegate : ListenerAdapter() {
                 }.queue()
             }
 
-            command(
-                "help",
-                "Sends an embed with information about the requested command."
-            ) { evt, commandName: String ->
-                val matchingCommands = loadedModules
+            command("help", "Gets information about the requested command.") { evt, commandName: String ->
+                val matchingCommands = loadedModules.asSequence()
                     .map { it.findCommandsByName(commandName) }
                     .filter { it.isNotEmpty() }
+                    .toList()
                     .flatten()
                 if (matchingCommands.isNotEmpty()) {
                     evt.channel.sendEmbed {

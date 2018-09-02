@@ -14,9 +14,7 @@ import kotlin.system.exitProcess
 
 const val NAME = "AutoTitan"
 const val VERSION = "1.0.0"
-val config by lazy {
-    BotConfig.generate()
-}
+val config by lazy { BotConfig.generate() }
 
 fun main(args: Array<String>) {
     val longFlags = args.filter { it.matches("--\\w+".toRegex()) }
@@ -29,7 +27,7 @@ fun main(args: Array<String>) {
     }
 
     when {
-        "up" in args || "update" in subCommands -> {
+        "up" in subCommands || "update" in subCommands -> {
             update()
             exitProcess(0)
         }
@@ -40,7 +38,7 @@ fun main(args: Array<String>) {
             setToken(config.token)
             addEventListener(EventDelegate)
             setGame(Game.playing("${config.prefix}help"))
-        }.buildBlocking().also {
+        }.build().awaitReady().also {
             println(
                 """
                 $NAME v$VERSION

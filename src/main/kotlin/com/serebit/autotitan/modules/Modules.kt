@@ -19,7 +19,7 @@ class Modules : ModuleTemplate(defaultAccess = Access.BotOwner()) {
         }
 
         command("enableModule", "Enables the given optional module.") { evt, moduleName: String ->
-            if (EventDelegate.allModules.filter { it.isOptional }.none { it.name == moduleName }) return@command
+            if (EventDelegate.optionalModules.none { it.name == moduleName }) return@command
             if (moduleName !in config.enabledModules) {
                 config.enabledModules.add(moduleName)
                 config.serialize()
@@ -28,7 +28,7 @@ class Modules : ModuleTemplate(defaultAccess = Access.BotOwner()) {
         }
 
         command("disableModule", "Disables the given optional module.") { evt, moduleName: String ->
-            if (EventDelegate.allModules.filter { it.isOptional }.none { it.name == moduleName }) return@command
+            if (EventDelegate.optionalModules.none { it.name == moduleName }) return@command
             if (moduleName in config.enabledModules) {
                 config.enabledModules.remove(moduleName)
                 config.serialize()
