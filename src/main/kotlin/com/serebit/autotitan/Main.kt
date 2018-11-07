@@ -2,13 +2,13 @@ package com.serebit.autotitan
 
 import com.serebit.autotitan.listeners.EventListener
 import com.serebit.extensions.jda.jda
-import com.serebit.loggerkt.LogLevel
-import com.serebit.loggerkt.Logger
+import com.serebit.logkat.LogLevel
+import com.serebit.logkat.Logger
 import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.entities.Game
 
 const val NAME = "AutoTitan"
-const val VERSION = "0.5.2"
+const val VERSION = "0.5.3"
 val config: Configuration = Configuration.generate()
 
 fun main(args: Array<String>) {

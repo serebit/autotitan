@@ -4,15 +4,18 @@ import com.google.common.reflect.ClassPath
 import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.config
 import com.serebit.extensions.jda.sendEmbed
-import com.serebit.loggerkt.Logger
-import kotlinx.coroutines.experimental.launch
+import com.serebit.logkat.Logger
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import net.dv8tion.jda.core.events.Event
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import net.dv8tion.jda.core.hooks.ListenerAdapter
 import kotlin.reflect.full.createInstance
 import com.serebit.autotitan.api.annotations.Command as CommandAnnotation
 
-internal object EventListener : ListenerAdapter() {
+internal object EventListener : ListenerAdapter(), CoroutineScope {
+    override val coroutineContext = Dispatchers.Default
     var allModules: List<Module> = classpathModules
         private set
     private val classpathModules

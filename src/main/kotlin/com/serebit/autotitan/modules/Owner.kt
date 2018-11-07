@@ -10,7 +10,7 @@ import com.serebit.extensions.asMetricUnit
 import com.serebit.extensions.asPercentageOf
 import com.serebit.extensions.jda.sendEmbed
 import com.serebit.extensions.toVerboseTimestamp
-import com.serebit.loggerkt.Logger
+import com.serebit.logkat.Logger
 import net.dv8tion.jda.core.entities.Game
 import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent

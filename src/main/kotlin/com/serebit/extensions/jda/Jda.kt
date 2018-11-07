@@ -9,7 +9,7 @@ import net.dv8tion.jda.core.entities.Emote
 import net.dv8tion.jda.core.entities.User
 
 inline fun jda(accountType: AccountType, init: JDABuilder.() -> Unit): JDA =
-    JDABuilder(accountType).apply(init).buildBlocking()
+    JDABuilder(accountType).apply(init).build().awaitReady()
 
 fun JDA.getUserByMention(mention: String): User? = try {
     getUserById(
