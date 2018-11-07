@@ -2,7 +2,7 @@ package com.serebit.autotitan.network
 
 import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.Gson
-import com.serebit.loggerkt.Logger
+import com.serebit.logkat.Logger
 import khttp.get
 import java.io.File
 import java.io.FileOutputStream

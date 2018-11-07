@@ -6,7 +6,7 @@ import com.serebit.autotitan.api.ModuleTemplate
 import com.serebit.autotitan.api.parameters.LongString
 import com.serebit.extensions.jda.sendEmbed
 import khttp.get
-import org.apache.http.HttpStatus
+import java.net.HttpURLConnection
 
 @Suppress("UNUSED")
 class Rule34 : ModuleTemplate(isOptional = true) {
@@ -49,7 +49,7 @@ class Rule34 : ModuleTemplate(isOptional = true) {
 
     private fun randomPostOrNull(provider: ImageProvider, tags: String): ApiPost? {
         val response = get("https://${provider.baseUri}/index.php?page=dapi&s=post&q=index&tags=$tags&json=1")
-        return if (response.statusCode == HttpStatus.SC_OK && response.text.isNotBlank()) {
+        return if (response.statusCode == HttpURLConnection.HTTP_OK && response.text.isNotBlank()) {
             gson.fromJson<List<ApiPost>>(response.text)
                 .filter { !it.image.endsWith(".webm") }
                 .random()

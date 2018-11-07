@@ -2,7 +2,7 @@
 
 package com.serebit.autotitan.network
 
-import com.serebit.loggerkt.Logger
+import com.serebit.logkat.Logger
 import java.io.IOException
 import java.net.InetSocketAddress
 import java.net.Socket

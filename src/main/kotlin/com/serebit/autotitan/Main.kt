@@ -4,8 +4,8 @@ import com.serebit.autotitan.data.FileManager
 import com.serebit.autotitan.listeners.EventDelegate
 import com.serebit.autotitan.network.GithubApi
 import com.serebit.autotitan.network.ping
-import com.serebit.loggerkt.LogLevel
-import com.serebit.loggerkt.Logger
+import com.serebit.logkat.LogLevel
+import com.serebit.logkat.Logger
 import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDABuilder
 import net.dv8tion.jda.core.entities.Game
