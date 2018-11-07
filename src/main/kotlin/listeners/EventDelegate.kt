@@ -2,8 +2,8 @@ package com.serebit.autotitan.listeners
 
 import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.api.ModuleTemplate
+import com.serebit.autotitan.api.extensions.jda.sendEmbed
 import com.serebit.autotitan.config
-import com.serebit.extensions.jda.sendEmbed
 import com.serebit.logkat.Logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

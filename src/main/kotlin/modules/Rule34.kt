@@ -3,8 +3,8 @@ package com.serebit.autotitan.modules
 import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.Gson
 import com.serebit.autotitan.api.ModuleTemplate
+import com.serebit.autotitan.api.extensions.jda.sendEmbed
 import com.serebit.autotitan.api.parameters.LongString
-import com.serebit.extensions.jda.sendEmbed
 import khttp.get
 import java.net.HttpURLConnection
 

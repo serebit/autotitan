@@ -1,11 +1,11 @@
 package com.serebit.autotitan.modules
 
 import com.serebit.autotitan.api.ModuleTemplate
+import com.serebit.autotitan.api.extensions.jda.sendEmbed
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.parameters.LongString
 import com.serebit.autotitan.config
 import com.serebit.autotitan.listeners.EventDelegate
-import com.serebit.extensions.jda.sendEmbed
 import com.serebit.logkat.Logger
 import net.dv8tion.jda.core.entities.Game
 import net.dv8tion.jda.core.entities.User

@@ -1,10 +1,10 @@
 package com.serebit.autotitan.api
 
+import com.serebit.autotitan.api.extensions.jda.canInvokeCommands
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.meta.Descriptor
 import com.serebit.autotitan.api.parser.Parser
 import com.serebit.autotitan.api.parser.TokenType
-import com.serebit.extensions.jda.canInvokeCommands
 import net.dv8tion.jda.core.entities.MessageEmbed
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 

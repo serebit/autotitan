@@ -1,9 +1,9 @@
 package com.serebit.autotitan.modules
 
 import com.serebit.autotitan.api.ModuleTemplate
+import com.serebit.autotitan.api.extensions.jda.isBotOwner
+import com.serebit.autotitan.api.extensions.jda.sendEmbed
 import com.serebit.autotitan.api.meta.Access
-import com.serebit.extensions.jda.isBotOwner
-import com.serebit.extensions.jda.sendEmbed
 import net.dv8tion.jda.core.OnlineStatus
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Member

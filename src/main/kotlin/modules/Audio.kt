@@ -1,13 +1,13 @@
 package com.serebit.autotitan.modules
 
 import com.serebit.autotitan.api.ModuleTemplate
+import com.serebit.autotitan.api.extensions.jda.closeAudioConnection
+import com.serebit.autotitan.api.extensions.jda.openAudioConnection
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.parameters.LongString
 import com.serebit.autotitan.audio.AudioHandler
 import com.serebit.autotitan.audio.GuildTrackManager
 import com.serebit.autotitan.audio.VoiceStatus
-import com.serebit.extensions.jda.closeAudioConnection
-import com.serebit.extensions.jda.openAudioConnection
 import net.dv8tion.jda.core.entities.Guild
 import net.dv8tion.jda.core.entities.VoiceChannel
 import net.dv8tion.jda.core.events.guild.voice.GuildVoiceLeaveEvent

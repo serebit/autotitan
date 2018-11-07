@@ -1,6 +1,6 @@
 @file:JvmName("CollectionExtensions")
 
-package com.serebit.extensions
+package com.serebit.autotitan.api.extensions
 
 fun <T> Iterable<T>.chunkedBy(
     chunkSize: Int,

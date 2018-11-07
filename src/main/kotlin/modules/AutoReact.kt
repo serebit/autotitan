@@ -1,14 +1,14 @@
 package com.serebit.autotitan.modules
 
 import com.serebit.autotitan.api.ModuleTemplate
+import com.serebit.autotitan.api.extensions.chunkedBy
+import com.serebit.autotitan.api.extensions.jda.MESSAGE_EMBED_MAX_FIELDS
+import com.serebit.autotitan.api.extensions.jda.sendEmbed
+import com.serebit.autotitan.api.extensions.limitLengthTo
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.parameters.Emote
 import com.serebit.autotitan.data.DataManager
 import com.serebit.autotitan.data.GuildResourceMap
-import com.serebit.extensions.chunkedBy
-import com.serebit.extensions.jda.MESSAGE_EMBED_MAX_FIELDS
-import com.serebit.extensions.jda.sendEmbed
-import com.serebit.extensions.limitLengthTo
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Message
 import net.dv8tion.jda.core.entities.MessageEmbed

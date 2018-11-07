@@ -6,7 +6,7 @@ import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackState
-import com.serebit.extensions.jda.sendEmbed
+import com.serebit.autotitan.api.extensions.jda.sendEmbed
 import net.dv8tion.jda.core.audio.AudioSendHandler
 import net.dv8tion.jda.core.entities.MessageChannel
 import net.dv8tion.jda.core.managers.AudioManager

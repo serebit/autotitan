@@ -1,10 +1,10 @@
 package com.serebit.autotitan.modules
 
 import com.serebit.autotitan.api.ModuleTemplate
+import com.serebit.autotitan.api.extensions.jda.sendEmbed
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.config
 import com.serebit.autotitan.listeners.EventDelegate
-import com.serebit.extensions.jda.sendEmbed
 
 @Suppress("UNUSED")
 class Modules : ModuleTemplate(defaultAccess = Access.BotOwner()) {

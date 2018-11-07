@@ -1,6 +1,6 @@
 @file:JvmName("MessageExtensions")
 
-package com.serebit.extensions.jda
+package com.serebit.autotitan.api.extensions.jda
 
 import net.dv8tion.jda.core.EmbedBuilder
 import net.dv8tion.jda.core.entities.Message

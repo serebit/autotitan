@@ -1,6 +1,6 @@
 @file:JvmName("AudioExtensions")
 
-package com.serebit.extensions.jda
+package com.serebit.autotitan.api.extensions.jda
 
 import net.dv8tion.jda.core.audio.hooks.ConnectionListener
 import net.dv8tion.jda.core.audio.hooks.ConnectionStatus

@@ -2,12 +2,12 @@ package com.serebit.autotitan.modules
 
 import com.google.gson.Gson
 import com.serebit.autotitan.api.ModuleTemplate
+import com.serebit.autotitan.api.extensions.jda.sendEmbed
+import com.serebit.autotitan.api.extensions.limitLengthTo
 import com.serebit.autotitan.api.parameters.LongString
 import com.serebit.autotitan.data.DataManager
 import com.serebit.autotitan.network.UrbanDictionaryApi
 import com.serebit.autotitan.network.WordnikApi
-import com.serebit.extensions.jda.sendEmbed
-import com.serebit.extensions.limitLengthTo
 import net.dv8tion.jda.core.entities.MessageEmbed
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 
