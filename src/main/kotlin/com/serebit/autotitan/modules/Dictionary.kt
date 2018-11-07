@@ -152,8 +152,8 @@ class Dictionary : Module(isOptional = true) {
     fun urban(evt: MessageReceivedEvent, index: Int, query: String) {
         val encodedQuery = URLEncoder.encode(query, "UTF-8")
         val apiResult = get("https://api.urbandictionary.com/v0/define?term=$encodedQuery")
-        if (apiResult.jsonObject["result_type"] != "no_results") {
-            val definitions = gson.fromJson<UrbanDictionaryResult>(apiResult.text).list
+        val definitions = gson.fromJson<UrbanDictionaryResult>(apiResult.text).list
+        if (definitions.isNotEmpty()) {
             val definition = definitions[index - 1]
                 .definition
                 .replace("\\[word]".toRegex(), "")
@@ -171,9 +171,7 @@ class Dictionary : Module(isOptional = true) {
 
     private data class WordnikConfig(var apiKey: String? = null)
 
-    private data class UrbanDictionaryResult(
-        val list: List<UrbanDictionaryDefinition>
-    )
+    private data class UrbanDictionaryResult(val list: List<UrbanDictionaryDefinition>)
 
     private data class UrbanDictionaryDefinition(val definition: String, val permalink: String, val example: String)
 
