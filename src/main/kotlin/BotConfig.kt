@@ -2,7 +2,7 @@ package com.serebit.autotitan
 
 import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.Gson
-import com.serebit.autotitan.data.FileManager
+import com.serebit.autotitan.data.classpathResource
 import java.util.*
 
 data class BotConfig(
@@ -15,7 +15,7 @@ data class BotConfig(
 
     companion object {
         private val serializer = Gson()
-        private val file = FileManager.classpathResource(".config")
+        private val file = classpathResource(".config")
         private val dummy by lazy { BotConfig("", "!") }
 
         fun generate(): BotConfig = when {

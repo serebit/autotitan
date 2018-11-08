@@ -1,6 +1,9 @@
 package com.serebit.autotitan.api
 
+import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.config
+import com.serebit.autotitan.data.DataManager
+import com.serebit.autotitan.listeners.EventDelegate
 import net.dv8tion.jda.core.entities.MessageEmbed
 import net.dv8tion.jda.core.events.Event
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
@@ -8,7 +11,8 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 internal data class Module(
     val name: String,
     val isOptional: Boolean,
-    private val commands: List<Command>, private val listeners: List<Listener>
+    private val commands: List<Command>, private val listeners: List<Listener>,
+    private val dataManager: DataManager
 ) {
     val commandListField
         get() = MessageEmbed.Field(
@@ -25,7 +29,7 @@ internal data class Module(
         } else null
     }
 
-    fun invoke(evt: Event) {
+    suspend fun invoke(evt: Event) {
         listeners.asSequence()
             .filter { it.eventType == evt::class }
             .forEach { it.invoke(evt) }
@@ -40,4 +44,13 @@ internal data class Module(
     }
 
     fun findCommandsByName(name: String): List<Command> = commands.filter { it.matchesName(name) && !it.isHidden }
+}
+
+fun module(
+    name: String,
+    isOptional: Boolean = false,
+    defaultAccess: Access = Access.All(),
+    init: ModuleTemplate.() -> Unit
+) {
+    EventDelegate.addModule(ModuleTemplate(name, isOptional, defaultAccess).apply(init).build())
 }

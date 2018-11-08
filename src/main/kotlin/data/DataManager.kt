@@ -4,12 +4,11 @@ import com.github.salomonbrys.kotson.jsonDeserializer
 import com.github.salomonbrys.kotson.registerTypeAdapter
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
-import com.serebit.autotitan.api.ModuleTemplate
 import com.serebit.autotitan.api.parameters.Emote
 import java.lang.reflect.Type
 
-class DataManager(template: ModuleTemplate) {
-    private val folder = FileManager.classpathResource("data/${template.name}").also { it.mkdirs() }
+class DataManager internal constructor(moduleName: String) {
+    private val folder by lazy { classpathResource("data/$moduleName").also { it.mkdirs() } }
 
     /*
      * This function *needs* to be reified to work with Gson. Gson has issues with Kotlin generics, so if T is of a

@@ -22,10 +22,11 @@ repositories {
 dependencies {
     compile(kotlin("stdlib-jdk8"))
     compile(kotlin("reflect"))
+    compile(kotlin("script-util"))
+    compile(kotlin("compiler-embeddable"))
     compile(group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version = "1.0.0")
     compile(group = "net.dv8tion", name = "JDA", version = "3.8.1_439")
     compile(group = "com.sedmelluq", name = "lavaplayer", version = "1.3.10")
-    compile(group = "org.reflections", name = "reflections", version = "0.9.11")
     compile(group = "com.github.salomonbrys.kotson", name = "kotson", version = "2.5.0")
     compile(group = "khttp", name = "khttp", version = "0.1.0")
     compile(group = "com.serebit", name = "logkat-jvm", version = "0.4.2")

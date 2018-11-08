@@ -12,13 +12,13 @@ internal class Command(
     private val descriptor: Descriptor,
     private val access: Access,
     private val tokenTypes: List<TokenType>,
-    private val function: (MessageReceivedEvent, List<Any>) -> Unit
+    private val function: suspend (MessageReceivedEvent, List<Any>) -> Unit
 ) {
     val summary = "`${descriptor.name} ${tokenTypes.joinToString(" ") { "<${it.name}>" }}`"
     val helpField = MessageEmbed.Field(summary, "${descriptor.description}\n${access.description}", false)
     val isHidden = access.hidden
 
-    operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>) = function.invoke(evt, parameters)
+    suspend operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>) = function.invoke(evt, parameters)
 
     fun matchesName(name: String) = descriptor.name == name
 

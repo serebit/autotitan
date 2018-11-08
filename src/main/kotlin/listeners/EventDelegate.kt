@@ -1,32 +1,29 @@
 package com.serebit.autotitan.listeners
 
 import com.serebit.autotitan.api.Module
-import com.serebit.autotitan.api.ModuleTemplate
 import com.serebit.autotitan.api.extensions.jda.sendEmbed
+import com.serebit.autotitan.api.module
 import com.serebit.autotitan.config
+import com.serebit.autotitan.data.ModuleLoader
 import com.serebit.logkat.Logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import net.dv8tion.jda.core.events.Event
 import net.dv8tion.jda.core.hooks.ListenerAdapter
-import org.reflections.Reflections
-import kotlin.reflect.full.createInstance
+import kotlin.system.exitProcess
 
 internal object EventDelegate : ListenerAdapter(), CoroutineScope {
     override val coroutineContext = Dispatchers.Default
-    var allModules: List<Module> = classpathModules
-        private set
-    internal val optionalModules get() = allModules.filter { it.isOptional }
-    private val classpathModules
-        get() = Reflections("com.serebit.autotitan.modules")
-            .getSubTypesOf(ModuleTemplate::class.java)
-            .mapNotNull { it.kotlin.createInstance().build() } + Help().build()
+    private val moduleLoader = ModuleLoader()
+    private val allModules = mutableListOf<Module>()
+    private val optionalModules get() = allModules.filter { it.isOptional }
     private val loadedModules get() = allModules.filter { it.isStandard || it.name in config.enabledModules }
 
-    fun resetModules() {
-        allModules = classpathModules
-        Logger.info("Reloaded modules from classpath.")
+    fun loadModules() = async {
+        addSystemModules()
+        moduleLoader.loadModules()
     }
 
     override fun onGenericEvent(evt: Event) {
@@ -35,8 +32,13 @@ internal object EventDelegate : ListenerAdapter(), CoroutineScope {
         }
     }
 
-    class Help : ModuleTemplate() {
-        init {
+    fun addModule(module: Module) {
+        allModules.add(module)
+        Logger.info("Added module ${module.name}.")
+    }
+
+    private fun addSystemModules() {
+        module("Help") {
             command("commands", "Sends an embed with a list of commands that can be used by the invoker.") { evt ->
                 evt.channel.sendEmbed {
                     loadedModules.asSequence()
@@ -83,6 +85,49 @@ internal object EventDelegate : ListenerAdapter(), CoroutineScope {
                         }
                     }.queue()
                 } else evt.channel.sendMessage("Could not find any commands matching `$commandName`.").queue()
+            }
+        }
+        module("System") {
+            command("reload") {
+                val message = it.channel.sendMessage("Reloading modules...").complete()
+                allModules.clear()
+                loadModules().await()
+                message.editMessage("Finished reloading modules.").complete()
+            }
+
+            command("shutdown", "Shuts down the bot with an exit code of 0.") { evt ->
+                Logger.info("Shutting down...")
+                evt.channel.sendMessage("Shutting down.").queue()
+                evt.jda.shutdown()
+                config.serialize()
+                exitProcess(0)
+            }
+
+            command("moduleList", "Sends a list of all the modules.") { evt ->
+                evt.channel.sendEmbed {
+                    setTitle("Modules")
+                    setDescription(EventDelegate.allModules.joinToString("\n") {
+                        it.name + if (it.isOptional) " (Optional)" else ""
+                    })
+                }.queue()
+            }
+
+            command("enableModule", "Enables the given optional module.") { evt, moduleName: String ->
+                if (EventDelegate.optionalModules.none { it.name == moduleName }) return@command
+                if (moduleName !in config.enabledModules) {
+                    config.enabledModules.add(moduleName)
+                    config.serialize()
+                    evt.channel.sendMessage("Enabled the `$moduleName` module.").queue()
+                } else evt.channel.sendMessage("Module `$moduleName` is already enabled.").queue()
+            }
+
+            command("disableModule", "Disables the given optional module.") { evt, moduleName: String ->
+                if (EventDelegate.optionalModules.none { it.name == moduleName }) return@command
+                if (moduleName in config.enabledModules) {
+                    config.enabledModules.remove(moduleName)
+                    config.serialize()
+                    evt.channel.sendMessage("Disabled the `$moduleName` module.").queue()
+                } else evt.channel.sendMessage("Module `$moduleName` is already disabled.").queue()
             }
         }
     }
