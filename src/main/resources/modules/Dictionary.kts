@@ -68,9 +68,9 @@ module("Dictionary", isOptional = true) {
     command(
         "urban",
         "Gets the Nth Urban Dictionary definition of the given query."
-    ) { evt, index: Int, query: LongString -> sendUrbanDefinition(evt, query.value, index) }
+    ) { index: Int, query: LongString -> sendUrbanDefinition(this, query.value, index) }
 
-    command("urban", "Gets the first Urban Dictionary definition of the given query.") { evt, query: LongString ->
-        sendUrbanDefinition(evt, query.value)
+    command("urban", "Gets the first Urban Dictionary definition of the given query.") { query: LongString ->
+        sendUrbanDefinition(this, query.value)
     }
 }

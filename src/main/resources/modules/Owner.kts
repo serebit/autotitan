@@ -34,7 +34,7 @@ fun Duration.toVerboseTimestamp(): String = buildString {
 fun Long.asPercentageOf(total: Long): Long = this / total * percentFactor
 
 module("Owner", defaultAccess = Access.BotOwner()) {
-    command("systemInfo", "Gets information about the system that the bot is running on.") { evt ->
+    command("systemInfo", "Gets information about the system that the bot is running on.") {
         val process = info.operatingSystem.getProcess(info.operatingSystem.processId)
         val processorModel = info.hardware.processor.name.replace("(\\(R\\)|\\(TM\\)|@ .+)".toRegex(), "")
         val processorCores = info.hardware.processor.physicalProcessorCount
@@ -43,7 +43,7 @@ module("Owner", defaultAccess = Access.BotOwner()) {
         val usedMemory = info.hardware.memory.total - info.hardware.memory.available
         val processMemory = process.residentSetSize
         val processUptime = Duration.ofMillis(ManagementFactory.getRuntimeMXBean().uptime).toVerboseTimestamp()
-        evt.channel.sendEmbed {
+        channel.sendEmbed {
             addField(
                 "Processor",
                 """
@@ -73,58 +73,58 @@ module("Owner", defaultAccess = Access.BotOwner()) {
         }.queue()
     }
 
-    command("setName", "Changes the bot's username.") { evt, name: LongString ->
+    command("setName", "Changes the bot's username.") { name: LongString ->
         if (name.value.length !in usernameLengthRange) {
-            evt.channel.sendMessage("Usernames must be between 2 and 32 characters in length.").queue()
+            channel.sendMessage("Usernames must be between 2 and 32 characters in length.").queue()
         } else {
-            evt.jda.selfUser.manager.setName(name.value).queue()
-            evt.channel.sendMessage("Renamed to $name.").queue()
+            jda.selfUser.manager.setName(name.value).queue()
+            channel.sendMessage("Renamed to $name.").queue()
         }
     }
 
-    command("setPrefix", "Changes the bot's command prefix.") { evt, prefix: String ->
+    command("setPrefix", "Changes the bot's command prefix.") { prefix: String ->
         if (prefix.isBlank() || prefix.contains("\\s".toRegex())) {
-            evt.channel.sendMessage("Invalid prefix. Prefix must not be empty, and may not contain whitespace.")
+            channel.sendMessage("Invalid prefix. Prefix must not be empty, and may not contain whitespace.")
             return@command
         }
         config.prefix = prefix
         config.serialize()
-        evt.jda.presence.game = Game.playing("${prefix}help")
-        evt.channel.sendMessage("Set prefix to `${config.prefix}`.").queue()
+        jda.presence.game = Game.playing("${prefix}help")
+        channel.sendMessage("Set prefix to `${config.prefix}`.").queue()
     }
 
-    command("blackListAdd", "Adds a user to the blacklist.") { evt, user: User ->
+    command("blackListAdd", "Adds a user to the blacklist.") { user: User ->
         if (user.idLong in config.blackList) {
-            evt.channel.sendMessage("${user.name} is already in the blacklist.").queue()
+            channel.sendMessage("${user.name} is already in the blacklist.").queue()
             return@command
         }
         config.blackList.add(user.idLong)
-        evt.channel.sendMessage("Added ${user.name} to the blacklist.").queue()
+        channel.sendMessage("Added ${user.name} to the blacklist.").queue()
         config.serialize()
     }
 
-    command("blackListRemove", "Removes a user from the blacklist.") { evt, user: User ->
+    command("blackListRemove", "Removes a user from the blacklist.") { user: User ->
         if (user.idLong in config.blackList) {
             config.blackList.remove(user.idLong)
             config.serialize()
-            evt.channel.sendMessage("Removed ${user.name} from the blacklist.").queue()
+            channel.sendMessage("Removed ${user.name} from the blacklist.").queue()
 
-        } else evt.channel.sendMessage("${user.name} is not in the blacklist.").queue()
+        } else channel.sendMessage("${user.name} is not in the blacklist.").queue()
     }
 
-    command("blackList", "Sends a list of blacklisted users in an embed.") { evt ->
+    command("blackList", "Sends a list of blacklisted users in an embed.") {
         if (config.blackList.isNotEmpty()) {
-            evt.channel.sendEmbed {
+            channel.sendEmbed {
                 addField("Blacklisted Users", config.blackList.joinToString("\n") {
-                    evt.jda.getUserById(it).asMention
+                    jda.getUserById(it).asMention
                 }, true)
             }.queue()
-        } else evt.channel.sendMessage("The blacklist is empty.").queue()
+        } else channel.sendMessage("The blacklist is empty.").queue()
     }
 
-    command("serverList", "Sends the list of servers that the bot is in.") { evt ->
-        evt.channel.sendEmbed {
-            evt.jda.guilds.forEach {
+    command("serverList", "Sends the list of servers that the bot is in.") {
+        channel.sendEmbed {
+            jda.guilds.forEach {
                 addField(
                     it.name,
                     "Owner: ${it.owner.asMention}\nMembers: ${it.members.size}\n",
@@ -134,8 +134,8 @@ module("Owner", defaultAccess = Access.BotOwner()) {
         }.queue()
     }
 
-    command("leaveServer", "Leaves the server in which the command is invoked.") { evt ->
-        evt.channel.sendMessage("Leaving the server.").complete()
-        evt.guild.leave().queue()
+    command("leaveServer", "Leaves the server in which the command is invoked.") {
+        channel.sendMessage("Leaving the server.").complete()
+        guild.leave().queue()
     }
 }

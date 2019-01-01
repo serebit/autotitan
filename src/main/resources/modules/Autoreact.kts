@@ -1,3 +1,4 @@
+
 import com.serebit.autotitan.api.extensions.chunkedBy
 import com.serebit.autotitan.api.extensions.jda.MESSAGE_EMBED_MAX_FIELDS
 import com.serebit.autotitan.api.extensions.jda.sendEmbed
@@ -10,7 +11,6 @@ import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Message
 import net.dv8tion.jda.core.entities.MessageEmbed
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
-import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.core.requests.RestAction
 import java.time.Clock
 import java.time.OffsetDateTime
@@ -49,15 +49,15 @@ module("Autoreact", isOptional = true) {
         "addReact",
         "Adds an autoreact with the given emote for the given word.",
         Access.Guild.All(Permission.MESSAGE_ADD_REACTION)
-    ) { evt, word: String, emote: Emote ->
-        val value = reactMap[evt.guild].getOrPut(word, ::mutableListOf)
+    ) { word: String, emote: Emote ->
+        val value = reactMap[guild].getOrPut(word, ::mutableListOf)
         when {
             value.size >= maxReactionsPerMessage ->
-                evt.channel.sendMessage("There are already $maxReactionsPerMessage reactions for that word.").queue()
-            !emote.canInteract(evt.channel) -> evt.channel.sendMessage("I can't use that emote.").queue()
-            value.add(EmoteData.from(emote, evt)) -> {
+                channel.sendMessage("There are already $maxReactionsPerMessage reactions for that word.").queue()
+            !emote.canInteract(channel) -> channel.sendMessage("I can't use that emote.").queue()
+            value.add(EmoteData.from(emote, this)) -> {
                 dataManager.write("reacts.json", reactMap)
-                evt.channel.sendMessage("Added reaction.").queue()
+                channel.sendMessage("Added reaction.").queue()
             }
         }
     }
@@ -66,15 +66,15 @@ module("Autoreact", isOptional = true) {
         "removeReact",
         "Removes the autoreact for the given word from the list.",
         Access.Guild.All(Permission.MESSAGE_ADD_REACTION)
-    ) { evt, word: String, emote: Emote ->
-        val guildReacts = reactMap[evt.guild]
+    ) { word: String, emote: Emote ->
+        val guildReacts = reactMap[guild]
         when {
-            word !in guildReacts -> evt.channel.sendMessage("There are no autoreacts for that word.").queue()
+            word !in guildReacts -> channel.sendMessage("There are no autoreacts for that word.").queue()
             guildReacts[word]?.none { it.emote == emote } ?: false ->
-                evt.channel.sendMessage("That emote is not an autoreact for that word.").queue()
+                channel.sendMessage("That emote is not an autoreact for that word.").queue()
             guildReacts[word]?.removeIf { it.emote == emote } ?: false -> {
                 dataManager.write("reacts.json", reactMap)
-                evt.channel.sendMessage("Removed reaction.")
+                channel.sendMessage("Removed reaction.")
             }
         }
     }
@@ -84,23 +84,23 @@ module("Autoreact", isOptional = true) {
         "Deletes all autoreacts from the server.",
         Access.Guild.All(Permission.MESSAGE_ADD_REACTION, Permission.MANAGE_SERVER)
     ) {
-        reactMap[it.guild].clear()
-        it.channel.sendMessage("Cleared all autoreacts from this server.").queue()
+        reactMap[guild].clear()
+        channel.sendMessage("Cleared all autoreacts from this server.").queue()
     }
 
     command(
         "reactList",
         "Sends a list of autoreacts for the server to the command invoker.",
         Access.Guild.All()
-    ) { evt ->
-        val reacts = reactMap[evt.guild]
-        evt.channel.sendMessage("Sending a reaction list in PMs.").queue()
+    ) {
+        val reacts = reactMap[guild]
+        channel.sendMessage("Sending a reaction list in PMs.").queue()
         if (reacts.isNotEmpty()) {
-            evt.author.openPrivateChannel().queue({ privateChannel ->
+            author.openPrivateChannel().queue({ privateChannel ->
                 reacts
                     .map { (word, emotes) ->
                         word.limitLengthTo(MessageEmbed.TITLE_MAX_LENGTH) to
-                                emotes.joinToString("") { it.emote.asMention(evt.jda) }
+                                emotes.joinToString("") { it.emote.asMention(jda) }
                     }
                     .chunkedBy(MessageEmbed.EMBED_MAX_LENGTH_BOT, MESSAGE_EMBED_MAX_FIELDS) {
                         it.first.length + it.second.length
@@ -110,17 +110,17 @@ module("Autoreact", isOptional = true) {
                             embeds.forEach { addField(it.first, it.second, false) }
                         }.queue()
                     }
-            }, { evt.channel.sendMessage(it.message).queue() })
-        } else evt.channel.sendMessage("This server has no autoreacts saved.").queue()
+            }, { channel.sendMessage(it.message).queue() })
+        } else channel.sendMessage("This server has no autoreacts saved.").queue()
     }
 
-    listener { evt: GuildMessageReceivedEvent ->
-        if (evt.guild in reactMap && evt.author != evt.jda.selfUser) {
-            reactMap[evt.guild]
-                .filter { it.key in evt.message.contentRaw }
+    listener<MessageReceivedEvent> {
+        if (guild in reactMap && author != jda.selfUser) {
+            reactMap[guild]
+                .filter { it.key in message.contentRaw }
                 .values
                 .flatten()
-                .forEach { evt.message?.addReaction(it.emote)?.queue() }
+                .forEach { message?.addReaction(it.emote)?.queue() }
         }
     }
 }

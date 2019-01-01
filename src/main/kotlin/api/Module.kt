@@ -3,7 +3,6 @@ package com.serebit.autotitan.api
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.config
 import com.serebit.autotitan.data.DataManager
-import com.serebit.autotitan.listeners.EventDelegate
 import net.dv8tion.jda.core.entities.MessageEmbed
 import net.dv8tion.jda.core.events.Event
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
@@ -31,8 +30,8 @@ internal data class Module(
 
     suspend fun invoke(evt: Event) {
         listeners.asSequence()
-            .filter { it.eventType == evt::class }
-            .forEach { it.invoke(evt) }
+            .filter { it.eventType.isInstance(evt) }
+            .forEach { it(evt) }
         if (evt is MessageReceivedEvent && evt.message.contentRaw.startsWith(config.prefix)) {
             commands.asSequence()
                 .filter { it.isInvokeableFrom(evt) }
@@ -51,6 +50,4 @@ fun module(
     isOptional: Boolean = false,
     defaultAccess: Access = Access.All(),
     init: ModuleTemplate.() -> Unit
-) {
-    EventDelegate.addModule(ModuleTemplate(name, isOptional, defaultAccess).apply(init).build())
-}
+) = ModuleTemplate(name, isOptional, defaultAccess).apply(init)

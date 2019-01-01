@@ -1,29 +1,27 @@
 package com.serebit.autotitan.data
 
+import com.serebit.autotitan.api.Module
+import com.serebit.autotitan.api.ModuleTemplate
 import com.serebit.logkat.Logger
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.joinAll
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import java.io.File
 import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import javax.script.ScriptEngineManager
-import kotlin.coroutines.CoroutineContext
 
-internal class ModuleLoader : CoroutineScope {
-    override val coroutineContext: CoroutineContext = Dispatchers.IO
-
-    suspend fun loadModules() {
-        val factory = ScriptEngineManager().getEngineByExtension("kts").factory
+internal class ModuleLoader {
+    suspend fun loadModules(): List<Module> = coroutineScope {
+        val scriptEngine = ScriptEngineManager().getEngineByExtension("kts").factory!!.scriptEngine
         loadScripts().map {
-            launch {
-                factory!!.scriptEngine.eval(it.readText())
-                Logger.debug("Loaded module from file ${it.name}.")
+            async {
+                Logger.debug("Loading module from file ${it.name}.")
+                scriptEngine.eval(it.readText()) as ModuleTemplate
             }
-        }.joinAll()
+        }.awaitAll().map { it.build() }
     }
 
     private fun loadScripts() = listOf(loadInternalScripts(), loadExternalScripts()).flatten()

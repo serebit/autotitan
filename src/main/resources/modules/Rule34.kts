@@ -38,33 +38,33 @@ module("Rule34", isOptional = true) {
     command(
         "rule34",
         "Searches Rule34.xxx for the given tags and returns a random image."
-    ) { evt, tagString: LongString ->
-        if (evt.guild != null && evt.textChannel.isNSFW || evt.privateChannel != null) {
+    ) { tagString: LongString ->
+        if (guild != null && textChannel.isNSFW || privateChannel != null) {
             randomPostOrNull(ImageProvider.RULE34XXX, formatTags(tagString.value))?.let { post ->
-                evt.channel.sendEmbed {
+                channel.sendEmbed {
                     setImage(post.rule34xxxImageUri)
                     setFooter("via Rule34.xxx", "https://rule34.xxx/favicon.png")
                 }.queue()
-            } ?: evt.channel.sendMessage(
+            } ?: channel.sendMessage(
                 "No images found on Rule34.xxx for `${formatTags(tagString.value, " ")}`."
             ).queue()
-        } else evt.channel.sendMessage("This command can only be used in channels marked as NSFW.").queue()
+        } else channel.sendMessage("This command can only be used in channels marked as NSFW.").queue()
     }
 
     command(
         "gelbooru",
         "Searches Gelbooru.com for the given tags and returns a random image."
-    ) { evt, tagString: LongString ->
-        if (evt.guild != null && evt.textChannel.isNSFW || evt.privateChannel != null) {
+    ) { tagString: LongString ->
+        if (guild != null && textChannel.isNSFW || privateChannel != null) {
             val formattedTags = formatTags(tagString.value)
             randomPostOrNull(ImageProvider.GELBOORU, formattedTags)?.let { post ->
-                evt.channel.sendEmbed {
+                channel.sendEmbed {
                     setImage(post.gelbooruImageUri)
                     setFooter("via Gelbooru", "https://gelbooru.com/favicon.png")
                 }.queue()
-            } ?: evt.channel.sendMessage(
+            } ?: channel.sendMessage(
                 "No images found on Gelbooru for `${formatTags(tagString.value, " ")}`."
             ).queue()
-        } else evt.channel.sendMessage("This command can only be used in channels marked as NSFW.").queue()
+        } else channel.sendMessage("This command can only be used in channels marked as NSFW.").queue()
     }
 }

@@ -6,40 +6,45 @@ import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Guild
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.entities.Role
+import net.dv8tion.jda.core.entities.TextChannel
 import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent
+import net.dv8tion.jda.core.events.guild.member.GuildMemberLeaveEvent
 
-class GuildRoleMap {
-    private val map = mutableMapOf<Long, Long>()
+class GuildRoleMap : MutableMap<Long, Long> by mutableMapOf() {
+    operator fun contains(key: Guild) = contains(key.idLong)
 
-    operator fun contains(key: Guild) = map.contains(key.idLong)
+    operator fun get(jda: JDA, key: Guild): Role? = jda.getRoleById(get(key.idLong) ?: -1L)
 
-    operator fun get(jda: JDA, key: Guild): Role? = jda.getRoleById(map[key.idLong] ?: -1L)
-
-    fun put(key: Guild, value: Role) = map.put(key.idLong, value.idLong)
+    fun put(key: Guild, value: Role) = put(key.idLong, value.idLong)
 }
+
+data class WelcomeMessageData(var channelId: Long, var joinMessage: String? = null, var leaveMessage: String? = null)
 
 val daysOfInactivity = 30
 val maximumCleanupCount = 99
 
 module("Moderation") {
     val memberRoleMap: GuildRoleMap = dataManager.readOrDefault("rolemap.json") { GuildRoleMap() }
+    val welcomeMessages = dataManager.readOrDefault("welcomemessages.json") {
+        mutableMapOf<Long, WelcomeMessageData>()
+    }
 
-    command("kick", "Kicks a member.", Access.Guild.All(Permission.KICK_MEMBERS)) { evt, member: Member ->
-        evt.guild.controller.kick(member).queue {
-            evt.channel.sendMessage("Kicked ${member.effectiveName}.").queue()
+    command("kick", "Kicks a member.", Access.Guild.All(Permission.KICK_MEMBERS)) { member: Member ->
+        guild.controller.kick(member).queue {
+            channel.sendMessage("Kicked ${member.effectiveName}.").queue()
         }
     }
 
-    command("ban", "Bans a user.", Access.Guild.All(Permission.BAN_MEMBERS)) { evt, user: User ->
-        evt.guild.controller.ban(user, 0).queue {
-            evt.channel.sendMessage("Banned ${user.name}.").queue()
+    command("ban", "Bans a user.", Access.Guild.All(Permission.BAN_MEMBERS)) { user: User ->
+        guild.controller.ban(user, 0).queue {
+            channel.sendMessage("Banned ${user.name}.").queue()
         }
     }
 
-    command("unBan", "Un-bans a banned user.", Access.Guild.All(Permission.BAN_MEMBERS)) { evt, user: User ->
-        evt.guild.controller.unban(user).queue {
-            evt.channel.sendMessage("Unbanned ${user.name}.").complete()
+    command("unBan", "Un-bans a banned user.", Access.Guild.All(Permission.BAN_MEMBERS)) { user: User ->
+        guild.controller.unban(user).queue {
+            channel.sendMessage("Unbanned ${user.name}.").complete()
         }
     }
 
@@ -47,61 +52,128 @@ module("Moderation") {
         "cleanUp",
         "Deletes the last N messages in the channel. N must be in the range of 1 to $maximumCleanupCount.",
         Access.Guild.All(Permission.MESSAGE_MANAGE)
-    ) { evt, number: Int ->
+    ) { number: Int ->
         if (number in 1..maximumCleanupCount) {
-            evt.textChannel.history.retrievePast(number + 1).queue { messages ->
-                evt.textChannel.deleteMessages(messages).queue()
+            textChannel.history.retrievePast(number + 1).queue { messages ->
+                textChannel.deleteMessages(messages).queue()
             }
-        } else evt.channel.sendMessage("The number has to be in the range of `1..$maximumCleanupCount`.").queue()
+        } else channel.sendMessage("The number has to be in the range of `1..$maximumCleanupCount`.").queue()
     }
 
     command(
         "setMemberRole",
         "Sets the role given to new members of the server upon joining.",
         Access.Guild.All(Permission.MANAGE_ROLES)
-    ) { evt, roleName: LongString ->
-        evt.guild.roles
+    ) { roleName: LongString ->
+        guild.roles
             .findLast { it.name.toLowerCase() == roleName.value.toLowerCase() }
             ?.let { role ->
-                memberRoleMap.put(evt.guild, role)
+                memberRoleMap.put(guild, role)
                 dataManager.write("rolemap.json", memberRoleMap)
-                evt.channel.sendMessage("Set the member role to `$roleName`.").queue()
-            } ?: evt.channel.sendMessage("`$roleName` does not exist.").queue()
+                channel.sendMessage("Set the member role to `$roleName`.").queue()
+            } ?: channel.sendMessage("`$roleName` does not exist.").queue()
     }
 
     command(
         "getMemberRole",
         "Gets the role given to new members of the server upon joining.",
         Access.Guild.All(Permission.MANAGE_ROLES)
-    ) { evt ->
-        memberRoleMap[evt.jda, evt.guild]?.let { role ->
-            evt.channel.sendMessage("The member role for this server is set to `${role.name}`.").queue()
-        } ?: evt.channel.sendMessage("The member role is not set up for this server.").queue()
+    ) {
+        memberRoleMap[jda, guild]?.let { role ->
+            channel.sendMessage("The member role for this server is set to `${role.name}`.").queue()
+        } ?: channel.sendMessage("The member role is not set up for this server.").queue()
+    }
+
+    command(
+        "leavemessage", "Sets a message to display upon a user leaving the server.", Access.Guild.GuildOwner()
+    ) { message: LongString ->
+        if (guild.idLong in welcomeMessages) {
+            welcomeMessages[guild.idLong]!!.joinMessage = message.value
+        } else {
+            welcomeMessages[guild.idLong] =
+                WelcomeMessageData(guild.systemChannel.idLong, joinMessage = message.value)
+
+        }
+        channel.sendMessage("Set the join message.").queue()
+    }
+
+    command(
+        "joinmessage", "Sets a message to display upon a user joining the server.", Access.Guild.GuildOwner()
+    ) { message: LongString ->
+        if (guild.idLong in welcomeMessages) {
+            welcomeMessages[guild.idLong]!!.joinMessage = message.value
+        } else {
+            welcomeMessages[guild.idLong] =
+                WelcomeMessageData(guild.systemChannel.idLong, joinMessage = message.value)
+
+        }
+        channel.sendMessage("Set the join message.").queue()
+    }
+
+    command("disablejoinmessage", "Removes the set join message.", Access.Guild.GuildOwner()) {
+        if (welcomeMessages[guild.idLong]?.joinMessage != null) {
+            welcomeMessages[guild.idLong]?.joinMessage = null
+            channel.sendMessage("Removed the existing join message.").queue()
+        } else channel.sendMessage("No join message to remove.").queue()
+    }
+
+    command("disablejoinmessage", "Removes the set join message.", Access.Guild.GuildOwner()) {
+        if (welcomeMessages[guild.idLong]?.leaveMessage != null) {
+            welcomeMessages[guild.idLong]?.leaveMessage = null
+            channel.sendMessage("Removed the existing leave message.").queue()
+        } else channel.sendMessage("No leave message to remove.").queue()
+    }
+
+    command(
+        "welcomechannel", "Sets the channel in which to send leave/join messages.", Access.Guild.GuildOwner()
+    ) { channel: TextChannel ->
+        if (guild.idLong in welcomeMessages) {
+            welcomeMessages[guild.idLong]!!.channelId = channel.idLong
+        } else {
+            welcomeMessages[guild.idLong] = WelcomeMessageData(channel.idLong)
+
+        }
+        channel.sendMessage("Set the welcome channel to ${channel.asMention}.").queue()
     }
 
     command(
         "smartPrune",
         "Prunes members from the server, including those with the default member role.",
         Access.Guild.All(Permission.MANAGE_SERVER)
-    ) { evt ->
-        memberRoleMap[evt.jda, evt.guild]?.let { memberRole ->
-            val membersWithBaseRole = evt.guild.getMembersWithRoles(memberRole)
-            membersWithBaseRole.forEach { evt.guild.controller.removeSingleRoleFromMember(it, memberRole).queue() }
-            val prunableMemberCount = evt.guild.getPrunableMemberCount(daysOfInactivity).complete()
-            evt.guild.controller.prune(daysOfInactivity).complete()
-            val membersWithoutBaseRole = evt.guild.members.filter { it.roles.isEmpty() }
-            membersWithoutBaseRole.forEach { evt.guild.controller.addSingleRoleToMember(it, memberRole).queue() }
-            evt.channel.sendMessage("Pruned $prunableMemberCount members.").queue()
+    ) {
+        memberRoleMap[jda, guild]?.let { memberRole ->
+            val membersWithBaseRole = guild.getMembersWithRoles(memberRole)
+            membersWithBaseRole.forEach { guild.controller.removeSingleRoleFromMember(it, memberRole).queue() }
+            val prunableMemberCount = guild.getPrunableMemberCount(daysOfInactivity).complete()
+            guild.controller.prune(daysOfInactivity).complete()
+            val membersWithoutBaseRole = guild.members.filter { it.roles.isEmpty() }
+            membersWithoutBaseRole.forEach { guild.controller.addSingleRoleToMember(it, memberRole).queue() }
+            channel.sendMessage("Pruned $prunableMemberCount members.").queue()
         } ?: run {
-            val prunableMemberCount = evt.guild.getPrunableMemberCount(daysOfInactivity).complete()
-            evt.guild.controller.prune(daysOfInactivity).complete()
-            evt.channel.sendMessage("Pruned $prunableMemberCount members.").queue()
+            val prunableMemberCount = guild.getPrunableMemberCount(daysOfInactivity).complete()
+            guild.controller.prune(daysOfInactivity).complete()
+            channel.sendMessage("Pruned $prunableMemberCount members.").queue()
         }
     }
 
-    listener { evt: GuildMemberJoinEvent ->
-        if (evt.guild in memberRoleMap) {
-            evt.guild.controller.addRolesToMember(evt.member, memberRoleMap[evt.jda, evt.guild]).queue()
+    listener<GuildMemberJoinEvent> {
+        if (guild in memberRoleMap) {
+            guild.controller.addRolesToMember(member, memberRoleMap[jda, guild]).queue()
+        }
+        welcomeMessages[guild.idLong]?.let { data ->
+            data.joinMessage?.let {
+                val formatted = it.format(user.name, user.asMention)
+                guild.getTextChannelById(data.channelId).sendMessage(formatted).queue()
+            }
+        }
+    }
+
+    listener<GuildMemberLeaveEvent> {
+        welcomeMessages[guild.idLong]?.let { data ->
+            data.leaveMessage?.let {
+                val formatted = it.format(user.name, user.asMention)
+                guild.getTextChannelById(data.channelId).sendMessage(formatted).queue()
+            }
         }
     }
 }

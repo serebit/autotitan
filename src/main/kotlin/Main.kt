@@ -6,7 +6,6 @@ import com.serebit.autotitan.network.GithubApi
 import com.serebit.autotitan.network.ping
 import com.serebit.logkat.LogLevel
 import com.serebit.logkat.Logger
-import kotlinx.coroutines.runBlocking
 import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDABuilder
 import net.dv8tion.jda.core.entities.Game
@@ -17,7 +16,7 @@ const val NAME = "AutoTitan"
 const val VERSION = "1.0.0"
 val config by lazy { BotConfig.generate() }
 
-fun main(args: Array<String>) = runBlocking {
+suspend fun main(args: Array<String>) {
     val longFlags = args.filter { it.matches("--\\w+".toRegex()) }
     val subCommands = args.filter { it.matches("\\w+".toRegex()) }
 
@@ -36,21 +35,12 @@ fun main(args: Array<String>) = runBlocking {
 
     if (ping("discordapp.com")) {
         // start loading the modules now, and in the meantime, login to Discord
-        val loadModules = EventDelegate.loadModules()
+        val loadModules = EventDelegate.loadModulesAsync()
         JDABuilder(AccountType.BOT).apply {
             setToken(config.token)
             addEventListener(EventDelegate)
             setGame(Game.playing("${config.prefix}help"))
-        }.build().awaitReady().also {
-            println(
-                """
-                $NAME v$VERSION
-                Username:    ${it.selfUser.name}
-                Ping:        ${it.ping}ms
-                Invite link: ${it.asBot().getInviteUrl()}
-                """.trimIndent()
-            )
-        }
+        }.build()
         // wait for the module loaders to finish
         loadModules.await()
     } else Logger.error("Failed to connect to Discord.")

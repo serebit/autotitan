@@ -25,19 +25,19 @@ val eightBallResponses = listOf(
 )
 
 module("Entertainment", isOptional = true) {
-    command("8", "Answers questions in 8-ball fashion.") { evt, _: LongString ->
-        evt.channel.sendMessage(eightBallResponses.random()).queue()
+    command("8", "Answers questions in 8-ball fashion.") { question: LongString ->
+        channel.sendMessage("In response to $question: ${eightBallResponses.random()}").queue()
     }
 
     command(
         "rate",
         "Rates the given thing on a scale of 0 to $ratingDenominator."
-    ) { evt, thingToRate: LongString ->
+    ) { thingToRate: LongString ->
         val seed = thingToRate.value.normalize()
             .hashCode()
             .plus(config.token.hashCode())
             .toLong()
         val rating = Random(seed).nextInt(ratingDenominator)
-        evt.channel.sendMessage("I'd give $thingToRate a `$rating/$ratingDenominator`.").queue()
+        channel.sendMessage("I'd give $thingToRate a `$rating/$ratingDenominator`.").queue()
     }
 }
