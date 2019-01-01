@@ -94,6 +94,7 @@ module("Moderation") {
                 WelcomeMessageData(guild.systemChannel.idLong, joinMessage = message.value)
 
         }
+        dataManager.write("welcomemessages.json", welcomeMessages)
         channel.sendMessage("Set the join message.").queue()
     }
 
@@ -107,6 +108,7 @@ module("Moderation") {
                 WelcomeMessageData(guild.systemChannel.idLong, joinMessage = message.value)
 
         }
+        dataManager.write("welcomemessages.json", welcomeMessages)
         channel.sendMessage("Set the join message.").queue()
     }
 
@@ -115,6 +117,7 @@ module("Moderation") {
             welcomeMessages[guild.idLong]?.joinMessage = null
             channel.sendMessage("Removed the existing join message.").queue()
         } else channel.sendMessage("No join message to remove.").queue()
+        dataManager.write("welcomemessages.json", welcomeMessages)
     }
 
     command("disablejoinmessage", "Removes the set join message.", Access.Guild.GuildOwner()) {
@@ -122,6 +125,7 @@ module("Moderation") {
             welcomeMessages[guild.idLong]?.leaveMessage = null
             channel.sendMessage("Removed the existing leave message.").queue()
         } else channel.sendMessage("No leave message to remove.").queue()
+        dataManager.write("welcomemessages.json", welcomeMessages)
     }
 
     command(
@@ -133,6 +137,7 @@ module("Moderation") {
             welcomeMessages[guild.idLong] = WelcomeMessageData(channel.idLong)
 
         }
+        dataManager.write("welcomemessages.json", welcomeMessages)
         channel.sendMessage("Set the welcome channel to ${channel.asMention}.").queue()
     }
 
