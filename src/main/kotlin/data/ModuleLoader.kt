@@ -12,19 +12,20 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import javax.script.ScriptEngineManager
+import kotlin.streams.toList
 
 internal class ModuleLoader {
     suspend fun loadModules(): List<Module> = coroutineScope {
-        val scriptEngine = ScriptEngineManager().getEngineByExtension("kts").factory!!.scriptEngine
+        val engineFactory = ScriptEngineManager().getEngineByExtension("kts").factory!!
         loadScripts().map {
             async {
                 Logger.debug("Loading module from file ${it.name}.")
-                scriptEngine.eval(it.readText()) as ModuleTemplate
+                engineFactory.scriptEngine.eval(it.readText()) as ModuleTemplate
             }
         }.awaitAll().map { it.build() }
     }
 
-    private fun loadScripts() = listOf(loadInternalScripts(), loadExternalScripts()).flatten()
+    private fun loadScripts() = loadInternalScripts() + loadExternalScripts()
 
     private fun loadInternalScripts(): List<File> {
         val uri = ModuleLoader::class.java.classLoader.getResource("modules").toURI()
@@ -34,11 +35,9 @@ internal class ModuleLoader {
             fileSystem.getPath("modules")
         } else Paths.get(uri))
 
-        val validScripts = mutableListOf<String>()
-
-        Files.walk(myPath, 1).forEach { path ->
-            validScripts += path.toString().let { it.removePrefix(it.substringBefore("modules")) }
-        }
+        val validScripts = Files.walk(myPath, 1).map { path ->
+            path.toString().let { it.removePrefix(it.substringBefore("modules")) }
+        }.toList()
 
         return validScripts
             .filter { it.endsWith(".kts") }
