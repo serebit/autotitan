@@ -45,7 +45,7 @@ internal object EventDelegate : ListenerAdapter(), CoroutineScope {
     )
 
     private fun addSystemModules() {
-        module("Help") {
+        allModules += module("Help") {
             command("commands", "Sends an embed with a list of commands that can be used by the invoker.") {
                 channel.sendEmbed {
                     loadedModules.asSequence()
@@ -93,8 +93,8 @@ internal object EventDelegate : ListenerAdapter(), CoroutineScope {
                     }.queue()
                 } else channel.sendMessage("Could not find any commands matching `$commandName`.").queue()
             }
-        }
-        module("System") {
+        }.build()
+        allModules += module("System") {
             command("reload") {
                 val message = channel.sendMessage("Reloading modules...").complete()
                 allModules.clear()
@@ -136,6 +136,6 @@ internal object EventDelegate : ListenerAdapter(), CoroutineScope {
                     channel.sendMessage("Disabled the `$moduleName` module.").queue()
                 } else channel.sendMessage("Module `$moduleName` is already disabled.").queue()
             }
-        }
+        }.build()
     }
 }
