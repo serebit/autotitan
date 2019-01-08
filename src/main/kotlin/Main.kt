@@ -46,7 +46,7 @@ suspend fun main(args: Array<String>) {
     } else Logger.error("Failed to connect to Discord.")
 }
 
-private fun update() = if (Files.probeContentType(codeSource.toPath()) == "application/x-java-archive") {
+private suspend fun update() = if (Files.probeContentType(codeSource.toPath()) == "application/x-java-archive") {
     GithubApi.getLatestRelease("serebit", "autotitan") { it.tag_name != VERSION }
         ?.assets
         ?.find { it.content_type == "application/x-java-archive" }

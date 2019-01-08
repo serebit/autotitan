@@ -1,40 +1,44 @@
+
 import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.Gson
 import com.serebit.autotitan.api.extensions.jda.sendEmbed
 import com.serebit.autotitan.api.extensions.limitLengthTo
 import com.serebit.autotitan.api.module
 import com.serebit.autotitan.api.parameters.LongString
-import khttp.get
+import io.ktor.client.HttpClient
+import io.ktor.client.call.call
+import io.ktor.client.response.readText
+import io.ktor.http.HttpStatusCode
 import net.dv8tion.jda.core.entities.MessageEmbed
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
-import java.net.HttpURLConnection
 import java.net.URLEncoder
 
 object UrbanDictionaryApi {
     private val serializer = Gson()
-    private val resultCache: MutableMap<String, List<Definition>> = mutableMapOf()
+    private val client = HttpClient()
+    private val resultCache = mutableMapOf<String, List<Definition>>()
 
-    fun hasDefinitions(query: String) = existsOrCacheDefinition(query) && resultCache[query]!!.isNotEmpty()
+    suspend fun hasDefinitions(query: String) = existsOrCacheDefinition(query) && resultCache[query]!!.isNotEmpty()
 
-    fun numDefinitions(query: String) = if (existsOrCacheDefinition(query)) resultCache[query]!!.size else 0
+    suspend fun numDefinitions(query: String) = if (existsOrCacheDefinition(query)) resultCache[query]!!.size else 0
 
-    fun getDefinition(query: String, index: Int): Definition? = if (existsOrCacheDefinition(query)) {
+    suspend fun getDefinition(query: String, index: Int): Definition? = if (existsOrCacheDefinition(query)) {
         resultCache[query]?.getOrNull(index)
     } else null
 
-    private fun existsOrCacheDefinition(query: String): Boolean = if (query in resultCache) true else {
-        val response = get("https://api.urbandictionary.com/v0/define?term=${URLEncoder.encode(query, "UTF-8")}")
-        when {
-            response.statusCode == HttpURLConnection.HTTP_OK -> {
-                resultCache[query] = serializer.fromJson<Result>(response.text).list
+    private suspend fun existsOrCacheDefinition(query: String): Boolean = if (query in resultCache) {
+        true
+    } else {
+        val uri = "https://api.urbandictionary.com/v0/define?term=${URLEncoder.encode(query, "UTF-8")}"
+
+        val response = client.call(uri).response
+        if (response.status == HttpStatusCode.OK) {
+            val definitions = serializer.fromJson<Result>(response.readText()).list
+            if (definitions.isNotEmpty()) {
+                resultCache[query] = definitions
                 true
-            }
-            response.jsonObject["result_type"] != "no_results" -> {
-                resultCache[query] = emptyList()
-                false
-            }
-            else -> false
-        }
+            } else false
+        } else false
     }
 
     private data class Result(val list: List<Definition>)
@@ -42,7 +46,7 @@ object UrbanDictionaryApi {
     data class Definition(val definition: String, val permalink: String, val example: String)
 }
 
-fun sendUrbanDefinition(evt: MessageReceivedEvent, query: String, index: Int = 1) {
+suspend fun sendUrbanDefinition(evt: MessageReceivedEvent, query: String, index: Int = 1) {
     if (UrbanDictionaryApi.hasDefinitions(query)) {
         UrbanDictionaryApi.getDefinition(query, index - 1)?.let { definition ->
             val text = definition

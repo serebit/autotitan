@@ -1,17 +1,23 @@
+
 import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.Gson
 import com.serebit.autotitan.api.extensions.jda.sendEmbed
 import com.serebit.autotitan.api.module
 import com.serebit.autotitan.api.parameters.LongString
-import khttp.get
-import java.net.HttpURLConnection
+import io.ktor.client.HttpClient
+import io.ktor.client.call.call
+import io.ktor.client.response.readText
+import io.ktor.http.HttpStatusCode
 
 val gson = Gson()
+val client = HttpClient()
 
-fun randomPostOrNull(provider: ImageProvider, tags: String): ApiPost? {
-    val response = get("https://${provider.baseUri}/index.php?page=dapi&s=post&q=index&tags=$tags&json=1")
-    return if (response.statusCode == HttpURLConnection.HTTP_OK && response.text.isNotBlank()) {
-        gson.fromJson<List<ApiPost>>(response.text)
+suspend fun randomPostOrNull(provider: ImageProvider, tags: String): ApiPost? {
+    val response = client
+        .call("https://${provider.baseUri}/index.php?page=dapi&s=post&q=index&tags=$tags&json=1")
+        .response
+    return if (response.status == HttpStatusCode.OK && response.readText().isNotBlank()) {
+        gson.fromJson<List<ApiPost>>(response.readText())
             .filter { !it.image.endsWith(".webm") }
             .random()
     } else null
