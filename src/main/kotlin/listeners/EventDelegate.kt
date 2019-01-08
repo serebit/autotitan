@@ -14,6 +14,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import net.dv8tion.jda.core.events.Event
 import net.dv8tion.jda.core.events.ReadyEvent
+import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import net.dv8tion.jda.core.hooks.ListenerAdapter
 import kotlin.system.exitProcess
 
@@ -26,7 +27,7 @@ internal object EventDelegate : ListenerAdapter(), CoroutineScope {
 
     fun loadModulesAsync() = async {
         addSystemModules()
-        allModules.addAll(moduleLoader.loadModules())
+        allModules += moduleLoader.loadModules()
     }
 
     override fun onGenericEvent(evt: Event) {
@@ -78,20 +79,29 @@ internal object EventDelegate : ListenerAdapter(), CoroutineScope {
                 }.queue()
             }
 
+            listener<MessageReceivedEvent> {
+                val guildMention = guild?.selfMember?.asMention
+                if (message.contentRaw == jda.selfUser.asMention || message.contentRaw == guildMention) {
+                    channel.sendMessage("My prefix is `${config.prefix}`.").queue()
+                }
+            }
+
             command("help", "Gets information about the requested command.") { commandName: String ->
                 val matchingCommands = loadedModules.asSequence()
                     .map { it.findCommandsByName(commandName) }
                     .filter { it.isNotEmpty() }
                     .toList()
                     .flatten()
-                if (matchingCommands.isNotEmpty()) {
+                if (matchingCommands.isEmpty()) {
+                    channel.sendMessage("Could not find any commands matching `$commandName`.").queue()
+                } else {
                     channel.sendEmbed {
                         matchingCommands.forEachIndexed { index, command ->
                             if (index > 0) addBlankField(false)
                             addField(command.helpField)
                         }
                     }.queue()
-                } else channel.sendMessage("Could not find any commands matching `$commandName`.").queue()
+                }
             }
         }.build()
         allModules += module("System") {
