@@ -16,7 +16,7 @@ class GuildRoleMap : MutableMap<Long, Long> by mutableMapOf() {
 
     operator fun get(jda: JDA, key: Guild): Role? = jda.getRoleById(get(key.idLong) ?: -1L)
 
-    fun put(key: Guild, value: Role) = put(key.idLong, value.idLong)
+    operator fun set(key: Guild, value: Role) = put(key.idLong, value.idLong)
 }
 
 data class WelcomeMessageData(var channelId: Long, var joinMessage: String? = null, var leaveMessage: String? = null)
@@ -68,7 +68,7 @@ module("Moderation") {
         guild.roles
             .findLast { it.name.toLowerCase() == roleName.value.toLowerCase() }
             ?.let { role ->
-                memberRoleMap.put(guild, role)
+                memberRoleMap[guild] = role
                 dataManager.write("rolemap.json", memberRoleMap)
                 channel.sendMessage("Set the member role to `$roleName`.").queue()
             } ?: channel.sendMessage("`$roleName` does not exist.").queue()
@@ -92,7 +92,6 @@ module("Moderation") {
         } else {
             welcomeMessages[guild.idLong] =
                 WelcomeMessageData(guild.systemChannel.idLong, joinMessage = message.value)
-
         }
         dataManager.write("welcomemessages.json", welcomeMessages)
         channel.sendMessage("Set the join message.").queue()

@@ -57,13 +57,12 @@ module("Quotes", isOptional = true, defaultAccess = Access.Guild.All()) {
     }
 
     command("quoteList", "Gets the list of quotes that this server has saved.") {
-        val quotes = quoteMap[guild]
-        if (quotes.isEmpty()) {
+        if (quoteMap[guild].isEmpty()) {
             channel.sendMessage("This server has no quotes saved.").queue()
         } else {
             channel.sendMessage("Sending a quote list in PMs.").queue()
             author.openPrivateChannel().queue({ privateChannel ->
-                quotes.filterNotNull().mapIndexed { index, quote ->
+                quoteMap[guild].filterNotNull().mapIndexed { index, quote ->
                     index.toString() to quote.trimWhitespace().limitLengthTo(MessageEmbed.VALUE_MAX_LENGTH)
                 }.chunkedBy(MessageEmbed.EMBED_MAX_LENGTH_BOT, MESSAGE_EMBED_MAX_FIELDS) {
                     it.first.length + it.second.length

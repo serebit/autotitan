@@ -13,7 +13,7 @@ import kotlin.math.log
 import kotlin.math.pow
 import kotlin.math.roundToInt
 
-val info by lazy { SystemInfo() }
+val info get() = SystemInfo()
 val percentFactor = 100
 val metricBase = 1000f
 val usernameLengthRange = 2..32
@@ -113,13 +113,15 @@ module("Owner", defaultAccess = Access.BotOwner()) {
     }
 
     command("blackList", "Sends a list of blacklisted users in an embed.") {
-        if (config.blackList.isNotEmpty()) {
+        if (config.blackList.isEmpty()) {
+            channel.sendMessage("The blacklist is empty.").queue()
+        } else {
             channel.sendEmbed {
                 addField("Blacklisted Users", config.blackList.joinToString("\n") {
                     jda.getUserById(it).asMention
                 }, true)
             }.queue()
-        } else channel.sendMessage("The blacklist is empty.").queue()
+        }
     }
 
     command("serverList", "Sends the list of servers that the bot is in.") {
