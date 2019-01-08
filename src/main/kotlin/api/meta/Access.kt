@@ -30,7 +30,7 @@ sealed class Access(val description: String, val hidden: Boolean) {
         hidden: Boolean,
         private val permissions: Set<Permission>
     ) : Access("$description\nPermissions: ${permissions.joinToString()}", hidden) {
-        override fun matches(evt: MessageReceivedEvent): Boolean = evt.member.hasPermission(permissions)
+        override fun matches(evt: MessageReceivedEvent): Boolean = evt.member?.hasPermission(permissions) ?: false
 
         class All(
             vararg permissions: Permission,
