@@ -16,7 +16,7 @@ internal data class Module(
     val commandListField
         get() = MessageEmbed.Field(
             name,
-            commands.filter { !it.isHidden }.joinToString("\n") { it.summary },
+            commands.filter { !it.isHidden }.joinToString { it.summary },
             false
         )
     val isStandard get() = !isOptional
@@ -24,7 +24,7 @@ internal data class Module(
     fun getInvokeableCommandField(evt: MessageReceivedEvent): MessageEmbed.Field? {
         val validCommands = commands.filter { it.isVisibleFrom(evt) }
         return if (validCommands.isNotEmpty()) {
-            MessageEmbed.Field(name, validCommands.joinToString("\n") { it.summary }, false)
+            MessageEmbed.Field(name, validCommands.joinToString { it.summary }, false)
         } else null
     }
 
