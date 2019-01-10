@@ -19,7 +19,7 @@ module("Quotes", isOptional = true, defaultAccess = Access.Guild.All()) {
         if (message.mentionsUsers) {
             channel.sendMessage("Quotes containing mentions are not permitted.").queue()
         } else {
-            quoteMap[guild].apply {
+            quoteMap[guild.idLong]!!.apply {
                 add(quote.value)
                 channel.sendMessage("Added ${member.asMention}'s quote as number `${size - 1}`.").queue()
             }
@@ -28,7 +28,7 @@ module("Quotes", isOptional = true, defaultAccess = Access.Guild.All()) {
     }
 
     command("deleteQuote", "Deletes the quote at the given index.") { index: Int ->
-        val quotes = quoteMap[guild]
+        val quotes = quoteMap[guild.idLong]!!
 
         when {
             quotes.isEmpty() -> channel.sendMessage("This server has no quotes saved.").queue()
@@ -42,27 +42,27 @@ module("Quotes", isOptional = true, defaultAccess = Access.Guild.All()) {
     }
 
     command("quote", "Gets a random quote, if any exist.") {
-        if (quoteMap[guild].isNotEmpty()) {
-            channel.sendMessage(quoteMap[guild].filterNotNull().random()).queue()
+        if (quoteMap[guild.idLong]!!.isNotEmpty()) {
+            channel.sendMessage(quoteMap[guild.idLong]!!.filterNotNull().random()).queue()
         } else channel.sendMessage("This server has no quotes saved.").queue()
     }
 
     command("quote", "Gets the quote at the given index.") { index: Int ->
-        if (quoteMap[guild].isEmpty()) {
+        if (quoteMap[guild.idLong]!!.isEmpty()) {
             channel.sendMessage("This server has no quotes saved.").queue()
         } else {
-            quoteMap[guild][index]?.let { channel.sendMessage(it).queue() }
+            quoteMap[guild.idLong]!![index]?.let { channel.sendMessage(it).queue() }
                 ?: channel.sendMessage("There is no quote with an index of `$index`.").queue()
         }
     }
 
     command("quoteList", "Gets the list of quotes that this server has saved.") {
-        if (quoteMap[guild].isEmpty()) {
+        if (quoteMap[guild.idLong]!!.isEmpty()) {
             channel.sendMessage("This server has no quotes saved.").queue()
         } else {
             channel.sendMessage("Sending a quote list in PMs.").queue()
             author.openPrivateChannel().queue({ privateChannel ->
-                quoteMap[guild].filterNotNull().mapIndexed { index, quote ->
+                quoteMap[guild.idLong]!!.filterNotNull().mapIndexed { index, quote ->
                     index.toString() to quote.trimWhitespace().limitLengthTo(MessageEmbed.VALUE_MAX_LENGTH)
                 }.chunkedBy(MessageEmbed.EMBED_MAX_LENGTH_BOT, MESSAGE_EMBED_MAX_FIELDS) {
                     it.first.length + it.second.length
@@ -80,11 +80,11 @@ module("Quotes", isOptional = true, defaultAccess = Access.Guild.All()) {
         "Removes the empty quote indices for the given server.",
         access = Access.Guild.All(Permission.MANAGE_CHANNEL)
     ) {
-        if (quoteMap[guild].isEmpty()) {
+        if (quoteMap[guild.idLong]!!.isEmpty()) {
             channel.sendMessage("This server has no quotes to shuffle.").queue()
         } else {
-            val emptyQuotes = quoteMap[guild].count { it == null }
-            quoteMap[guild].removeAll { it == null }
+            val emptyQuotes = quoteMap[guild.idLong]!!.count { it == null }
+            quoteMap[guild.idLong]!!.removeAll { it == null }
             dataManager.write("quotes.json", quoteMap)
             channel.sendMessage("Shuffled this server's quotes. $emptyQuotes indices were removed.").queue()
         }

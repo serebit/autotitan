@@ -2,18 +2,8 @@
 
 package com.serebit.autotitan.data
 
-import net.dv8tion.jda.core.entities.Guild
+class GuildResourceMap<K, V> : MutableMap<Long, MutableMap<K, V>>
+by (mutableMapOf<Long, MutableMap<K, V>>().withDefault { mutableMapOf() })
 
-private typealias GuildId = Long
-
-class GuildResourceMap<K, V> : MutableMap<GuildId, MutableMap<K, V>> by mutableMapOf() {
-    operator fun contains(guild: Guild): Boolean = guild.idLong in this
-
-    operator fun get(guild: Guild): MutableMap<K, V> = getOrPut(guild.idLong) { mutableMapOf() }
-}
-
-class GuildResourceList<E> : MutableMap<GuildId, MutableList<E>> by mutableMapOf() {
-    operator fun contains(guild: Guild): Boolean = guild.idLong in this
-
-    operator fun get(guild: Guild): MutableList<E> = getOrPut(guild.idLong) { mutableListOf() }
-}
+class GuildResourceList<E> : MutableMap<Long, MutableList<E>>
+by (mutableMapOf<Long, MutableList<E>>().withDefault { mutableListOf() })

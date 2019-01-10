@@ -1,26 +1,26 @@
 package com.serebit.autotitan
 
-import com.github.salomonbrys.kotson.fromJson
-import com.google.gson.Gson
 import com.serebit.autotitan.data.classpathResource
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import java.util.*
 
+@Serializable
 data class BotConfig(
     val token: String,
     var prefix: String,
     val blackList: MutableSet<Long> = mutableSetOf(),
     val enabledModules: MutableSet<String> = mutableSetOf()
 ) {
-    fun serialize() = file.also { it.createNewFile() }.writeText(serializer.toJson(this))
+    fun serialize() = file.writeText(Json.stringify(serializer(), this))
 
     companion object {
-        private val serializer = Gson()
-        private val file = classpathResource(".config")
+        private val file = classpathResource(".config").also { it.createNewFile() }
         private val dummy by lazy { BotConfig("", "!") }
 
         fun generate(): BotConfig = when {
             System.getenv("AUTOTITAN_TEST_MODE_FLAG") == "true" -> dummy
-            file.exists() -> serializer.fromJson(file.readText())
+            file.exists() -> Json.parse(serializer(), file.readText())
             else -> Scanner(System.`in`).use { scanner ->
                 BotConfig(
                     token = prompt(scanner, "Enter Discord API token:"),

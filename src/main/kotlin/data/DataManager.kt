@@ -7,13 +7,17 @@ import com.google.gson.reflect.TypeToken
 import com.serebit.autotitan.api.parameters.Emote
 import java.lang.reflect.Type
 
+/*
+ kotlinx.serialization needs to do a pass over classes marked with @Serializable during compile time, so because scripts
+ don't have access to that, DataManager uses Gson instead.
+ */
 class DataManager internal constructor(moduleName: String) {
     private val folder by lazy { classpathResource("data/$moduleName").also { it.mkdirs() } }
 
     /*
-     * This function *needs* to be reified to work with Gson. Gson has issues with Kotlin generics, so if T is of a
-     * type that uses generics, and T isn't reified when passed to the TypeToken, Gson fails to cast the JSON to the
-     * input type and throws an exception. Keep it in.
+     This function *needs* to be reified to work with Gson. Gson has issues with Kotlin generics, so if T is of a
+     type that uses generics, and T isn't reified when passed to the TypeToken, Gson fails to cast the JSON to the
+     input type and throws an exception. Keep it in.
      */
     inline fun <reified T : Any> read(fileName: String): T? = read(fileName, object : TypeToken<T>() {}.type)
 

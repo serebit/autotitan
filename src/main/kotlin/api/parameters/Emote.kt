@@ -1,10 +1,12 @@
 package com.serebit.autotitan.api.parameters
 
-import com.github.salomonbrys.kotson.fromJson
-import com.google.gson.Gson
 import com.serebit.autotitan.data.classpathResource
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.list
+import kotlinx.serialization.serializer
 import net.dv8tion.jda.core.JDA
 import net.dv8tion.jda.core.entities.MessageChannel
+import kotlin.streams.toList
 import net.dv8tion.jda.core.entities.Emote as JdaEmote
 
 sealed class Emote {
@@ -30,12 +32,11 @@ sealed class Emote {
     }
 
     companion object {
-        private val emojiCodePoints = Gson().fromJson<Set<IntArray>>(
-            classpathResource("resources/emoji-code-points.json").readText()
-        )
+        private val emojiCodePoints =
+            Json.parse(Int.serializer().list.list, classpathResource("resources/emoji-code-points.json").readText())
         private val String.isUnicodeEmoji
-            get() = codePoints().toArray().let { codePoints ->
-                emojiCodePoints.any { it.contentEquals(codePoints) }
+            get() = codePoints().toList().let { codePoints ->
+                emojiCodePoints.any { it == codePoints }
             }
 
         fun from(string: String, jda: JDA? = null): Emote? = if (string.isUnicodeEmoji) {
