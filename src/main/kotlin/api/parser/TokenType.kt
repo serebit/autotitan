@@ -37,10 +37,10 @@ sealed class TokenType(val name: String) {
         object ChannelToken : JdaToken("Channel")
 
         companion object {
-            fun from(type: KClass<out Any>): JdaToken? = when (type) {
-                User::class -> UserToken
-                Member::class -> MemberToken
-                Channel::class -> ChannelToken
+            fun from(type: KClass<out Any>): JdaToken? = when {
+                type == User::class -> UserToken
+                type == Member::class -> MemberToken
+                type.isSubclassOf(Channel::class) -> ChannelToken
                 else -> null
             }
         }

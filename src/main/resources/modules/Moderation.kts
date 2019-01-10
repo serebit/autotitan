@@ -90,13 +90,13 @@ module("Moderation") {
         Access.Guild.All(Permission.MANAGE_SERVER)
     ) { message: LongString ->
         if (guild.idLong in welcomeMessages) {
-            welcomeMessages[guild.idLong]!!.joinMessage = message.value
+            welcomeMessages[guild.idLong]!!.leaveMessage = message.value
         } else {
             welcomeMessages[guild.idLong] =
-                WelcomeMessageData(guild.systemChannel.idLong, joinMessage = message.value)
+                WelcomeMessageData(guild.systemChannel.idLong, leaveMessage = message.value)
         }
         dataManager.write("welcomemessages.json", welcomeMessages)
-        channel.sendMessage("Set the join message.").queue()
+        channel.sendMessage("Set the leave message.").queue()
     }
 
     command(
