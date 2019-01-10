@@ -85,7 +85,9 @@ module("Moderation") {
     }
 
     command(
-        "leavemessage", "Sets a message to display upon a user leaving the server.", Access.Guild.GuildOwner()
+        "leavemessage",
+        "Sets a message to display upon a user leaving the server.",
+        Access.Guild.All(Permission.MANAGE_SERVER)
     ) { message: LongString ->
         if (guild.idLong in welcomeMessages) {
             welcomeMessages[guild.idLong]!!.joinMessage = message.value
@@ -98,7 +100,9 @@ module("Moderation") {
     }
 
     command(
-        "joinmessage", "Sets a message to display upon a user joining the server.", Access.Guild.GuildOwner()
+        "joinmessage",
+        "Sets a message to display upon a user joining the server.",
+        Access.Guild.All(Permission.MANAGE_SERVER)
     ) { message: LongString ->
         if (guild.idLong in welcomeMessages) {
             welcomeMessages[guild.idLong]!!.joinMessage = message.value
@@ -111,7 +115,7 @@ module("Moderation") {
         channel.sendMessage("Set the join message.").queue()
     }
 
-    command("disablejoinmessage", "Removes the set join message.", Access.Guild.GuildOwner()) {
+    command("disablejoinmessage", "Removes the set join message.", Access.Guild.All(Permission.MANAGE_SERVER)) {
         if (welcomeMessages[guild.idLong]?.joinMessage != null) {
             welcomeMessages[guild.idLong]?.joinMessage = null
             channel.sendMessage("Removed the existing join message.").queue()
@@ -119,7 +123,7 @@ module("Moderation") {
         dataManager.write("welcomemessages.json", welcomeMessages)
     }
 
-    command("disablejoinmessage", "Removes the set join message.", Access.Guild.GuildOwner()) {
+    command("disableleavemessage", "Removes the set leave message.", Access.Guild.All(Permission.MANAGE_SERVER)) {
         if (welcomeMessages[guild.idLong]?.leaveMessage != null) {
             welcomeMessages[guild.idLong]?.leaveMessage = null
             channel.sendMessage("Removed the existing leave message.").queue()
@@ -128,7 +132,9 @@ module("Moderation") {
     }
 
     command(
-        "welcomechannel", "Sets the channel in which to send leave/join messages.", Access.Guild.GuildOwner()
+        "welcomechannel",
+        "Sets the channel in which to send leave/join messages.",
+        Access.Guild.All(Permission.MANAGE_SERVER)
     ) { channel: TextChannel ->
         if (guild.idLong in welcomeMessages) {
             welcomeMessages[guild.idLong]!!.channelId = channel.idLong
@@ -138,26 +144,6 @@ module("Moderation") {
         }
         dataManager.write("welcomemessages.json", welcomeMessages)
         channel.sendMessage("Set the welcome channel to ${channel.asMention}.").queue()
-    }
-
-    command(
-        "smartPrune",
-        "Prunes members from the server, including those with the default member role.",
-        Access.Guild.All(Permission.MANAGE_SERVER)
-    ) {
-        memberRoleMap[jda, guild]?.let { memberRole ->
-            val membersWithBaseRole = guild.getMembersWithRoles(memberRole)
-            membersWithBaseRole.forEach { guild.controller.removeSingleRoleFromMember(it, memberRole).queue() }
-            val prunableMemberCount = guild.getPrunableMemberCount(daysOfInactivity).complete()
-            guild.controller.prune(daysOfInactivity).complete()
-            val membersWithoutBaseRole = guild.members.filter { it.roles.isEmpty() }
-            membersWithoutBaseRole.forEach { guild.controller.addSingleRoleToMember(it, memberRole).queue() }
-            channel.sendMessage("Pruned $prunableMemberCount members.").queue()
-        } ?: run {
-            val prunableMemberCount = guild.getPrunableMemberCount(daysOfInactivity).complete()
-            guild.controller.prune(daysOfInactivity).complete()
-            channel.sendMessage("Pruned $prunableMemberCount members.").queue()
-        }
     }
 
     listener<GuildMemberJoinEvent> {
