@@ -1,19 +1,46 @@
-import com.serebit.autotitan.api.extensions.jda.closeAudioConnection
-import com.serebit.autotitan.api.extensions.jda.openAudioConnection
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.module
 import com.serebit.autotitan.api.parameters.LongString
 import com.serebit.autotitan.audio.AudioHandler
 import com.serebit.autotitan.audio.GuildTrackManager
 import com.serebit.autotitan.audio.VoiceStatus
+import net.dv8tion.jda.core.audio.hooks.ConnectionListener
+import net.dv8tion.jda.core.audio.hooks.ConnectionStatus
 import net.dv8tion.jda.core.entities.Guild
+import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.entities.VoiceChannel
 import net.dv8tion.jda.core.events.guild.voice.GuildVoiceLeaveEvent
 import net.dv8tion.jda.core.events.guild.voice.GuildVoiceMoveEvent
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
+import net.dv8tion.jda.core.managers.AudioManager
 
 val trackManagers = mutableMapOf<Long, GuildTrackManager>()
 val uriRegex = "^https?://[^\\s/\$.?#].[^\\s]*\$".toRegex()
+
+inline fun AudioManager.onConnectionStatusChange(desiredStatus: ConnectionStatus, crossinline task: () -> Unit) {
+    connectionListener = object : ConnectionListener {
+        override fun onStatusChange(status: ConnectionStatus) {
+            if (status == desiredStatus) {
+                task()
+                connectionListener = null
+            }
+        }
+
+        override fun onUserSpeaking(user: User?, speaking: Boolean) = Unit
+
+        override fun onPing(ping: Long) = Unit
+    }
+}
+
+inline fun AudioManager.openAudioConnection(channel: VoiceChannel, crossinline task: () -> Unit) {
+    onConnectionStatusChange(ConnectionStatus.CONNECTED, task)
+    openAudioConnection(channel)
+}
+
+inline fun AudioManager.closeAudioConnection(crossinline task: () -> Unit) {
+    onConnectionStatusChange(ConnectionStatus.NOT_CONNECTED, task)
+    closeAudioConnection()
+}
 
 inline fun leaveVoiceChannel(guild: Guild, crossinline onDisconnect: () -> Unit = {}) {
     if (guild.audioManager.isConnected) {

@@ -1,6 +1,6 @@
 package com.serebit.autotitan.api
 
-import com.serebit.autotitan.api.extensions.jda.canInvokeCommands
+import api.extensions.canInvokeCommands
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.meta.Descriptor
 import com.serebit.autotitan.api.parser.Parser

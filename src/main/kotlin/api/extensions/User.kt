@@ -1,6 +1,6 @@
 @file:JvmName("UserExtensions")
 
-package com.serebit.autotitan.api.extensions.jda
+package api.extensions
 
 import com.serebit.autotitan.config
 import net.dv8tion.jda.core.JDA

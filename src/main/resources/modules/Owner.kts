@@ -1,4 +1,4 @@
-import com.serebit.autotitan.api.extensions.jda.sendEmbed
+import com.serebit.autotitan.api.extensions.sendEmbed
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.module
 import com.serebit.autotitan.api.parameters.LongString
@@ -127,11 +127,7 @@ module("Owner", defaultAccess = Access.BotOwner()) {
     command("serverList", "Sends the list of servers that the bot is in.") {
         channel.sendEmbed {
             jda.guilds.forEach {
-                addField(
-                    it.name,
-                    "Owner: ${it.owner.asMention}\nMembers: ${it.members.size}\n",
-                    true
-                )
+                addField(it.name, "Owner: ${it.owner.asMention}\nMembers: ${it.members.size}\n", true)
             }
         }.queue()
     }

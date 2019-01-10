@@ -17,12 +17,16 @@ import kotlin.streams.toList
 internal class ModuleLoader {
     suspend fun loadModules(): List<Module> = coroutineScope {
         val engineFactory = ScriptEngineManager().getEngineByExtension("kts").factory!!
-        loadScripts().map {
+        loadScripts().map { scriptFile ->
             async {
-                Logger.debug("Loading module from file ${it.name}.")
-                engineFactory.scriptEngine.eval(it.readText()) as ModuleTemplate
+                Logger.debug("Loading module from file ${scriptFile.name}...")
+                engineFactory.scriptEngine.eval(scriptFile.readText()).also {
+                    Logger.debug("Loaded module from file ${scriptFile.name}.")
+                } as ModuleTemplate
             }
-        }.awaitAll().map { it.build() }
+        }.awaitAll().map { it.build() }.also {
+            Logger.debug("Finished loading modules.")
+        }
     }
 
     private fun loadScripts() = loadInternalScripts() + loadExternalScripts()

@@ -1,5 +1,5 @@
-import com.serebit.autotitan.api.extensions.jda.isBotOwner
-import com.serebit.autotitan.api.extensions.jda.sendEmbed
+import api.extensions.isBotOwner
+import com.serebit.autotitan.api.extensions.sendEmbed
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.module
 import net.dv8tion.jda.core.OnlineStatus
