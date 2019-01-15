@@ -10,7 +10,7 @@ internal data class Listener(
     val eventType: KClass<out Event>,
     private val function: suspend (Event) -> Unit
 ) : CoroutineScope {
-    override val coroutineContext = Dispatchers.Main
+    override val coroutineContext = Dispatchers.Default
 
     operator fun invoke(evt: Event) = launch { function(evt) }
 }
