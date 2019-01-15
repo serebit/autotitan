@@ -11,8 +11,8 @@ import kotlinx.coroutines.launch
 import net.dv8tion.jda.core.entities.MessageEmbed
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 
-internal class Command(
-    val name: String, description: String,
+internal data class Command(
+    val name: String, val description: String,
     val access: Access,
     private val tokenTypes: List<TokenType>,
     private val function: suspend (MessageReceivedEvent, List<Any>) -> Unit
