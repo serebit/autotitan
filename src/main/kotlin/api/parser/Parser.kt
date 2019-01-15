@@ -6,6 +6,7 @@ import net.dv8tion.jda.core.JDA
 import net.dv8tion.jda.core.entities.Guild
 import net.dv8tion.jda.core.entities.IMentionable
 import net.dv8tion.jda.core.entities.Member
+import net.dv8tion.jda.core.entities.Role
 import net.dv8tion.jda.core.entities.TextChannel
 import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
@@ -19,14 +20,15 @@ internal object Parser {
                 is TokenType.OtherToken -> castOther(evt, type, token)
             }
         }
-        return if (null in castedTokens) emptyList() else castedTokens.requireNoNulls()
+        return if (null in castedTokens) null else castedTokens.requireNoNulls()
     }
 
     private fun castJdaMentionable(evt: MessageReceivedEvent, type: TokenType.JdaToken, token: String): IMentionable? =
         when (type) {
             TokenType.JdaToken.UserToken -> evt.jda.getUserByMention(token)
             TokenType.JdaToken.MemberToken -> evt.guild.getMemberByMention(token)
-            TokenType.JdaToken.ChannelToken -> evt.guild.getTextChannelByMention(token)
+            TokenType.JdaToken.TextChannelToken -> evt.guild.getTextChannelByMention(token)
+            TokenType.JdaToken.RoleToken -> evt.guild.getRoleByMention(token)
         }
 
     private fun castNumeral(type: TokenType.NumberToken, token: String): Number? = when (type) {
@@ -34,8 +36,10 @@ internal object Parser {
         TokenType.NumberToken.ShortToken -> token.toShortOrNull()
         TokenType.NumberToken.IntToken -> token.toIntOrNull()
         TokenType.NumberToken.LongToken -> token.toLongOrNull()
+        TokenType.NumberToken.BigIntToken -> token.toBigIntegerOrNull()
         TokenType.NumberToken.DoubleToken -> token.toDoubleOrNull()
         TokenType.NumberToken.FloatToken -> token.toFloatOrNull()
+        TokenType.NumberToken.BigDecimalToken -> token.toBigDecimalOrNull()
     }
 
     private fun castOther(evt: MessageReceivedEvent, type: TokenType.OtherToken, token: String): Any? = when (type) {
@@ -56,4 +60,7 @@ internal object Parser {
 
     private fun Guild.getTextChannelByMention(mention: String): TextChannel? =
         getTextChannelById(mention.removeSurrounding("<#", ">"))
+
+    private fun Guild.getRoleByMention(mention: String): Role? =
+        getRoleById(mention.removeSurrounding("<@&", ">"))
 }
