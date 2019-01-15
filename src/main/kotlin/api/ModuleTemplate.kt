@@ -1,7 +1,6 @@
 package com.serebit.autotitan.api
 
 import com.serebit.autotitan.api.meta.Access
-import com.serebit.autotitan.api.meta.Descriptor
 import com.serebit.autotitan.api.parser.TokenType
 import com.serebit.autotitan.data.DataManager
 import net.dv8tion.jda.core.events.Event
@@ -25,12 +24,7 @@ open class ModuleTemplate(
         function: suspend MessageReceivedEvent.(List<Any>) -> Unit
     ): Boolean = parameterTypes.map { TokenType.from(it) }.let { tokenTypes ->
         if (tokenTypes.none { it == null }) commands.add(
-            Command(
-                Descriptor(name.toLowerCase(), description),
-                access,
-                tokenTypes.requireNoNulls(),
-                function
-            )
+            Command(name.toLowerCase(), description, access, tokenTypes.requireNoNulls(), function)
         ) else false
     }
 

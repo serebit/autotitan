@@ -1,54 +1,43 @@
 package com.serebit.autotitan.api
 
-import api.extensions.canInvokeCommands
 import com.serebit.autotitan.api.meta.Access
-import com.serebit.autotitan.api.meta.Descriptor
 import com.serebit.autotitan.api.parser.Parser
 import com.serebit.autotitan.api.parser.TokenType
+import com.serebit.autotitan.api.parser.signature
+import com.serebit.autotitan.config
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import net.dv8tion.jda.core.entities.MessageEmbed
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 
 internal class Command(
-    private val descriptor: Descriptor,
-    private val access: Access,
+    val name: String, description: String,
+    val access: Access,
     private val tokenTypes: List<TokenType>,
     private val function: suspend (MessageReceivedEvent, List<Any>) -> Unit
-) {
-    val summary = "`${descriptor.name} ${tokenTypes.joinToString(" ") { "<${it.name}>" }}`"
-    val helpField = MessageEmbed.Field(summary, "${descriptor.description}\n${access.description}", false)
+) : CoroutineScope {
+    override val coroutineContext = Dispatchers.Default
+    val summary = "`$name ${tokenTypes.joinToString(" ") { "<${it.name}>" }}`"
+    val helpField = MessageEmbed.Field(summary, "$description\n${access.description}", false)
     val isHidden = access.hidden
+    private val signature = buildString {
+        append("^(\\Q$name\\E)".toRegex())
+        tokenTypes.signature().let { if (it.isNotBlank()) append(" $it") }
+        append("$")
+    }.toRegex()
 
-    suspend operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>) = function.invoke(evt, parameters)
+    operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>) = launch {
+        function(evt, parameters)
+    }
 
-    fun matchesName(name: String) = descriptor.name == name
-
-    fun isVisibleFrom(evt: MessageReceivedEvent) = access.matches(evt) && !isHidden
-
-    fun isInvokeableFrom(evt: MessageReceivedEvent) =
-        evt.author.canInvokeCommands && access.matches(evt) && descriptor.matches(evt.message.contentRaw)
-
-    fun parseTokensOrNull(evt: MessageReceivedEvent): List<Any>? {
-        val tokens = tokenizeMessage(evt.message.contentRaw)
-        return when {
-            tokens[0] != descriptor.invocation -> null
-            tokenTypes.size != tokens.size - 1 -> null
-            else -> parseTokens(evt, tokens).let { parsedTokens ->
-                if (parsedTokens.any { it == null }) null else parsedTokens.filterNotNull()
-            }
-        }
+    fun parseTokensOrNull(evt: MessageReceivedEvent): List<Any>? = if (!access.matches(evt)) {
+        null
+    } else {
+        val tokens = tokenizeMessage(evt.message.contentRaw.removePrefix(config.prefix))
+        if (tokens.isNotEmpty()) Parser.castTokens(evt, tokenTypes, tokens.drop(1)) else null
     }
 
     private fun tokenizeMessage(message: String): List<String> =
-        message.split("\\s+".toRegex()).filter(String::isNotBlank).let { splitTokens ->
-            (if (tokenTypes.lastOrNull() == TokenType.OtherToken.LongStringToken) {
-                splitTokens.slice(0 until tokenTypes.size) + splitTokens.drop(tokenTypes.size).joinToString(" ")
-            } else {
-                splitTokens
-            }).filter(String::isNotBlank)
-        }
-
-    private fun parseTokens(evt: MessageReceivedEvent, tokens: List<String>): List<Any?> =
-        tokenTypes.zip(tokens.drop(1)).map { (type, string) ->
-            Parser.castToken(evt, type, string)
-        }
+        signature.find(message)?.groups?.mapNotNull { it?.value }?.drop(1) ?: emptyList()
 }

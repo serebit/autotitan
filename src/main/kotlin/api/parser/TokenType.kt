@@ -9,14 +9,14 @@ import net.dv8tion.jda.core.entities.User
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
 
-sealed class TokenType(val name: String) {
-    sealed class NumberToken(name: String) : TokenType(name) {
-        object ByteToken : NumberToken("Byte")
-        object ShortToken : NumberToken("Short")
-        object IntToken : NumberToken("Int")
-        object LongToken : NumberToken("Long")
-        object FloatToken : NumberToken("Float")
-        object DoubleToken : NumberToken("Double")
+internal sealed class TokenType(val name: String, val signature: Regex) {
+    sealed class NumberToken(name: String, signature: Regex) : TokenType(name, signature) {
+        object ByteToken : NumberToken("Byte", "\\d+?".toRegex())
+        object ShortToken : NumberToken("Short", "\\d+?".toRegex())
+        object IntToken : NumberToken("Int", "\\d+?".toRegex())
+        object LongToken : NumberToken("Long", "\\d+?L?".toRegex())
+        object FloatToken : NumberToken("Float", "\\d+?.\\d+?f?".toRegex())
+        object DoubleToken : NumberToken("Double", "\\d+?.\\d+?".toRegex())
 
         companion object {
             fun from(type: KClass<out Any>): NumberToken? = when (type) {
@@ -31,10 +31,10 @@ sealed class TokenType(val name: String) {
         }
     }
 
-    sealed class JdaToken(name: String) : TokenType(name) {
-        object UserToken : JdaToken("User")
-        object MemberToken : JdaToken("Member")
-        object ChannelToken : JdaToken("Channel")
+    sealed class JdaToken(name: String, signature: Regex) : TokenType(name, signature) {
+        object UserToken : JdaToken("User", "<?@?!?\\d+?>?".toRegex())
+        object MemberToken : JdaToken("Member", "<?@?!?\\d+?>?".toRegex())
+        object ChannelToken : JdaToken("Channel", "<?#?!?\\d+?>?".toRegex())
 
         companion object {
             fun from(type: KClass<out Any>): JdaToken? = when {
@@ -46,12 +46,12 @@ sealed class TokenType(val name: String) {
         }
     }
 
-    sealed class OtherToken(name: String) : TokenType(name) {
-        object EmoteToken : OtherToken("Emote")
-        object StringToken : OtherToken("String")
-        object LongStringToken : OtherToken("LongString")
-        object BooleanToken : OtherToken("Boolean")
-        object CharToken : OtherToken("Char")
+    sealed class OtherToken(name: String, signature: Regex) : TokenType(name, signature) {
+        object EmoteToken : OtherToken("Emote", "<?a?:\\S+?:\\d+?>|[^A-Za-z\\d\\s]+?".toRegex())
+        object StringToken : OtherToken("String", "\\S+?".toRegex())
+        object LongStringToken : OtherToken("LongString", ".+?".toRegex())
+        object BooleanToken : OtherToken("Boolean", "true|false".toRegex())
+        object CharToken : OtherToken("Char", "\\S".toRegex())
 
         companion object {
             fun from(type: KClass<out Any>): OtherToken? = when (type) {
@@ -73,3 +73,5 @@ sealed class TokenType(val name: String) {
         }
     }
 }
+
+internal fun List<TokenType>.signature() = if (isEmpty()) "" else joinToString(" ", "(", ")") { it.signature.pattern }

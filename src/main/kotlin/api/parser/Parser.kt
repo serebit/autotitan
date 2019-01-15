@@ -11,10 +11,15 @@ import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 
 internal object Parser {
-    fun castToken(evt: MessageReceivedEvent, type: TokenType, token: String): Any? = when (type) {
-        is TokenType.NumberToken -> castNumeral(type, token)
-        is TokenType.JdaToken -> castJdaMentionable(evt, type, token)
-        is TokenType.OtherToken -> castOther(evt, type, token)
+    fun castTokens(evt: MessageReceivedEvent, types: Collection<TokenType>, tokens: Collection<String>): List<Any>? {
+        val castedTokens = types.zip(tokens).map { (type, token) ->
+            when (type) {
+                is TokenType.NumberToken -> castNumeral(type, token)
+                is TokenType.JdaToken -> castJdaMentionable(evt, type, token)
+                is TokenType.OtherToken -> castOther(evt, type, token)
+            }
+        }
+        return if (null in castedTokens) emptyList() else castedTokens.requireNoNulls()
     }
 
     private fun castJdaMentionable(evt: MessageReceivedEvent, type: TokenType.JdaToken, token: String): IMentionable? =
