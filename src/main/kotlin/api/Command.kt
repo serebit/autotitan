@@ -25,7 +25,7 @@ internal data class Command(
         append("^(\\Q$name\\E)".toRegex())
         tokenTypes.signature().let { if (it.isNotBlank()) append(" $it") }
         append("$")
-    }.toRegex()
+    }.toRegex(RegexOption.DOT_MATCHES_ALL)
 
     operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>) = launch {
         function(evt, parameters)

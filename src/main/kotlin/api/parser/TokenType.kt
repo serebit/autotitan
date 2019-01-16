@@ -12,15 +12,15 @@ import java.math.BigInteger
 import kotlin.reflect.KClass
 
 internal sealed class TokenType(val name: String, val signature: Regex) {
-    sealed class NumberToken(name: String, signature: Regex) : TokenType(name, signature) {
-        object ByteToken : NumberToken("Byte", "\\d+?".toRegex())
-        object ShortToken : NumberToken("Short", "\\d+?".toRegex())
-        object IntToken : NumberToken("Int", "\\d+?".toRegex())
-        object LongToken : NumberToken("Long", "\\d+?L?".toRegex())
-        object BigIntToken : NumberToken("BigInt", "\\d+?".toRegex())
-        object FloatToken : NumberToken("Float", "\\d+?.\\d+?f?".toRegex())
-        object DoubleToken : NumberToken("Double", "\\d+?.\\d+?".toRegex())
-        object BigDecimalToken : NumberToken("BigDecimal", "\\d+?.\\d+?".toRegex())
+    sealed class Number(name: String, signature: Regex) : TokenType(name, signature) {
+        object ByteToken : Number("Byte", "[+-]?\\d{1,3}?".toRegex())
+        object ShortToken : Number("Short", "[+-]?\\d{1,5}?".toRegex())
+        object IntToken : Number("Int", "[+-]?\\d{1,10}?".toRegex())
+        object LongToken : Number("Long", "[+-]?\\d{1,19}?L?".toRegex())
+        object BigIntToken : Number("BigInt", "[+-]?\\d+?".toRegex())
+        object FloatToken : Number("Float", "[+-]?(?:\\d*\\.\\d+|\\d+\\.?)(?:[eE]\\d+)?[fF]?".toRegex())
+        object DoubleToken : Number("Double", "[+-]?(?:\\d*\\.\\d+|\\d+\\.?)(?:[eE]\\d+)?".toRegex())
+        object BigDecimalToken : Number("BigDecimal", "[+-]?(?:\\d*\\.\\d+|\\d+\\.?)(?:[eE]\\d+)?".toRegex())
 
         companion object {
             val typeAssociations = mapOf(
@@ -36,11 +36,11 @@ internal sealed class TokenType(val name: String, val signature: Regex) {
         }
     }
 
-    sealed class JdaToken(name: String, signature: Regex) : TokenType(name, signature) {
-        object UserToken : JdaToken("User", "<?@?!?\\d+?>?".toRegex())
-        object MemberToken : JdaToken("Member", "<?@?!?\\d+?>?".toRegex())
-        object TextChannelToken : JdaToken("Channel", "<?#?!?\\d+?>?".toRegex())
-        object RoleToken : JdaToken("Role", "(?:<@&)?\\d+?>?".toRegex())
+    sealed class Jda(name: String, signature: Regex) : TokenType(name, signature) {
+        object UserToken : Jda("User", "<@!?\\d+>|\\d+".toRegex())
+        object MemberToken : Jda("Member", "<@!?\\d+>|\\d+".toRegex())
+        object TextChannelToken : Jda("Channel", "<#\\d+>|\\d+".toRegex())
+        object RoleToken : Jda("Role", "<@&\\d+>|\\d+".toRegex())
 
         companion object {
             val typeAssociations = mapOf(
@@ -53,12 +53,12 @@ internal sealed class TokenType(val name: String, val signature: Regex) {
         }
     }
 
-    sealed class OtherToken(name: String, signature: Regex) : TokenType(name, signature) {
-        object EmoteToken : OtherToken("Emote", "<?a?:\\S+?:\\d+?>|[^A-Za-z\\d\\s]+?".toRegex())
-        object StringToken : OtherToken("String", "\\S+?".toRegex())
-        object LongStringToken : OtherToken("LongString", ".+?".toRegex())
-        object BooleanToken : OtherToken("Boolean", "true|false".toRegex())
-        object CharToken : OtherToken("Char", "\\S".toRegex())
+    sealed class Other(name: String, signature: Regex) : TokenType(name, signature) {
+        object EmoteToken : Other("Emote", "<a?:\\S+:\\d+>|\\d+|[\\uD83C-\\uDBFF\\uDC00-\\uDFFF]+".toRegex())
+        object StringToken : Other("String", "\\S+".toRegex())
+        object LongStringToken : Other("LongString", ".+?".toRegex())
+        object BooleanToken : Other("Boolean", "true|false".toRegex())
+        object CharToken : Other("Char", "\\S".toRegex())
 
         companion object {
             val typeAssociations = mapOf(
@@ -73,9 +73,9 @@ internal sealed class TokenType(val name: String, val signature: Regex) {
 
     companion object {
         fun from(type: KClass<out Any>): TokenType? = when (type) {
-            in NumberToken.typeAssociations -> NumberToken.typeAssociations[type]
-            in JdaToken.typeAssociations -> JdaToken.typeAssociations[type]
-            in OtherToken.typeAssociations -> OtherToken.typeAssociations[type]
+            in Number.typeAssociations -> Number.typeAssociations[type]
+            in Jda.typeAssociations -> Jda.typeAssociations[type]
+            in Other.typeAssociations -> Other.typeAssociations[type]
             else -> null
         }
     }
