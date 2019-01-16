@@ -1,7 +1,9 @@
+import com.serebit.autotitan.api.command
 import com.serebit.autotitan.api.extensions.MESSAGE_EMBED_MAX_FIELDS
 import com.serebit.autotitan.api.extensions.chunkedBy
 import com.serebit.autotitan.api.extensions.limitLengthTo
 import com.serebit.autotitan.api.extensions.sendEmbed
+import com.serebit.autotitan.api.listener
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.module
 import com.serebit.autotitan.api.parameters.Emote

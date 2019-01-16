@@ -1,4 +1,5 @@
 
+import com.serebit.autotitan.api.command
 import com.serebit.autotitan.api.extensions.MESSAGE_EMBED_MAX_FIELDS
 import com.serebit.autotitan.api.extensions.chunkedBy
 import com.serebit.autotitan.api.extensions.limitLengthTo

@@ -1,3 +1,5 @@
+import com.serebit.autotitan.api.command
+import com.serebit.autotitan.api.listener
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.module
 import com.serebit.autotitan.api.parameters.LongString

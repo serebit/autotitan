@@ -1,4 +1,5 @@
 import api.extensions.isBotOwner
+import com.serebit.autotitan.api.command
 import com.serebit.autotitan.api.extensions.sendEmbed
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.module
