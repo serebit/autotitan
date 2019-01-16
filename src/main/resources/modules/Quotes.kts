@@ -17,6 +17,7 @@ module("Quotes", isOptional = true, defaultAccess = Access.Guild.All()) {
     val quoteMap = dataManager.readOrDefault("quotes.json") { GuildResourceList<String?>() }
 
     command("addQuote", "Adds the given quote.") { quote: LongString ->
+        if (guild.idLong !in quoteMap) quoteMap[guild.idLong] = mutableListOf()
         if (message.mentionsUsers) {
             channel.sendMessage("Quotes containing mentions are not permitted.").queue()
         } else {
@@ -29,6 +30,7 @@ module("Quotes", isOptional = true, defaultAccess = Access.Guild.All()) {
     }
 
     command("deleteQuote", "Deletes the quote at the given index.") { index: Int ->
+        if (guild.idLong !in quoteMap) quoteMap[guild.idLong] = mutableListOf()
         val quotes = quoteMap[guild.idLong]!!
 
         when {
@@ -43,12 +45,14 @@ module("Quotes", isOptional = true, defaultAccess = Access.Guild.All()) {
     }
 
     command("quote", "Gets a random quote, if any exist.") {
+        if (guild.idLong !in quoteMap) quoteMap[guild.idLong] = mutableListOf()
         if (quoteMap[guild.idLong]!!.isNotEmpty()) {
             channel.sendMessage(quoteMap[guild.idLong]!!.filterNotNull().random()).queue()
         } else channel.sendMessage("This server has no quotes saved.").queue()
     }
 
     command("quote", "Gets the quote at the given index.") { index: Int ->
+        if (guild.idLong !in quoteMap) quoteMap[guild.idLong] = mutableListOf()
         if (quoteMap[guild.idLong]!!.isEmpty()) {
             channel.sendMessage("This server has no quotes saved.").queue()
         } else {
@@ -58,6 +62,7 @@ module("Quotes", isOptional = true, defaultAccess = Access.Guild.All()) {
     }
 
     command("quoteList", "Gets the list of quotes that this server has saved.") {
+        if (guild.idLong !in quoteMap) quoteMap[guild.idLong] = mutableListOf()
         if (quoteMap[guild.idLong]!!.isEmpty()) {
             channel.sendMessage("This server has no quotes saved.").queue()
         } else {
@@ -81,6 +86,7 @@ module("Quotes", isOptional = true, defaultAccess = Access.Guild.All()) {
         "Removes the empty quote indices for the given server.",
         access = Access.Guild.All(Permission.MANAGE_CHANNEL)
     ) {
+        if (guild.idLong !in quoteMap) quoteMap[guild.idLong] = mutableListOf()
         if (quoteMap[guild.idLong]!!.isEmpty()) {
             channel.sendMessage("This server has no quotes to shuffle.").queue()
         } else {

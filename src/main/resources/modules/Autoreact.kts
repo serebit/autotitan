@@ -49,6 +49,7 @@ module("Autoreact", isOptional = true) {
         "Adds an autoreact with the given emote for the given word.",
         Access.Guild.All(Permission.MESSAGE_ADD_REACTION)
     ) { word: String, emote: Emote ->
+        if (guild.idLong !in reactMap) reactMap[guild.idLong] = mutableMapOf()
         val value = reactMap[guild.idLong]!!.getOrPut(word, ::mutableListOf)
         when {
             value.size >= maxReactionsPerMessage ->
@@ -66,6 +67,7 @@ module("Autoreact", isOptional = true) {
         "Removes the autoreact for the given word from the list.",
         Access.Guild.All(Permission.MESSAGE_ADD_REACTION)
     ) { word: String, emote: Emote ->
+        if (guild.idLong !in reactMap) reactMap[guild.idLong] = mutableMapOf()
         val guildReacts = reactMap[guild.idLong]!!
         when {
             word !in guildReacts -> channel.sendMessage("There are no autoreacts for that word.").queue()
@@ -83,6 +85,7 @@ module("Autoreact", isOptional = true) {
         "Deletes all autoreacts from the server.",
         Access.Guild.All(Permission.MESSAGE_ADD_REACTION, Permission.MANAGE_SERVER)
     ) {
+        if (guild.idLong !in reactMap) reactMap[guild.idLong] = mutableMapOf()
         reactMap[guild.idLong]!!.clear()
         channel.sendMessage("Cleared all autoreacts from this server.").queue()
     }
@@ -92,6 +95,7 @@ module("Autoreact", isOptional = true) {
         "Sends a list of autoreacts for the server to the command invoker.",
         Access.Guild.All()
     ) {
+        if (guild.idLong !in reactMap) reactMap[guild.idLong] = mutableMapOf()
         val reacts = reactMap[guild.idLong]!!
         channel.sendMessage("Sending a reaction list in PMs.").queue()
         if (reacts.isNotEmpty()) {
