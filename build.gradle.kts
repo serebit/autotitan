@@ -43,7 +43,7 @@ tasks {
     }
 
     withType<ShadowJar> {
-        archiveName = "$baseName-$version.$extension"
+        archiveFileName.set("$archiveBaseName-$archiveVersion.$archiveExtension")
         manifest.attributes["Main-Class"] = "com.serebit.autotitan.MainKt"
     }
 
