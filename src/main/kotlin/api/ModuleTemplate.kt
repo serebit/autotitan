@@ -24,7 +24,9 @@ data class ModuleTemplate(
         function: suspend MessageReceivedEvent.(List<Any>) -> Unit
     ) = parameterTypes.map(TokenType.Companion::from).let { tokenTypes ->
         require(null !in tokenTypes)
-        commands += Command(name.toLowerCase(), description, access, tokenTypes.requireNoNulls(), function)
+        commands += Command(
+            name.toLowerCase(), description, access, "".toRegex(), tokenTypes.requireNoNulls(), function
+        )
     }
 
     inline fun command(
