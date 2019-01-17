@@ -81,4 +81,4 @@ internal sealed class TokenType(val name: String, val signature: Regex) {
     }
 }
 
-internal fun List<TokenType>.signature() = if (isEmpty()) "" else joinToString(" ", "(", ")") { it.signature.pattern }
+internal fun List<TokenType>.signature() = if (isEmpty()) "" else joinToString(" ") { "(${it.signature.pattern})" }

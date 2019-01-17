@@ -1,3 +1,5 @@
 package com.serebit.autotitan.api.parameters
 
-data class LongString(val value: String)
+inline class LongString(val value: String) {
+    override fun toString() = value
+}

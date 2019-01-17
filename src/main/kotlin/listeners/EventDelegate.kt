@@ -7,6 +7,7 @@ import com.serebit.autotitan.api.command
 import com.serebit.autotitan.api.extensions.sendEmbed
 import com.serebit.autotitan.api.listener
 import com.serebit.autotitan.api.module
+import com.serebit.autotitan.api.parameters.LongString
 import com.serebit.autotitan.config
 import com.serebit.autotitan.data.ModuleLoader
 import com.serebit.logkat.Logger
@@ -88,19 +89,17 @@ internal object EventDelegate : ListenerAdapter(), CoroutineScope {
                 }
             }
 
-            command("help", "Gets information about the requested command.") { commandName: String ->
-                val matchingCommands = loadedModules.asSequence()
-                    .map { it.findCommandsByName(commandName) }
+            command("help", "Gets information about the requested command or group.") { name: LongString ->
+                val matchingFields = loadedModules.map { it.helpFieldsBySignature(name.value) }
                     .filter { it.isNotEmpty() }
-                    .toList()
                     .flatten()
-                if (matchingCommands.isEmpty()) {
-                    channel.sendMessage("Could not find any commands matching `$commandName`.").queue()
+                if (matchingFields.isEmpty()) {
+                    channel.sendMessage("Could not find any commands or groups matching `$name`.").queue()
                 } else {
                     channel.sendEmbed {
-                        matchingCommands.forEachIndexed { index, command ->
+                        matchingFields.forEachIndexed { index, field ->
                             if (index > 0) addBlankField(false)
-                            addField(command.helpField)
+                            addField(field)
                         }
                     }.queue()
                 }

@@ -1,3 +1,4 @@
+
 import com.serebit.autotitan.api.command
 import com.serebit.autotitan.api.extensions.MESSAGE_EMBED_MAX_FIELDS
 import com.serebit.autotitan.api.extensions.chunkedBy
@@ -41,16 +42,12 @@ data class EmoteData(
 
 val maxReactionsPerMessage = 20
 
-module("Autoreact", isOptional = true) {
+module("Autoreact", isOptional = true, defaultAccess = Access.Guild.All(Permission.MESSAGE_ADD_REACTION)) {
     val reactMap = dataManager.readOrDefault("reacts.json") {
         GuildResourceMap<String, MutableList<EmoteData>>()
     }
 
-    command(
-        "addReact",
-        "Adds an autoreact with the given emote for the given word.",
-        Access.Guild.All(Permission.MESSAGE_ADD_REACTION)
-    ) { word: String, emote: Emote ->
+    command("addReact", "Adds an autoreact with the given emote for the given word.") { word: String, emote: Emote ->
         if (guild.idLong !in reactMap) reactMap[guild.idLong] = mutableMapOf()
         val value = reactMap[guild.idLong]!!.getOrPut(word, ::mutableListOf)
         when {
@@ -64,11 +61,7 @@ module("Autoreact", isOptional = true) {
         }
     }
 
-    command(
-        "removeReact",
-        "Removes the autoreact for the given word from the list.",
-        Access.Guild.All(Permission.MESSAGE_ADD_REACTION)
-    ) { word: String, emote: Emote ->
+    command("removeReact", "Removes the autoreact for the given word from the list.") { word: String, emote: Emote ->
         if (guild.idLong !in reactMap) reactMap[guild.idLong] = mutableMapOf()
         val guildReacts = reactMap[guild.idLong]!!
         when {
@@ -92,11 +85,7 @@ module("Autoreact", isOptional = true) {
         channel.sendMessage("Cleared all autoreacts from this server.").queue()
     }
 
-    command(
-        "reactList",
-        "Sends a list of autoreacts for the server to the command invoker.",
-        Access.Guild.All()
-    ) {
+    command("reactList", "Sends a list of autoreacts for the server to the command invoker.", Access.Guild.All()) {
         if (guild.idLong !in reactMap) reactMap[guild.idLong] = mutableMapOf()
         val reacts = reactMap[guild.idLong]!!
         channel.sendMessage("Sending a reaction list in PMs.").queue()

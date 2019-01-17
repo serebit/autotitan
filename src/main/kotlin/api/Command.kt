@@ -17,14 +17,20 @@ internal data class Command(
     private val parentSignature: Regex,
     private val tokenTypes: List<TokenType>,
     private val function: suspend (MessageReceivedEvent, List<Any>) -> Unit
-) : CoroutineScope {
+) : Invokeable, CoroutineScope {
     override val coroutineContext = Dispatchers.Default
     val summary = "`$name ${tokenTypes.joinToString(" ") { "<${it.name}>" }}`"
-    val helpField = MessageEmbed.Field(summary, "$description\n${access.description}", false)
     val isHidden = access.hidden
-    private val signature = buildString {
+    override val helpField = MessageEmbed.Field(summary, "$description\n${access.description}", false)
+    override val helpSignature = buildString {
         append("^")
-        if (parentSignature.pattern.isNotBlank()) append(" $parentSignature ")
+        if (parentSignature.pattern.isNotBlank()) append("$parentSignature ")
+        append("(\\Q$name\\E)".toRegex())
+        append("$")
+    }.toRegex()
+    private val invocationSignature = buildString {
+        append("^")
+        if (parentSignature.pattern.isNotBlank()) append("$parentSignature ")
         append("(\\Q$name\\E)".toRegex())
         tokenTypes.signature().let { if (it.isNotBlank()) append(" $it") }
         append("$")
@@ -42,5 +48,5 @@ internal data class Command(
     }
 
     private fun tokenizeMessage(message: String): List<String> =
-        signature.find(message)?.groups?.mapNotNull { it?.value }?.drop(1) ?: emptyList()
+        invocationSignature.find(message)?.groups?.mapNotNull { it?.value }?.drop(1) ?: emptyList()
 }

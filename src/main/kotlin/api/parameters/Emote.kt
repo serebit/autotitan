@@ -1,6 +1,6 @@
 package com.serebit.autotitan.api.parameters
 
-import com.serebit.autotitan.data.classpathResource
+import com.serebit.autotitan.data.internalResource
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.list
 import kotlinx.serialization.serializer
@@ -33,7 +33,7 @@ sealed class Emote {
 
     companion object {
         private val emojiCodePoints =
-            Json.parse(Int.serializer().list.list, classpathResource("resources/emoji-code-points.json").readText())
+            Json.parse(Int.serializer().list.list, internalResource("emoji-code-points.json")!!.readText())
         private val String.isUnicodeEmoji
             get() = codePoints().toList().let { codePoints ->
                 emojiCodePoints.any { it == codePoints }
