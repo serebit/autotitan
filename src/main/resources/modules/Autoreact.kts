@@ -82,6 +82,7 @@ module("Autoreact", isOptional = true, defaultAccess = Access.Guild.All(Permissi
     ) {
         if (guild.idLong !in reactMap) reactMap[guild.idLong] = mutableMapOf()
         reactMap[guild.idLong]!!.clear()
+        dataManager.write("reacts.json", reactMap)
         channel.sendMessage("Cleared all autoreacts from this server.").queue()
     }
 
@@ -94,7 +95,7 @@ module("Autoreact", isOptional = true, defaultAccess = Access.Guild.All(Permissi
                 reacts
                     .map { (word, emotes) ->
                         word.limitLengthTo(MessageEmbed.TITLE_MAX_LENGTH) to
-                                emotes.joinToString("") { it.emote.asMention(jda) }
+                                emotes.joinToString("") { it.emote.asMention(guild) }
                     }
                     .chunkedBy(MessageEmbed.EMBED_MAX_LENGTH_BOT, MESSAGE_EMBED_MAX_FIELDS) {
                         it.first.length + it.second.length
@@ -109,7 +110,7 @@ module("Autoreact", isOptional = true, defaultAccess = Access.Guild.All(Permissi
     }
 
     listener<MessageReceivedEvent> {
-        if (guild.idLong in reactMap && author != jda.selfUser) {
+        if (guild?.idLong in reactMap && author != jda.selfUser) {
             reactMap[guild.idLong]!!
                 .filter { it.key in message.contentRaw }
                 .values

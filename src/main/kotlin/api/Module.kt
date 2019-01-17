@@ -2,8 +2,8 @@ package com.serebit.autotitan.api
 
 import api.extensions.canInvokeCommands
 import com.serebit.autotitan.api.meta.Access
+import com.serebit.autotitan.api.parser.Parser
 import com.serebit.autotitan.config
-import com.serebit.autotitan.data.DataManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -11,17 +11,19 @@ import net.dv8tion.jda.core.entities.MessageEmbed
 import net.dv8tion.jda.core.events.Event
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 
-internal data class Module(
+internal class Module(
     val name: String,
     val isOptional: Boolean,
-    private val groups: List<Group>, private val commands: List<Command>,
-    private val listeners: List<Listener>,
-    private val dataManager: DataManager
+    groupTemplates: List<GroupTemplate>,
+    commandTemplates: List<CommandTemplate>,
+    private val listeners: List<Listener>
 ) : CoroutineScope {
     override val coroutineContext = Dispatchers.Default
     val commandListField
         get() = MessageEmbed.Field(name, commands.filter { !it.isHidden }.joinToString { it.summary }, false)
     val isStandard get() = !isOptional
+    private val groups = groupTemplates.map { it.build() }
+    private val commands = commandTemplates.map { it.build(null) }
     private val allCommands = commands + groups.map { it.commands }.flatten()
     private val allInvokeable = allCommands + groups
 
@@ -43,11 +45,17 @@ internal data class Module(
             .filter { it.eventType.isInstance(evt) }
             .forEach { it(evt) }
         if (evt is MessageReceivedEvent && evt.isCommandInvocation) {
-            allCommands.asSequence()
-                .associate { it to it.parseTokensOrNull(evt) }.entries
-                .find { it.value != null }?.let { (command, parameters) ->
-                    command(evt, parameters!!)
+            val rawContent = evt.message.contentRaw.removePrefix(config.prefix)
+            allCommands
+                .asSequence()
+                .filter { it.access.matches(evt) }
+                .mapNotNull { command ->
+                    Parser.tokenize(rawContent, command.invocationSignature)?.let { command to it }
                 }
+                .mapNotNull { (command, tokens) ->
+                    Parser.parseTokens(evt, tokens, command.tokenTypes)?.let { command to it }
+                }
+                .firstOrNull()?.let { (command, parameters) -> command(evt, parameters) }
         }
     }
 

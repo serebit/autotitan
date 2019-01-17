@@ -12,7 +12,13 @@ import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 
 internal object Parser {
-    fun castTokens(evt: MessageReceivedEvent, types: Collection<TokenType>, tokens: Collection<String>): List<Any>? {
+    fun tokenize(message: String, signature: Regex): List<String>? =
+        signature.find(message)?.groups?.mapNotNull { it?.value }?.drop(1)
+
+    fun parseTokens(evt: MessageReceivedEvent, tokens: List<String>, tokenTypes: List<TokenType>): List<Any>? =
+        if (tokens.isNotEmpty()) castTokens(evt, tokenTypes, tokens.takeLast(tokenTypes.size)) else null
+
+    private fun castTokens(evt: MessageReceivedEvent, types: List<TokenType>, tokens: List<String>): List<Any>? {
         val castedTokens = types.zip(tokens).map { (type, token) ->
             when (type) {
                 is TokenType.Number -> castNumeral(type, token)
@@ -47,7 +53,7 @@ internal object Parser {
         TokenType.Other.LongStringToken -> LongString(token)
         TokenType.Other.CharToken -> token.singleOrNull()
         TokenType.Other.BooleanToken -> token.toBooleanOrNull()
-        TokenType.Other.EmoteToken -> Emote.from(token, evt.jda)
+        TokenType.Other.EmoteToken -> Emote.from(token, evt.guild)
     }
 
     private fun String.toBooleanOrNull() = if (this == "true" || this == "false") toBoolean() else null
