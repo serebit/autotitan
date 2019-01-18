@@ -1,4 +1,5 @@
 import com.serebit.autotitan.api.command
+import com.serebit.autotitan.api.group
 import com.serebit.autotitan.api.listener
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.module
@@ -23,7 +24,6 @@ class GuildRoleMap : MutableMap<Long, Long> by mutableMapOf() {
 
 data class WelcomeMessageData(var channelId: Long, var joinMessage: String? = null, var leaveMessage: String? = null)
 
-val daysOfInactivity = 30
 val maximumCleanupCount = 99
 
 module("Moderation") {
@@ -62,90 +62,70 @@ module("Moderation") {
         } else channel.sendMessage("The number has to be in the range of `1..$maximumCleanupCount`.").queue()
     }
 
-    command(
-        "setMemberRole",
-        "Sets the role given to new members of the server upon joining.",
-        Access.Guild.All(Permission.MANAGE_ROLES)
-    ) { roleName: LongString ->
-        guild.roles
-            .findLast { it.name.toLowerCase() == roleName.value.toLowerCase() }
-            ?.let { role ->
-                memberRoleMap[guild] = role
-                dataManager.write("rolemap.json", memberRoleMap)
-                channel.sendMessage("Set the member role to `$roleName`.").queue()
-            } ?: channel.sendMessage("`$roleName` does not exist.").queue()
-    }
-
-    command(
-        "getMemberRole",
-        "Gets the role given to new members of the server upon joining.",
-        Access.Guild.All(Permission.MANAGE_ROLES)
-    ) {
-        memberRoleMap[jda, guild]?.let { role ->
-            channel.sendMessage("The member role for this server is set to `${role.name}`.").queue()
-        } ?: channel.sendMessage("The member role is not set up for this server.").queue()
-    }
-
-    command(
-        "leavemessage",
-        "Sets a message to display upon a user leaving the server.",
-        Access.Guild.All(Permission.MANAGE_SERVER)
-    ) { message: LongString ->
-        if (guild.idLong in welcomeMessages) {
-            welcomeMessages[guild.idLong]!!.leaveMessage = message.value
-        } else {
-            welcomeMessages[guild.idLong] =
-                WelcomeMessageData(guild.systemChannel.idLong, leaveMessage = message.value)
+    group("autorole", defaultAccess = Access.Guild.All(Permission.MANAGE_ROLES)) {
+        command("member", "Sets the role given to new members of the server upon joining.") { role: Role ->
+            memberRoleMap[guild] = role
+            dataManager.write("rolemap.json", memberRoleMap)
+            channel.sendMessage("Set the member role to `${role.name}`.").queue()
         }
-        dataManager.write("welcomemessages.json", welcomeMessages)
-        channel.sendMessage("Set the leave message.").queue()
-    }
 
-    command(
-        "joinmessage",
-        "Sets a message to display upon a user joining the server.",
-        Access.Guild.All(Permission.MANAGE_SERVER)
-    ) { message: LongString ->
-        if (guild.idLong in welcomeMessages) {
-            welcomeMessages[guild.idLong]!!.joinMessage = message.value
-        } else {
-            welcomeMessages[guild.idLong] =
-                WelcomeMessageData(guild.systemChannel.idLong, joinMessage = message.value)
-
+        command("member", "Gets the role given to new members of the server upon joining.") {
+            memberRoleMap[jda, guild]?.let { role ->
+                channel.sendMessage("The member role for this server is set to `${role.name}`.").queue()
+            } ?: channel.sendMessage("The member role is not set up for this server.").queue()
         }
-        dataManager.write("welcomemessages.json", welcomeMessages)
-        channel.sendMessage("Set the join message.").queue()
     }
 
-    command("disablejoinmessage", "Removes the set join message.", Access.Guild.All(Permission.MANAGE_SERVER)) {
-        if (welcomeMessages[guild.idLong]?.joinMessage != null) {
-            welcomeMessages[guild.idLong]?.joinMessage = null
-            channel.sendMessage("Removed the existing join message.").queue()
-        } else channel.sendMessage("No join message to remove.").queue()
-        dataManager.write("welcomemessages.json", welcomeMessages)
-    }
-
-    command("disableleavemessage", "Removes the set leave message.", Access.Guild.All(Permission.MANAGE_SERVER)) {
-        if (welcomeMessages[guild.idLong]?.leaveMessage != null) {
-            welcomeMessages[guild.idLong]?.leaveMessage = null
-            channel.sendMessage("Removed the existing leave message.").queue()
-        } else channel.sendMessage("No leave message to remove.").queue()
-        dataManager.write("welcomemessages.json", welcomeMessages)
-    }
-
-    command(
-        "welcomechannel",
-        "Sets the channel in which to send leave/join messages.",
-        Access.Guild.All(Permission.MANAGE_SERVER)
-    ) { channel: TextChannel ->
-        if (guild.idLong in welcomeMessages) {
-            welcomeMessages[guild.idLong]!!.channelId = channel.idLong
-        } else {
-            welcomeMessages[guild.idLong] = WelcomeMessageData(channel.idLong)
-
+    group("welcome", defaultAccess = Access.Guild.All(Permission.MANAGE_SERVER)) {
+        command("onleave", "Sets a message to display upon a user leaving the server.") { message: LongString ->
+            if (guild.idLong in welcomeMessages) {
+                welcomeMessages[guild.idLong]!!.leaveMessage = message.value
+            } else {
+                welcomeMessages[guild.idLong] =
+                    WelcomeMessageData(guild.systemChannel.idLong, leaveMessage = message.value)
+            }
+            dataManager.write("welcomemessages.json", welcomeMessages)
+            channel.sendMessage("Set the leave message.").queue()
         }
-        dataManager.write("welcomemessages.json", welcomeMessages)
-        channel.sendMessage("Set the welcome channel to ${channel.asMention}.").queue()
+
+        command("onjoin", "Sets a message to display upon a user joining the server.") { message: LongString ->
+            if (guild.idLong in welcomeMessages) {
+                welcomeMessages[guild.idLong]!!.joinMessage = message.value
+            } else {
+                welcomeMessages[guild.idLong] =
+                    WelcomeMessageData(guild.systemChannel.idLong, joinMessage = message.value)
+
+            }
+            dataManager.write("welcomemessages.json", welcomeMessages)
+            channel.sendMessage("Set the join message.").queue()
+        }
+
+        command("disableonjoin", "Removes the set join message.") {
+            if (welcomeMessages[guild.idLong]?.joinMessage != null) {
+                welcomeMessages[guild.idLong]?.joinMessage = null
+                channel.sendMessage("Removed the existing join message.").queue()
+            } else channel.sendMessage("No join message to remove.").queue()
+            dataManager.write("welcomemessages.json", welcomeMessages)
+        }
+
+        command("disableonleave", "Removes the set leave message.") {
+            if (welcomeMessages[guild.idLong]?.leaveMessage != null) {
+                welcomeMessages[guild.idLong]?.leaveMessage = null
+                channel.sendMessage("Removed the existing leave message.").queue()
+            } else channel.sendMessage("No leave message to remove.").queue()
+            dataManager.write("welcomemessages.json", welcomeMessages)
+        }
+
+        command("channel", "Sets the channel in which to send leave/join messages.") { channel: TextChannel ->
+            if (guild.idLong in welcomeMessages) {
+                welcomeMessages[guild.idLong]!!.channelId = channel.idLong
+            } else {
+                welcomeMessages[guild.idLong] = WelcomeMessageData(channel.idLong)
+
+            }
+            dataManager.write("welcomemessages.json", welcomeMessages)
+            channel.sendMessage("Set the welcome channel to ${channel.asMention}.").queue()
+        }
     }
 
     listener<GuildMemberJoinEvent> {

@@ -5,6 +5,7 @@ import com.serebit.autotitan.VERSION
 import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.api.command
 import com.serebit.autotitan.api.extensions.sendEmbed
+import com.serebit.autotitan.api.group
 import com.serebit.autotitan.api.listener
 import com.serebit.autotitan.api.module
 import com.serebit.autotitan.api.parameters.LongString
@@ -121,31 +122,33 @@ internal object EventDelegate : ListenerAdapter(), CoroutineScope {
                 exitProcess(0)
             }
 
-            command("moduleList", "Sends a list of all the modules.") {
-                channel.sendEmbed {
-                    setTitle("Modules")
-                    setDescription(EventDelegate.allModules.joinToString("\n") {
-                        it.name + if (it.isOptional) " (Optional)" else ""
-                    })
-                }.queue()
-            }
+            group("module") {
+                command("list", "Sends a list of all the modules.") {
+                    channel.sendEmbed {
+                        setTitle("Modules")
+                        setDescription(allModules.joinToString("\n") {
+                            it.name + if (it.isOptional) " (Optional)" else ""
+                        })
+                    }.queue()
+                }
 
-            command("enableModule", "Enables the given optional module.") { moduleName: String ->
-                if (EventDelegate.optionalModules.none { it.name == moduleName }) return@command
-                if (moduleName !in config.enabledModules) {
-                    config.enabledModules.add(moduleName)
-                    config.serialize()
-                    channel.sendMessage("Enabled the `$moduleName` module.").queue()
-                } else channel.sendMessage("Module `$moduleName` is already enabled.").queue()
-            }
+                command("enable", "Enables the given optional module.") { moduleName: String ->
+                    if (optionalModules.none { it.name == moduleName }) return@command
+                    if (moduleName !in config.enabledModules) {
+                        config.enabledModules.add(moduleName)
+                        config.serialize()
+                        channel.sendMessage("Enabled the `$moduleName` module.").queue()
+                    } else channel.sendMessage("Module `$moduleName` is already enabled.").queue()
+                }
 
-            command("disableModule", "Disables the given optional module.") { moduleName: String ->
-                if (EventDelegate.optionalModules.none { it.name == moduleName }) return@command
-                if (moduleName in config.enabledModules) {
-                    config.enabledModules.remove(moduleName)
-                    config.serialize()
-                    channel.sendMessage("Disabled the `$moduleName` module.").queue()
-                } else channel.sendMessage("Module `$moduleName` is already disabled.").queue()
+                command("disable", "Disables the given optional module.") { moduleName: String ->
+                    if (optionalModules.none { it.name == moduleName }) return@command
+                    if (moduleName in config.enabledModules) {
+                        config.enabledModules.remove(moduleName)
+                        config.serialize()
+                        channel.sendMessage("Disabled the `$moduleName` module.").queue()
+                    } else channel.sendMessage("Module `$moduleName` is already disabled.").queue()
+                }
             }
         }.build()
     }

@@ -4,6 +4,7 @@ import com.serebit.autotitan.api.extensions.MESSAGE_EMBED_MAX_FIELDS
 import com.serebit.autotitan.api.extensions.chunkedBy
 import com.serebit.autotitan.api.extensions.limitLengthTo
 import com.serebit.autotitan.api.extensions.sendEmbed
+import com.serebit.autotitan.api.group
 import com.serebit.autotitan.api.listener
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.module
@@ -47,66 +48,68 @@ module("Autoreact", isOptional = true, defaultAccess = Access.Guild.All(Permissi
         GuildResourceMap<String, MutableList<EmoteData>>()
     }
 
-    command("addReact", "Adds an autoreact with the given emote for the given word.") { word: String, emote: Emote ->
-        if (guild.idLong !in reactMap) reactMap[guild.idLong] = mutableMapOf()
-        val value = reactMap[guild.idLong]!!.getOrPut(word, ::mutableListOf)
-        when {
-            value.size >= maxReactionsPerMessage ->
-                channel.sendMessage("There are already $maxReactionsPerMessage reactions for that word.").queue()
-            !emote.canInteract(channel) -> channel.sendMessage("I can't use that emote.").queue()
-            value.add(EmoteData.from(emote, this)) -> {
-                dataManager.write("reacts.json", reactMap)
-                channel.sendMessage("Added reaction.").queue()
+    group("react") {
+        command("add", "Adds an autoreact with the given emote for the given word.") { word: String, emote: Emote ->
+            if (guild.idLong !in reactMap) reactMap[guild.idLong] = mutableMapOf()
+            val value = reactMap[guild.idLong]!!.getOrPut(word, ::mutableListOf)
+            when {
+                value.size >= maxReactionsPerMessage ->
+                    channel.sendMessage("There are already $maxReactionsPerMessage reactions for that word.").queue()
+                !emote.canInteract(channel) -> channel.sendMessage("I can't use that emote.").queue()
+                value.add(EmoteData.from(emote, this)) -> {
+                    dataManager.write("reacts.json", reactMap)
+                    channel.sendMessage("Added reaction.").queue()
+                }
             }
         }
-    }
 
-    command("removeReact", "Removes the autoreact for the given word from the list.") { word: String, emote: Emote ->
-        if (guild.idLong !in reactMap) reactMap[guild.idLong] = mutableMapOf()
-        val guildReacts = reactMap[guild.idLong]!!
-        when {
-            word !in guildReacts -> channel.sendMessage("There are no autoreacts for that word.").queue()
-            guildReacts[word]?.none { it.emote == emote } ?: false ->
-                channel.sendMessage("That emote is not an autoreact for that word.").queue()
-            guildReacts[word]?.removeIf { it.emote == emote } ?: false -> {
-                dataManager.write("reacts.json", reactMap)
-                channel.sendMessage("Removed reaction.")
+        command("remove", "Removes the autoreact for the given word from the list.") { word: String, emote: Emote ->
+            if (guild.idLong !in reactMap) reactMap[guild.idLong] = mutableMapOf()
+            val guildReacts = reactMap[guild.idLong]!!
+            when {
+                word !in guildReacts -> channel.sendMessage("There are no autoreacts for that word.").queue()
+                guildReacts[word]?.none { it.emote == emote } ?: false ->
+                    channel.sendMessage("That emote is not an autoreact for that word.").queue()
+                guildReacts[word]?.removeIf { it.emote == emote } ?: false -> {
+                    dataManager.write("reacts.json", reactMap)
+                    channel.sendMessage("Removed reaction.")
+                }
             }
         }
-    }
 
-    command(
-        "clearReacts",
-        "Deletes all autoreacts from the server.",
-        Access.Guild.All(Permission.MESSAGE_ADD_REACTION, Permission.MANAGE_SERVER)
-    ) {
-        if (guild.idLong !in reactMap) reactMap[guild.idLong] = mutableMapOf()
-        reactMap[guild.idLong]!!.clear()
-        dataManager.write("reacts.json", reactMap)
-        channel.sendMessage("Cleared all autoreacts from this server.").queue()
-    }
+        command(
+            "clear",
+            "Deletes all autoreacts from the server.",
+            Access.Guild.All(Permission.MESSAGE_ADD_REACTION, Permission.MANAGE_SERVER)
+        ) {
+            if (guild.idLong !in reactMap) reactMap[guild.idLong] = mutableMapOf()
+            reactMap[guild.idLong]!!.clear()
+            dataManager.write("reacts.json", reactMap)
+            channel.sendMessage("Cleared all autoreacts from this server.").queue()
+        }
 
-    command("reactList", "Sends a list of autoreacts for the server to the command invoker.", Access.Guild.All()) {
-        if (guild.idLong !in reactMap) reactMap[guild.idLong] = mutableMapOf()
-        val reacts = reactMap[guild.idLong]!!
-        channel.sendMessage("Sending a reaction list in PMs.").queue()
-        if (reacts.isNotEmpty()) {
-            author.openPrivateChannel().queue({ privateChannel ->
-                reacts
-                    .map { (word, emotes) ->
-                        word.limitLengthTo(MessageEmbed.TITLE_MAX_LENGTH) to
-                                emotes.joinToString("") { it.emote.asMention(guild) }
-                    }
-                    .chunkedBy(MessageEmbed.EMBED_MAX_LENGTH_BOT, MESSAGE_EMBED_MAX_FIELDS) {
-                        it.first.length + it.second.length
-                    }
-                    .forEach { embeds ->
-                        privateChannel.sendEmbed {
-                            embeds.forEach { addField(it.first, it.second, false) }
-                        }.queue()
-                    }
-            }, { channel.sendMessage(it.message).queue() })
-        } else channel.sendMessage("This server has no autoreacts saved.").queue()
+        command("list", "Sends a list of autoreacts for the server to the command invoker.", Access.Guild.All()) {
+            if (guild.idLong !in reactMap) reactMap[guild.idLong] = mutableMapOf()
+            val reacts = reactMap[guild.idLong]!!
+            channel.sendMessage("Sending a reaction list in PMs.").queue()
+            if (reacts.isNotEmpty()) {
+                author.openPrivateChannel().queue({ privateChannel ->
+                    reacts
+                        .map { (word, emotes) ->
+                            word.limitLengthTo(MessageEmbed.TITLE_MAX_LENGTH) to
+                                    emotes.joinToString("") { it.emote.asMention(guild) }
+                        }
+                        .chunkedBy(MessageEmbed.EMBED_MAX_LENGTH_BOT, MESSAGE_EMBED_MAX_FIELDS) {
+                            it.first.length + it.second.length
+                        }
+                        .forEach { embeds ->
+                            privateChannel.sendEmbed {
+                                embeds.forEach { addField(it.first, it.second, false) }
+                            }.queue()
+                        }
+                }, { channel.sendMessage(it.message).queue() })
+            } else channel.sendMessage("This server has no autoreacts saved.").queue()
+        }
     }
 
     listener<MessageReceivedEvent> {

@@ -170,10 +170,9 @@ module("Audio", defaultAccess = Access.Guild.All()) {
         } else channel.sendMessage("The track is already playing.").queue()
     }
 
-    command(
-        "queue",
-        "Sends an embed with the list of songs in the queue."
-    ) { guild.trackManager.sendQueueEmbed(textChannel) }
+    command("queue", "Sends an embed with the list of songs in the queue.") {
+        guild.trackManager.sendQueueEmbed(textChannel)
+    }
 
     command("setVolume", "Sets the volume.") { volume: Int ->
         if (handleVoiceStatus(this)) {

@@ -1,5 +1,6 @@
 import com.serebit.autotitan.api.command
 import com.serebit.autotitan.api.extensions.sendEmbed
+import com.serebit.autotitan.api.group
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.module
 import com.serebit.autotitan.api.parameters.LongString
@@ -94,34 +95,35 @@ module("Owner", defaultAccess = Access.BotOwner()) {
         channel.sendMessage("Set prefix to `${config.prefix}`.").queue()
     }
 
-    command("blackListAdd", "Adds a user to the blacklist.") { user: User ->
-        if (user.idLong in config.blackList) {
-            channel.sendMessage("${user.name} is already in the blacklist.").queue()
-            return@command
-        }
-        config.blackList.add(user.idLong)
-        channel.sendMessage("Added ${user.name} to the blacklist.").queue()
-        config.serialize()
-    }
-
-    command("blackListRemove", "Removes a user from the blacklist.") { user: User ->
-        if (user.idLong in config.blackList) {
-            config.blackList.remove(user.idLong)
+    group("blacklist") {
+        command("add", "Adds a user to the blacklist.") { user: User ->
+            if (user.idLong in config.blackList) {
+                channel.sendMessage("${user.name} is already in the blacklist.").queue()
+                return@command
+            }
+            config.blackList.add(user.idLong)
+            channel.sendMessage("Added ${user.name} to the blacklist.").queue()
             config.serialize()
-            channel.sendMessage("Removed ${user.name} from the blacklist.").queue()
+        }
 
-        } else channel.sendMessage("${user.name} is not in the blacklist.").queue()
-    }
+        command("remove", "Removes a user from the blacklist.") { user: User ->
+            if (user.idLong in config.blackList) {
+                config.blackList.remove(user.idLong)
+                config.serialize()
+                channel.sendMessage("Removed ${user.name} from the blacklist.").queue()
+            } else channel.sendMessage("${user.name} is not in the blacklist.").queue()
+        }
 
-    command("blackList", "Sends a list of blacklisted users in an embed.") {
-        if (config.blackList.isEmpty()) {
-            channel.sendMessage("The blacklist is empty.").queue()
-        } else {
-            channel.sendEmbed {
-                addField("Blacklisted Users", config.blackList.joinToString("\n") {
-                    jda.getUserById(it).asMention
-                }, true)
-            }.queue()
+        command("list", "Sends a list of blacklisted users in an embed.") {
+            if (config.blackList.isEmpty()) {
+                channel.sendMessage("The blacklist is empty.").queue()
+            } else {
+                channel.sendEmbed {
+                    addField("Blacklisted Users", config.blackList.joinToString("\n") {
+                        jda.getUserById(it).asMention
+                    }, true)
+                }.queue()
+            }
         }
     }
 

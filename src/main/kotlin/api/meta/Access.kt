@@ -2,6 +2,7 @@ package com.serebit.autotitan.api.meta
 
 import api.extensions.isBotOwner
 import net.dv8tion.jda.core.Permission
+import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 
 sealed class Access(val description: String, val hidden: Boolean) {
@@ -56,7 +57,7 @@ sealed class Access(val description: String, val hidden: Boolean) {
             hidden: Boolean = false
         ) : Guild("Anyone with their top role above the bot's top role", hidden, permissions.toSet()) {
             override fun matches(evt: MessageReceivedEvent): Boolean =
-                super.matches(evt) && evt.member.roles[0] > evt.guild.selfMember.roles[0]
+                super.matches(evt) && evt.member.rolePosition > evt.guild.selfMember.rolePosition
         }
 
         class RankSame(
@@ -64,7 +65,7 @@ sealed class Access(val description: String, val hidden: Boolean) {
             hidden: Boolean = false
         ) : Guild("Anyone with the same top role as the bot's top role", hidden, permissions.toSet()) {
             override fun matches(evt: MessageReceivedEvent): Boolean =
-                super.matches(evt) && evt.member.roles[0] == evt.guild.selfMember.roles[0]
+                super.matches(evt) && evt.member.rolePosition == evt.guild.selfMember.rolePosition
         }
 
         class RankBelow(
@@ -72,7 +73,9 @@ sealed class Access(val description: String, val hidden: Boolean) {
             hidden: Boolean = false
         ) : Guild("Anyone with their top role below the bot's top role", hidden, permissions.toSet()) {
             override fun matches(evt: MessageReceivedEvent): Boolean =
-                super.matches(evt) && evt.member.roles[0] < evt.guild.selfMember.roles[0]
+                super.matches(evt) && evt.member.rolePosition < evt.guild.selfMember.rolePosition
         }
     }
+
+    protected val Member.rolePosition get() = roles.getOrNull(0)?.position ?: -1
 }

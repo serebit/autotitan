@@ -42,10 +42,7 @@ data class ApiPost(
 }
 
 module("Rule34", isOptional = true) {
-    command(
-        "rule34",
-        "Searches Rule34.xxx for the given tags and returns a random image."
-    ) { tagString: LongString ->
+    command("rule34", "Searches Rule34.xxx for the given tags and returns a random image.") { tagString: LongString ->
         if (guild != null && textChannel.isNSFW || privateChannel != null) {
             randomPostOrNull(ImageProvider.RULE34XXX, formatTags(tagString.value))?.let { post ->
                 channel.sendEmbed {
@@ -69,9 +66,7 @@ module("Rule34", isOptional = true) {
                     setImage(post.gelbooruImageUri)
                     setFooter("via Gelbooru", "https://gelbooru.com/favicon.png")
                 }.queue()
-            } ?: channel.sendMessage(
-                "No images found on Gelbooru for `${formatTags(tagString.value, " ")}`."
-            ).queue()
+            } ?: channel.sendMessage("No images found on Gelbooru for `${formatTags(tagString.value, " ")}`.").queue()
         } else channel.sendMessage("This command can only be used in channels marked as NSFW.").queue()
     }
 }

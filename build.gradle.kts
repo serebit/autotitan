@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "com.serebit"
-version = "1.0.0"
+version = "1.0.0-eap"
 
 description = "AutoTitan is a modular, self-hosted Discord bot built in Kotlin/JVM using the Java Discord API."
 
@@ -46,7 +46,7 @@ tasks {
     }
 
     withType<ShadowJar> {
-        archiveFileName.set("$archiveBaseName-$archiveVersion.$archiveExtension")
+        archiveFileName.set("${archiveBaseName.get()}-${archiveVersion.get()}.${archiveExtension.get()}")
         manifest.attributes["Main-Class"] = "com.serebit.autotitan.MainKt"
     }
 

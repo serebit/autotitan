@@ -30,10 +30,7 @@ module("Entertainment", isOptional = true) {
         channel.sendMessage("In response to $question: ${eightBallResponses.random()}").queue()
     }
 
-    command(
-        "rate",
-        "Rates the given thing on a scale of 0 to $ratingDenominator."
-    ) { thingToRate: LongString ->
+    command("rate", "Rates the given thing on a scale of 0 to $ratingDenominator.") { thingToRate: LongString ->
         val seed = thingToRate.value.normalize()
             .hashCode()
             .plus(config.token.hashCode())
