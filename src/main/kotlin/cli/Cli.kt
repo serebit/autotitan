@@ -14,7 +14,7 @@ import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDABuilder
 import net.dv8tion.jda.core.entities.Game
 
-class Cli : CliktCommand() {
+class Cli : CliktCommand(name = "autotitan") {
     private val trace by option("-t", "--trace", help = "Enables verbose log output that tracks program execution.")
         .flag()
 
