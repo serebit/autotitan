@@ -35,6 +35,7 @@ dependencies {
     implementation(group = "com.serebit", name = "logkat-jvm", version = "0.4.2")
     implementation(group = "com.github.oshi", name = "oshi-core", version = "3.12.2")
     implementation(group = "com.github.salomonbrys.kotson", name = "kotson", version = "2.5.0")
+    implementation(group = "com.github.ajalt", name = "clikt", version = "1.6.0")
 }
 
 tasks {
