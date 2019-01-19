@@ -1,5 +1,6 @@
 package com.serebit.autotitan.data
 
+import com.serebit.autotitan.BotConfig
 import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.api.ModuleTemplate
 import com.serebit.logkat.Logger
@@ -15,7 +16,7 @@ import javax.script.ScriptEngineManager
 import kotlin.streams.toList
 
 internal class ModuleLoader {
-    suspend fun loadModules(): List<Module> = coroutineScope {
+    suspend fun loadModules(config: BotConfig): List<Module> = coroutineScope {
         val engineFactory = ScriptEngineManager().getEngineByExtension("kts").factory!!
         loadScripts().map { scriptFile ->
             async {
@@ -24,7 +25,7 @@ internal class ModuleLoader {
                     Logger.debug("Loaded module from file ${scriptFile.name}.")
                 } as ModuleTemplate
             }
-        }.awaitAll().map { it.build() }.also {
+        }.awaitAll().map { it.build(config) }.also {
             Logger.debug("Finished loading modules.")
         }
     }

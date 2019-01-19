@@ -1,5 +1,6 @@
 package com.serebit.autotitan.api
 
+import com.serebit.autotitan.BotConfig
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.parser.TokenType
 import com.serebit.autotitan.data.DataManager
@@ -12,6 +13,8 @@ data class ModuleTemplate(
     val isOptional: Boolean = false,
     inline val defaultAccess: Access
 ) {
+    lateinit var config: BotConfig
+        private set
     val dataManager = DataManager(name)
     private val groups: MutableList<GroupTemplate> = mutableListOf()
     private val commands: MutableList<CommandTemplate> = mutableListOf()
@@ -32,7 +35,10 @@ data class ModuleTemplate(
         listeners += Listener(eventType, function)
     }
 
-    internal fun build() = Module(name, isOptional, groups, commands, listeners)
+    internal fun build(config: BotConfig): Module {
+        this.config = config
+        return Module(name, isOptional, groups, commands, listeners, config)
+    }
 }
 
 inline fun ModuleTemplate.group(

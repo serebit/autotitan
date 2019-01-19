@@ -1,15 +1,11 @@
 package com.serebit.autotitan.listeners
 
+import com.serebit.autotitan.BotConfig
 import com.serebit.autotitan.NAME
 import com.serebit.autotitan.VERSION
-import com.serebit.autotitan.api.Module
-import com.serebit.autotitan.api.command
+import com.serebit.autotitan.api.*
 import com.serebit.autotitan.api.extensions.sendEmbed
-import com.serebit.autotitan.api.group
-import com.serebit.autotitan.api.listener
-import com.serebit.autotitan.api.module
 import com.serebit.autotitan.api.parameters.LongString
-import com.serebit.autotitan.config
 import com.serebit.autotitan.data.ModuleLoader
 import com.serebit.logkat.Logger
 import kotlinx.coroutines.CoroutineScope
@@ -22,7 +18,7 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import net.dv8tion.jda.core.hooks.ListenerAdapter
 import kotlin.system.exitProcess
 
-internal object EventDelegate : ListenerAdapter(), CoroutineScope {
+internal class EventDelegate(private val config: BotConfig) : ListenerAdapter(), CoroutineScope {
     override val coroutineContext = Dispatchers.Default
     private val moduleLoader = ModuleLoader()
     private val allModules = mutableListOf<Module>()
@@ -31,7 +27,7 @@ internal object EventDelegate : ListenerAdapter(), CoroutineScope {
 
     fun loadModulesAsync() = async {
         addSystemModules()
-        allModules += moduleLoader.loadModules()
+        allModules += moduleLoader.loadModules(config)
     }
 
     override fun onGenericEvent(evt: Event) {
@@ -105,7 +101,7 @@ internal object EventDelegate : ListenerAdapter(), CoroutineScope {
                     }.queue()
                 }
             }
-        }.build()
+        }.build(config)
         allModules += module("System") {
             command("reload") {
                 val message = channel.sendMessage("Reloading modules...").complete()
@@ -150,6 +146,6 @@ internal object EventDelegate : ListenerAdapter(), CoroutineScope {
                     } else channel.sendMessage("Module `$moduleName` is already disabled.").queue()
                 }
             }
-        }.build()
+        }.build(config)
     }
 }

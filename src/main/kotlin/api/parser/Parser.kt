@@ -3,12 +3,7 @@ package com.serebit.autotitan.api.parser
 import com.serebit.autotitan.api.parameters.Emote
 import com.serebit.autotitan.api.parameters.LongString
 import net.dv8tion.jda.core.JDA
-import net.dv8tion.jda.core.entities.Guild
-import net.dv8tion.jda.core.entities.IMentionable
-import net.dv8tion.jda.core.entities.Member
-import net.dv8tion.jda.core.entities.Role
-import net.dv8tion.jda.core.entities.TextChannel
-import net.dv8tion.jda.core.entities.User
+import net.dv8tion.jda.core.entities.*
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 
 internal object Parser {

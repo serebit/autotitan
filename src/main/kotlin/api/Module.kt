@@ -1,13 +1,13 @@
 package com.serebit.autotitan.api
 
-import api.extensions.canInvokeCommands
+import com.serebit.autotitan.BotConfig
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.parser.Parser
-import com.serebit.autotitan.config
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import net.dv8tion.jda.core.entities.MessageEmbed
+import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.Event
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 
@@ -16,7 +16,8 @@ internal class Module(
     val isOptional: Boolean,
     groupTemplates: List<GroupTemplate>,
     commandTemplates: List<CommandTemplate>,
-    private val listeners: List<Listener>
+    private val listeners: List<Listener>,
+    private val config: BotConfig
 ) : CoroutineScope {
     override val coroutineContext = Dispatchers.Default
     val commandListField
@@ -64,6 +65,8 @@ internal class Module(
 
     private val MessageReceivedEvent.isCommandInvocation
         get() = message.contentRaw.startsWith(config.prefix) && author.canInvokeCommands
+
+    private val User.canInvokeCommands get() = !isBot && idLong !in config.blackList
 }
 
 fun module(

@@ -1,7 +1,6 @@
 import com.serebit.autotitan.api.command
 import com.serebit.autotitan.api.module
 import com.serebit.autotitan.api.parameters.LongString
-import com.serebit.autotitan.config
 import kotlin.random.Random
 
 fun String.normalize(): String = toLowerCase().filter { it.isLetterOrDigit() }

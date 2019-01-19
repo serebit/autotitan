@@ -1,4 +1,3 @@
-
 import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.Gson
 import com.serebit.autotitan.api.command

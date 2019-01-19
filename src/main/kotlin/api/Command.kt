@@ -32,7 +32,7 @@ internal class Command(
     val isHidden = access.hidden
     val summary = buildString {
         append("`")
-        parent?.let { append("${it.name} ")}
+        parent?.let { append("${it.name} ") }
         append("$name ${tokenTypes.joinToString(" ") { "<${it.name}>" }}")
         append("`")
     }

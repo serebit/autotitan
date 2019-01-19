@@ -4,7 +4,6 @@ import com.serebit.autotitan.api.group
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.module
 import com.serebit.autotitan.api.parameters.LongString
-import com.serebit.autotitan.config
 import net.dv8tion.jda.core.entities.Game
 import net.dv8tion.jda.core.entities.User
 import oshi.SystemInfo
