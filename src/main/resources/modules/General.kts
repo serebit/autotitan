@@ -1,8 +1,9 @@
-import api.extensions.isBotOwner
+
+import com.serebit.autotitan.api.Access
 import com.serebit.autotitan.api.command
-import com.serebit.autotitan.api.extensions.sendEmbed
-import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.module
+import com.serebit.autotitan.extensions.isBotOwner
+import com.serebit.autotitan.extensions.sendEmbed
 import net.dv8tion.jda.core.OnlineStatus
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Member

@@ -1,9 +1,9 @@
 import com.serebit.autotitan.api.command
-import com.serebit.autotitan.api.extensions.sendEmbed
+import com.serebit.autotitan.extensions.sendEmbed
 import com.serebit.autotitan.api.group
-import com.serebit.autotitan.api.meta.Access
+import com.serebit.autotitan.api.Access
 import com.serebit.autotitan.api.module
-import com.serebit.autotitan.api.parameters.LongString
+import com.serebit.autotitan.api.LongString
 import net.dv8tion.jda.core.entities.Game
 import net.dv8tion.jda.core.entities.User
 import oshi.SystemInfo

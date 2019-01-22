@@ -1,8 +1,7 @@
-package com.serebit.autotitan.api
+package com.serebit.autotitan.internal
 
 import com.serebit.autotitan.BotConfig
-import com.serebit.autotitan.api.meta.Access
-import com.serebit.autotitan.api.parser.Parser
+import com.serebit.autotitan.api.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -10,6 +9,12 @@ import net.dv8tion.jda.core.entities.MessageEmbed
 import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.Event
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
+import kotlin.reflect.KClass
+
+internal interface HelpProvider {
+    val helpField: MessageEmbed.Field
+    val helpSignature: Regex
+}
 
 internal class Module(
     val name: String,
@@ -69,9 +74,61 @@ internal class Module(
     private val User.canInvokeCommands get() = !isBot && idLong !in config.blackList
 }
 
-fun module(
-    name: String,
-    isOptional: Boolean = false,
-    defaultAccess: Access = Access.All(),
-    init: ModuleTemplate.() -> Unit
-) = ModuleTemplate(name, isOptional, defaultAccess).apply(init)
+internal class Group(
+    val name: String, description: String,
+    commandTemplates: List<CommandTemplate>
+) : HelpProvider {
+    val commands = commandTemplates.map { it.build(this) }
+    override val helpSignature = "(\\Q$name\\E)".toRegex()
+    override val helpField = MessageEmbed.Field(
+        "`name`",
+        "$description\n${commands.joinToString { it.summary }}",
+        false
+    )
+}
+
+internal class Command(
+    val name: String, description: String,
+    val access: Access,
+    parent: Group?,
+    val tokenTypes: List<TokenType>,
+    private val function: suspend (MessageReceivedEvent, List<Any>) -> Unit
+) : HelpProvider, CoroutineScope {
+    override val coroutineContext = Dispatchers.Default
+    val isHidden = access.hidden
+    val summary = buildString {
+        append("`")
+        parent?.let { append("${it.name} ") }
+        append("$name ${tokenTypes.joinToString(" ") { "<${it.name}>" }}")
+        append("`")
+    }
+
+    override val helpField = MessageEmbed.Field(summary, "$description\n${access.description}", false)
+    override val helpSignature = buildString {
+        append("^")
+        parent?.let { append("${it.helpSignature} ") }
+        append("(\\Q$name\\E)".toRegex())
+        append("$")
+    }.toRegex()
+
+    val invocationSignature = buildString {
+        append("^")
+        parent?.let { append("${it.helpSignature} ") }
+        append("(\\Q$name\\E)".toRegex())
+        tokenTypes.signature().let { if (it.isNotBlank()) append(" $it") }
+        append("$")
+    }.toRegex(RegexOption.DOT_MATCHES_ALL)
+
+    operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>) = launch {
+        function(evt, parameters)
+    }
+}
+
+internal data class Listener(
+    val eventType: KClass<out Event>,
+    private val function: suspend (Event) -> Unit
+) : CoroutineScope {
+    override val coroutineContext = Dispatchers.Default
+
+    operator fun invoke(evt: Event) = launch { function(evt) }
+}

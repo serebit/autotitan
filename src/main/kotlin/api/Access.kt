@@ -1,6 +1,6 @@
-package com.serebit.autotitan.api.meta
+package com.serebit.autotitan.api
 
-import api.extensions.isBotOwner
+import com.serebit.autotitan.extensions.isBotOwner
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent

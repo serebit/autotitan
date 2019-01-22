@@ -1,10 +1,10 @@
-package com.serebit.autotitan.data
+package com.serebit.autotitan.api
 
 import com.github.salomonbrys.kotson.jsonDeserializer
 import com.github.salomonbrys.kotson.registerTypeAdapter
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
-import com.serebit.autotitan.api.parameters.Emote
+import com.serebit.autotitan.internal.classpathResource
 import java.lang.reflect.Type
 
 /*
@@ -44,3 +44,7 @@ class DataManager internal constructor(moduleName: String) {
         }.create()
     }
 }
+
+class GuildResourceMap<K, V> : MutableMap<Long, MutableMap<K, V>> by mutableMapOf()
+
+class GuildResourceList<E> : MutableMap<Long, MutableList<E>> by mutableMapOf()

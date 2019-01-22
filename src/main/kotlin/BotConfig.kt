@@ -1,6 +1,6 @@
 package com.serebit.autotitan
 
-import com.serebit.autotitan.data.classpathResource
+import com.serebit.autotitan.internal.classpathResource
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 

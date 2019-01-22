@@ -4,7 +4,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     kotlin("jvm") version "1.3.20-eap-100"
     id("kotlinx-serialization") version "1.3.20-eap-100"
-    id("com.github.johnrengelman.shadow") version "4.0.3"
+    id("com.github.johnrengelman.shadow") version "4.0.4"
     id("com.github.ben-manes.versions") version "0.20.0"
 }
 
@@ -33,7 +33,7 @@ dependencies {
     implementation(group = "net.dv8tion", name = "JDA", version = "3.8.1_439")
     implementation(group = "com.sedmelluq", name = "lavaplayer", version = "1.3.10")
     implementation(group = "com.serebit", name = "logkat-jvm", version = "0.4.2")
-    implementation(group = "com.github.oshi", name = "oshi-core", version = "3.12.2")
+    implementation(group = "com.github.oshi", name = "oshi-core", version = "3.13.0")
     implementation(group = "com.github.salomonbrys.kotson", name = "kotson", version = "2.5.0")
     implementation(group = "com.github.ajalt", name = "clikt", version = "1.6.0")
 }

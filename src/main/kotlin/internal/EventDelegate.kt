@@ -1,12 +1,10 @@
-package com.serebit.autotitan.listeners
+package com.serebit.autotitan.internal
 
 import com.serebit.autotitan.BotConfig
 import com.serebit.autotitan.NAME
 import com.serebit.autotitan.VERSION
 import com.serebit.autotitan.api.*
-import com.serebit.autotitan.api.extensions.sendEmbed
-import com.serebit.autotitan.api.parameters.LongString
-import com.serebit.autotitan.data.ModuleLoader
+import com.serebit.autotitan.extensions.sendEmbed
 import com.serebit.logkat.Logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -70,20 +68,13 @@ internal class EventDelegate(private val config: BotConfig) : ListenerAdapter(),
                         "Help",
                         """
                         My prefix is `${config.prefix}`.
-                        For a list of commands, enter `${config.prefix}commands`.
-                        For information on a certain command, enter `${config.prefix}help <command name>`.
-                        For a list containing every command, enter `${config.prefix}allcommands`.
+                        For a list of commands and groups, enter `${config.prefix}commands`.
+                        For information on a certain command or group, enter `${config.prefix}help <command name>`.
+                        For a list containing every command and group, enter `${config.prefix}allcommands`.
                         """.trimIndent(),
                         false
                     )
                 }.queue()
-            }
-
-            listener<MessageReceivedEvent> {
-                val guildMention = guild?.selfMember?.asMention
-                if (message.contentRaw == jda.selfUser.asMention || message.contentRaw == guildMention) {
-                    channel.sendMessage("My prefix is `${config.prefix}`.").queue()
-                }
             }
 
             command("help", "Gets information about the requested command or group.") { name: LongString ->
@@ -99,6 +90,13 @@ internal class EventDelegate(private val config: BotConfig) : ListenerAdapter(),
                             addField(field)
                         }
                     }.queue()
+                }
+            }
+
+            listener<MessageReceivedEvent> {
+                val guildMention = guild?.selfMember?.asMention
+                if (message.contentRaw == jda.selfUser.asMention || message.contentRaw == guildMention) {
+                    channel.sendMessage("My prefix is `${config.prefix}`.").queue()
                 }
             }
         }.build(config)

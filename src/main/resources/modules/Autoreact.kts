@@ -1,14 +1,8 @@
-import com.serebit.autotitan.api.command
-import com.serebit.autotitan.api.extensions.MESSAGE_EMBED_MAX_FIELDS
-import com.serebit.autotitan.api.extensions.chunkedBy
-import com.serebit.autotitan.api.extensions.limitLengthTo
-import com.serebit.autotitan.api.extensions.sendEmbed
-import com.serebit.autotitan.api.group
-import com.serebit.autotitan.api.listener
-import com.serebit.autotitan.api.meta.Access
-import com.serebit.autotitan.api.module
-import com.serebit.autotitan.api.parameters.Emote
-import com.serebit.autotitan.data.GuildResourceMap
+import com.serebit.autotitan.api.*
+import com.serebit.autotitan.extensions.MESSAGE_EMBED_MAX_FIELDS
+import com.serebit.autotitan.extensions.chunkedBy
+import com.serebit.autotitan.extensions.limitLengthTo
+import com.serebit.autotitan.extensions.sendEmbed
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Message
 import net.dv8tion.jda.core.entities.MessageEmbed
@@ -18,8 +12,8 @@ import java.time.Clock
 import java.time.OffsetDateTime
 
 fun Message.addReaction(emote: Emote): RestAction<Void>? = when (emote) {
-    is Emote.Jda -> jda.getEmoteById(emote.value)?.let { addReaction(it) }
-    is Emote.Unicode -> addReaction(emote.value)
+    is Emote.Jda -> jda.getEmoteById(emote.id)?.let { addReaction(it) }
+    is Emote.Unicode -> addReaction(emote.unicode)
 }
 
 data class EmoteData(

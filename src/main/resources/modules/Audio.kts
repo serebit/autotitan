@@ -1,20 +1,232 @@
-import com.serebit.autotitan.api.command
-import com.serebit.autotitan.api.listener
-import com.serebit.autotitan.api.meta.Access
-import com.serebit.autotitan.api.module
-import com.serebit.autotitan.api.parameters.LongString
-import com.serebit.autotitan.audio.AudioHandler
-import com.serebit.autotitan.audio.GuildTrackManager
-import com.serebit.autotitan.audio.VoiceStatus
+import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler
+import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
+import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager
+import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager
+import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter
+import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
+import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack
+import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
+import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack
+import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
+import com.sedmelluq.discord.lavaplayer.track.AudioTrackState
+import com.serebit.autotitan.api.*
+import com.serebit.autotitan.extensions.sendEmbed
+import com.serebit.logkat.Logger
+import net.dv8tion.jda.core.audio.AudioSendHandler
 import net.dv8tion.jda.core.audio.hooks.ConnectionListener
 import net.dv8tion.jda.core.audio.hooks.ConnectionStatus
-import net.dv8tion.jda.core.entities.Guild
-import net.dv8tion.jda.core.entities.User
-import net.dv8tion.jda.core.entities.VoiceChannel
+import net.dv8tion.jda.core.entities.*
 import net.dv8tion.jda.core.events.guild.voice.GuildVoiceLeaveEvent
 import net.dv8tion.jda.core.events.guild.voice.GuildVoiceMoveEvent
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import net.dv8tion.jda.core.managers.AudioManager
+import java.time.Duration
+import java.util.concurrent.Future
+
+enum class VoiceStatus(private val errorMessage: String?) {
+    NEITHER_CONNECTED("We both need to be in a voice channel for me to do that."),
+    SELF_DISCONNECTED_USER_CONNECTED("I need to be in your voice channel to do that."),
+    SELF_CONNECTED_USER_DISCONNECTED("You need to be in a voice channel for me to do that."),
+    BOTH_CONNECTED_DIFFERENT_CHANNEL("We need to be in the same voice channel for you to do that."),
+    BOTH_CONNECTED_SAME_CHANNEL(null);
+
+    fun sendErrorMessage(channel: MessageChannel) {
+        errorMessage?.let {
+            channel.sendMessage(it).queue()
+        }
+    }
+
+    companion object {
+        fun from(evt: MessageReceivedEvent): VoiceStatus {
+            val selfIsConnected = evt.guild.audioManager.isConnected
+            val userIsConnected = evt.member.voiceState.inVoiceChannel()
+            val differentChannel = evt.member.voiceState.channel != evt.guild.audioManager.connectedChannel
+            return when {
+                !userIsConnected && selfIsConnected -> VoiceStatus.SELF_CONNECTED_USER_DISCONNECTED
+                !selfIsConnected && userIsConnected -> VoiceStatus.SELF_DISCONNECTED_USER_CONNECTED
+                !selfIsConnected && !userIsConnected -> VoiceStatus.NEITHER_CONNECTED
+                differentChannel -> VoiceStatus.BOTH_CONNECTED_DIFFERENT_CHANNEL
+                else -> VoiceStatus.BOTH_CONNECTED_SAME_CHANNEL
+            }
+        }
+    }
+}
+
+object AudioHandler : AudioPlayerManager by DefaultAudioPlayerManager() {
+    init {
+        AudioSourceManagers.registerRemoteSources(this)
+        AudioSourceManagers.registerLocalSource(this)
+    }
+
+    inline fun loadTrack(
+        query: String,
+        channel: TextChannel,
+        crossinline onLoad: (AudioTrack) -> Unit
+    ): Future<Void> = loadItem(query, object : AudioLoadResultHandler {
+        override fun trackLoaded(track: AudioTrack) = onLoad(track)
+
+        override fun playlistLoaded(playlist: AudioPlaylist) {
+            if (playlist.isSearchResult && playlist.tracks.isNotEmpty()) {
+                onLoad(playlist.selectedTrack ?: playlist.tracks.first())
+            } else {
+                channel.sendMessage("Can't load a track from a playlist URI.").queue()
+            }
+        }
+
+        override fun noMatches() {
+            channel.sendMessage("Couldn't find anything. Maybe you misspelled the query?").queue()
+        }
+
+        override fun loadFailed(exception: FriendlyException) {
+            Logger.error(exception.message ?: "Failed to load track. No error message available.")
+            channel.sendMessage("Failed to load the track. The exception says `${exception.message}`.").queue()
+        }
+    })
+
+    inline fun loadPlaylist(
+        query: String,
+        channel: TextChannel,
+        crossinline onLoad: (AudioPlaylist) -> Unit
+    ): Future<Void> = loadItem(query, object : AudioLoadResultHandler {
+        override fun playlistLoaded(playlist: AudioPlaylist) {
+            if (playlist.isSearchResult) {
+                channel.sendMessage("Can't load search results as a playlist!").queue()
+            } else {
+                onLoad(playlist)
+            }
+        }
+
+        override fun trackLoaded(track: AudioTrack) {
+            channel.sendMessage("Can't load a playlist from a track URI.").queue()
+        }
+
+        override fun noMatches() {
+            channel.sendMessage("Couldn't find anything. Maybe you misspelled the query?").queue()
+        }
+
+        override fun loadFailed(exception: FriendlyException) {
+            Logger.warn(exception.message ?: "Failed to load playlist. No error message available.")
+            channel.sendMessage("Failed to load the playlist. The exception says `${exception.message}`.").queue()
+        }
+    })
+}
+
+class GuildTrackManager(audioManager: AudioManager) : AudioEventAdapter() {
+    private val player: AudioPlayer = AudioHandler.createPlayer().also {
+        it.addListener(this)
+    }
+    private val queue = mutableListOf<AudioTrack>()
+    val sendHandler = AudioPlayerSendHandler().also {
+        audioManager.sendingHandler = it
+    }
+    var volume: Int
+        get() = player.volume
+        set(value) {
+            player.volume = value.coerceIn(0..maxVolume)
+        }
+    val isPlaying: Boolean get() = player.playingTrack != null
+    val isNotPlaying get() = !isPlaying
+    val isPaused: Boolean get() = isPlaying && player.isPaused
+    val isNotPaused: Boolean get() = !isPaused
+
+    fun reset() {
+        stop()
+        resume()
+        player.volume = maxVolume
+    }
+
+    fun addToQueue(track: AudioTrack) {
+        player.playingTrack?.let {
+            queue.add(track)
+        } ?: player.playTrack(track)
+    }
+
+    fun skipTrack() {
+        player.playingTrack?.let {
+            player.stopTrack()
+            if (queue.isNotEmpty()) player.playTrack(queue.removeAt(0))
+        }
+    }
+
+    fun pause() {
+        player.isPaused = true
+    }
+
+    fun resume() {
+        player.isPaused = false
+    }
+
+    fun stop() {
+        player.stopTrack()
+        queue.clear()
+    }
+
+    fun sendQueueEmbed(channel: MessageChannel) {
+        player.playingTrack?.let { track ->
+            channel.sendEmbed {
+                when (track) {
+                    is YoutubeAudioTrack -> setThumbnail("https://img.youtube.com/vi/${track.info.identifier}/0.jpg")
+                }
+                setTitle("Now Playing")
+                setDescription(track.infoString)
+                val upNextList = queue
+                    .take(queueListLength)
+                    .joinToString("\n") { it.infoString }
+
+                if (upNextList.isNotEmpty()) addField(
+                    "Up Next",
+                    buildString {
+                        append(upNextList)
+                        if (queue.size > queueListLength) {
+                            append("\n plus ${queue.size - queueListLength} more...")
+                        }
+                    },
+                    false
+                )
+            }.queue()
+        } ?: channel.sendMessage("No songs are queued.").queue()
+    }
+
+    override fun onTrackEnd(player: AudioPlayer, track: AudioTrack, endReason: AudioTrackEndReason) {
+        if (queue.isNotEmpty() && endReason == AudioTrackEndReason.FINISHED) {
+            player.playTrack(queue.removeAt(0))
+        }
+    }
+
+    inner class AudioPlayerSendHandler : AudioSendHandler {
+        // behavior is the same whether we check for frames or not, so always return true
+        override fun canProvide(): Boolean = true
+
+        override fun provide20MsAudio(): ByteArray? = player.provide()?.data
+
+        override fun isOpus() = true
+    }
+
+    companion object {
+        private const val queueListLength = 8
+        private const val maxVolume = 100
+
+        private fun Duration.toBasicTimestamp(): String {
+            val remainingMinutes = minusHours(toHours()).toMinutes()
+            val remainingSeconds = minusMinutes(toMinutes()).seconds
+            return if (toHours() == 0L) {
+                "%d:%02d".format(remainingMinutes, remainingSeconds)
+            } else "%d:%02d:%02d".format(toHours(), remainingMinutes, remainingSeconds)
+        }
+
+        private val AudioTrack.infoString: String
+            get() {
+                val durationString = Duration.ofMillis(duration).toBasicTimestamp()
+                return if (state == AudioTrackState.PLAYING) {
+                    val positionString = Duration.ofMillis(position).toBasicTimestamp()
+                    "[${info.title}](${info.uri}) [$positionString/$durationString]"
+                } else {
+                    "[${info.title}](${info.uri}) [$durationString]"
+                }
+            }
+    }
+}
 
 val trackManagers = mutableMapOf<Long, GuildTrackManager>()
 val uriRegex = "^https?://[^\\s/\$.?#].[^\\s]*\$".toRegex()

@@ -1,7 +1,6 @@
-package com.serebit.autotitan.data
+package com.serebit.autotitan.internal
 
 import com.serebit.autotitan.BotConfig
-import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.api.ModuleTemplate
 import com.serebit.logkat.Logger
 import kotlinx.coroutines.async

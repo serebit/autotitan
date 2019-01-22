@@ -1,14 +1,15 @@
-import com.serebit.autotitan.api.command
-import com.serebit.autotitan.api.extensions.*
-import com.serebit.autotitan.api.group
-import com.serebit.autotitan.api.meta.Access
-import com.serebit.autotitan.api.module
-import com.serebit.autotitan.api.parameters.LongString
-import com.serebit.autotitan.data.GuildResourceList
+import com.serebit.autotitan.api.*
+import com.serebit.autotitan.extensions.MESSAGE_EMBED_MAX_FIELDS
+import com.serebit.autotitan.extensions.chunkedBy
+import com.serebit.autotitan.extensions.limitLengthTo
+import com.serebit.autotitan.extensions.sendEmbed
 import net.dv8tion.jda.core.Permission
+import net.dv8tion.jda.core.entities.Message
 import net.dv8tion.jda.core.entities.MessageEmbed
 
 fun String.trimWhitespace(): String = replace("(\\s){2,}".toRegex(), "$1$1")
+
+val Message.mentionsUsers get() = mentionedUsers.isNotEmpty() || mentionedMembers.isNotEmpty() || mentionsEveryone()
 
 module("Quotes", isOptional = true, defaultAccess = Access.Guild.All()) {
     val quoteMap = dataManager.readOrDefault("quotes.json") { GuildResourceList<String?>() }
