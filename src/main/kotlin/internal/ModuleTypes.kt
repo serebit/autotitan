@@ -1,7 +1,9 @@
 package com.serebit.autotitan.internal
 
 import com.serebit.autotitan.BotConfig
-import com.serebit.autotitan.api.*
+import com.serebit.autotitan.api.Access
+import com.serebit.autotitan.api.CommandTemplate
+import com.serebit.autotitan.api.GroupTemplate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

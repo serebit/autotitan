@@ -1,9 +1,4 @@
-import com.serebit.autotitan.api.command
-import com.serebit.autotitan.api.group
-import com.serebit.autotitan.api.listener
-import com.serebit.autotitan.api.Access
-import com.serebit.autotitan.api.module
-import com.serebit.autotitan.api.LongString
+import com.serebit.autotitan.api.*
 import net.dv8tion.jda.core.JDA
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.*

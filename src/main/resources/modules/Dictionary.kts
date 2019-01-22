@@ -1,10 +1,10 @@
 import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.Gson
+import com.serebit.autotitan.api.LongString
 import com.serebit.autotitan.api.command
+import com.serebit.autotitan.api.module
 import com.serebit.autotitan.extensions.limitLengthTo
 import com.serebit.autotitan.extensions.sendEmbed
-import com.serebit.autotitan.api.module
-import com.serebit.autotitan.api.LongString
 import io.ktor.client.HttpClient
 import io.ktor.client.call.call
 import io.ktor.client.response.readText
