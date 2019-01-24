@@ -10,8 +10,6 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackState
-import com.serebit.autotitan.api.*
-import com.serebit.autotitan.extensions.sendEmbed
 import com.serebit.logkat.Logger
 import net.dv8tion.jda.core.audio.AudioSendHandler
 import net.dv8tion.jda.core.audio.hooks.ConnectionListener

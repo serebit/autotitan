@@ -44,7 +44,7 @@ internal class EventDelegate(private val config: BotConfig) : ListenerAdapter(),
     )
 
     private fun addSystemModules() {
-        allModules += module("Help") {
+        module("Help") {
             command("commands", "Sends an embed with a list of commands that can be used by the invoker.") {
                 channel.sendEmbed {
                     loadedModules.asSequence()
@@ -99,8 +99,8 @@ internal class EventDelegate(private val config: BotConfig) : ListenerAdapter(),
                     channel.sendMessage("My prefix is `${config.prefix}`.").queue()
                 }
             }
-        }.build(config)
-        allModules += module("System") {
+        }
+        module("System") {
             command("reload") {
                 val message = channel.sendMessage("Reloading modules...").complete()
                 allModules.clear()
@@ -144,6 +144,6 @@ internal class EventDelegate(private val config: BotConfig) : ListenerAdapter(),
                     } else channel.sendMessage("Module `$moduleName` is already disabled.").queue()
                 }
             }
-        }.build(config)
+        }
     }
 }

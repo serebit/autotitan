@@ -1,14 +1,15 @@
 package com.serebit.autotitan.api
 
+import com.serebit.autotitan.internal.ScriptContext
 import net.dv8tion.jda.core.events.Event
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 
-fun module(
+inline fun module(
     name: String,
     isOptional: Boolean = false,
     defaultAccess: Access = Access.All(),
     init: ModuleTemplate.() -> Unit
-) = ModuleTemplate(name, isOptional, defaultAccess).apply(init)
+) = ScriptContext.pushModule(ModuleTemplate(name, isOptional, defaultAccess).apply(init))
 
 inline fun ModuleTemplate.group(
     name: String,

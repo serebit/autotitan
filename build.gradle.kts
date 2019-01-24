@@ -2,8 +2,8 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.3.20-eap-100"
-    id("kotlinx-serialization") version "1.3.20-eap-100"
+    kotlin("jvm") version "1.3.20"
+    id("kotlinx-serialization") version "1.3.20"
     id("com.github.johnrengelman.shadow") version "4.0.4"
     id("com.github.ben-manes.versions") version "0.20.0"
 }
@@ -23,10 +23,8 @@ dependencies {
     fun kotlinx(name: String, version: String) = "org.jetbrains.kotlinx:kotlinx-$name:$version"
 
     implementation(kotlin("stdlib-jdk8"))
-    implementation(kotlin("reflect"))
-    implementation(kotlin("script-util"))
-    implementation(kotlin("compiler-embeddable"))
-    implementation(kotlinx("serialization-runtime", version = "0.10.0-eap-1"))
+    implementation(kotlin("scripting-jvm-host"))
+    implementation(kotlinx("serialization-runtime", version = "0.10.0"))
     implementation(kotlinx("coroutines-core", version = "1.1.0"))
     implementation(group = "io.ktor", name = "ktor-client-okhttp", version = "1.1.1")
     implementation(group = "org.slf4j", name = "slf4j-simple", version = "1.8.0-beta2")

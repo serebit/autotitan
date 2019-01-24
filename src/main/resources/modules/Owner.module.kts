@@ -1,5 +1,3 @@
-import com.serebit.autotitan.api.*
-import com.serebit.autotitan.extensions.sendEmbed
 import net.dv8tion.jda.core.entities.Game
 import net.dv8tion.jda.core.entities.User
 import oshi.SystemInfo
