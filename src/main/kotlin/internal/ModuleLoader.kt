@@ -11,17 +11,7 @@ import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import kotlin.script.experimental.annotations.KotlinScript
-import kotlin.script.experimental.api.ScriptCompilationConfiguration
-import kotlin.script.experimental.api.defaultImports
-import kotlin.script.experimental.host.toScriptSource
-import kotlin.script.experimental.jvm.dependenciesFromCurrentContext
-import kotlin.script.experimental.jvm.jvm
-import kotlin.script.experimental.jvmhost.BasicJvmScriptingHost
-import kotlin.script.experimental.jvmhost.createJvmCompilationConfigurationFromTemplate
 import kotlin.streams.toList
-
-private const val SCRIPT_EXTENSION = ".module.kts"
 
 internal class ModuleLoader {
     private val compiler = ScriptCompiler()
@@ -53,11 +43,11 @@ internal class ModuleLoader {
             path.toString().let { it.removePrefix(it.substringBefore("modules")) }
         }.toList()
 
-        return validScripts.filter { it.endsWith(SCRIPT_EXTENSION) }.mapNotNull { internalResource(it) }
+        return validScripts.filter { it.endsWith(ScriptCompiler.SCRIPT_EXTENSION) }.mapNotNull { internalResource(it) }
     }
 
     private fun loadExternalScripts(): List<File> = classpathResource("modules").listFiles()
-        ?.filter { it.extension == SCRIPT_EXTENSION } ?: emptyList()
+        ?.filter { it.extension == ScriptCompiler.SCRIPT_EXTENSION } ?: emptyList()
 }
 
 @PublishedApi
@@ -70,31 +60,4 @@ internal object ScriptContext {
     }
 
     internal fun popModules() = moduleTemplates.toList().also { moduleTemplates.clear() }
-}
-
-internal class ScriptCompiler {
-    private val host = BasicJvmScriptingHost()
-    private val config = createJvmCompilationConfigurationFromTemplate<SimpleScript>()
-
-    fun eval(file: File) {
-        host.eval(file.readText().toScriptSource(), config, null)
-            .reports.forEach { println(it.message) }
-    }
-
-    @KotlinScript(
-        displayName = "Autotitan Module",
-        fileExtension = SCRIPT_EXTENSION,
-        compilationConfiguration = CompilationConfiguration::class
-    )
-    abstract class SimpleScript
-
-    object CompilationConfiguration : ScriptCompilationConfiguration({
-        defaultImports(
-            "com.serebit.autotitan.api.*", "com.serebit.autotitan.extensions.*",
-            "net.dv8tion.jda.core.*"
-        )
-        jvm {
-            dependenciesFromCurrentContext(wholeClasspath = true)
-        }
-    })
 }
