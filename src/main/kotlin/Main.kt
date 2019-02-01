@@ -43,7 +43,10 @@ class Cli : CliktCommand(name = "autotitan") {
         loadModules.await()
     }
 
-    private fun generateConfig(token: String?, prefix: String?) = BotConfig.generate() ?: Scanner(System.`in`).use {
+    private fun generateConfig(token: String?, prefix: String?) = BotConfig.generate()?.let { config ->
+        prefix?.let { config.prefix = it }
+        token?.let { config.copy(token = it) } ?: config
+    } ?: Scanner(System.`in`).use {
         BotConfig(token ?: prompt(it, "Enter token:"), prefix ?: prompt(it, "Enter command prefix:"))
     }
 

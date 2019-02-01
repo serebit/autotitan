@@ -25,7 +25,7 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation(kotlin("scripting-jvm-host"))
     implementation(kotlinx("serialization-runtime", version = "0.10.0"))
-    implementation(kotlinx("coroutines-core", version = "1.1.0"))
+    implementation(kotlinx("coroutines-core", version = "1.1.1"))
     implementation(group = "io.ktor", name = "ktor-client-okhttp", version = "1.1.1")
     implementation(group = "org.slf4j", name = "slf4j-simple", version = "1.8.0-beta2")
     implementation(group = "net.dv8tion", name = "JDA", version = "3.8.1_439")

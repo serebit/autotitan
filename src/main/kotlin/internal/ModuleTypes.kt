@@ -80,8 +80,8 @@ internal class Group(
     val name: String, description: String,
     commandTemplates: List<CommandTemplate>
 ) : HelpProvider {
-    val commands = commandTemplates.map { it.build(this) }
     override val helpSignature = "(\\Q$name\\E)".toRegex()
+    val commands = commandTemplates.map { it.build(this) }
     override val helpField = MessageEmbed.Field(
         "`name`",
         "$description\n${commands.joinToString { it.summary }}",
