@@ -1,10 +1,10 @@
 package com.serebit.autotitan.listeners
 
 import com.google.common.reflect.ClassPath
+import com.serebit.autotitan.Logger
 import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.config
 import com.serebit.extensions.jda.sendEmbed
-import com.serebit.logkat.Logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

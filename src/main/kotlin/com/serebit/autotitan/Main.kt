@@ -10,6 +10,7 @@ import net.dv8tion.jda.core.entities.Game
 const val NAME = "AutoTitan"
 const val VERSION = "0.5.3"
 val config: Configuration = Configuration.generate()
+val Logger = Logger()
 
 fun main(args: Array<String>) {
     Logger.level = when {

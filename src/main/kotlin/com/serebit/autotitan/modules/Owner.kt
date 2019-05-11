@@ -1,5 +1,6 @@
 package com.serebit.autotitan.modules
 
+import com.serebit.autotitan.Logger
 import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.api.annotations.Command
 import com.serebit.autotitan.api.meta.Access
@@ -10,7 +11,6 @@ import com.serebit.extensions.asMetricUnit
 import com.serebit.extensions.asPercentageOf
 import com.serebit.extensions.jda.sendEmbed
 import com.serebit.extensions.toVerboseTimestamp
-import com.serebit.logkat.Logger
 import net.dv8tion.jda.core.entities.Game
 import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
