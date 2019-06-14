@@ -2,9 +2,9 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.3.20"
+    kotlin("jvm") version "1.3.31"
     id("kotlinx-serialization") version "1.3.20"
-    id("com.github.johnrengelman.shadow") version "4.0.4"
+    id("com.github.johnrengelman.shadow") version "5.0.0"
     id("com.github.ben-manes.versions") version "0.20.0"
 }
 
