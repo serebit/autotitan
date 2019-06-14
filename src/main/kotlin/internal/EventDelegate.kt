@@ -5,7 +5,6 @@ import com.serebit.autotitan.NAME
 import com.serebit.autotitan.VERSION
 import com.serebit.autotitan.api.*
 import com.serebit.autotitan.extensions.sendEmbed
-import com.serebit.logkat.Logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -109,7 +108,7 @@ internal class EventDelegate(private val config: BotConfig) : ListenerAdapter(),
             }
 
             command("shutdown", "Shuts down the bot with an exit code of 0.") {
-                Logger.info("Shutting down...")
+                logger.info("Shutting down...")
                 channel.sendMessage("Shutting down.").queue()
                 jda.shutdown()
                 config.serialize()

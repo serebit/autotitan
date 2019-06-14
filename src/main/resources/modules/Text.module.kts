@@ -1,3 +1,6 @@
+import com.serebit.autotitan.api.LongString
+import com.serebit.autotitan.api.command
+import com.serebit.autotitan.api.module
 import kotlin.random.Random
 
 module("Text", isOptional = true) {

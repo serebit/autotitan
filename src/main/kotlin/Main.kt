@@ -4,9 +4,9 @@ import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.versionOption
+import com.serebit.autotitan.api.logger
 import com.serebit.autotitan.internal.EventDelegate
 import com.serebit.logkat.LogLevel
-import com.serebit.logkat.Logger
 import kotlinx.coroutines.runBlocking
 import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDABuilder
@@ -27,7 +27,7 @@ class Cli : CliktCommand(name = "autotitan") {
     }
 
     override fun run() = runBlocking {
-        if (trace) Logger.level = LogLevel.TRACE
+        if (trace) logger.level = LogLevel.TRACE
 
         val config = generateConfig(token, prefix)
         val delegate = EventDelegate(config)
@@ -47,7 +47,10 @@ class Cli : CliktCommand(name = "autotitan") {
         prefix?.let { config.prefix = it }
         token?.let { config.copy(token = it) } ?: config
     } ?: Scanner(System.`in`).use {
-        BotConfig(token ?: prompt(it, "Enter token:"), prefix ?: prompt(it, "Enter command prefix:"))
+        BotConfig(
+            token ?: prompt(it, "Enter token:"),
+            prefix ?: prompt(it, "Enter command prefix:")
+        ).also { it.serialize() }
     }
 
     private tailrec fun prompt(scanner: Scanner, text: String): String {

@@ -10,7 +10,8 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackState
-import com.serebit.logkat.Logger
+import com.serebit.autotitan.api.*
+import com.serebit.autotitan.extensions.sendEmbed
 import net.dv8tion.jda.core.audio.AudioSendHandler
 import net.dv8tion.jda.core.audio.hooks.ConnectionListener
 import net.dv8tion.jda.core.audio.hooks.ConnectionStatus
@@ -77,7 +78,7 @@ object AudioHandler : AudioPlayerManager by DefaultAudioPlayerManager() {
         }
 
         override fun loadFailed(exception: FriendlyException) {
-            Logger.error(exception.message ?: "Failed to load track. No error message available.")
+            logger.error(exception.message ?: "Failed to load track. No error message available.")
             channel.sendMessage("Failed to load the track. The exception says `${exception.message}`.").queue()
         }
     })
@@ -104,7 +105,7 @@ object AudioHandler : AudioPlayerManager by DefaultAudioPlayerManager() {
         }
 
         override fun loadFailed(exception: FriendlyException) {
-            Logger.warn(exception.message ?: "Failed to load playlist. No error message available.")
+            logger.warn(exception.message ?: "Failed to load playlist. No error message available.")
             channel.sendMessage("Failed to load the playlist. The exception says `${exception.message}`.").queue()
         }
     })

@@ -1,3 +1,8 @@
+import com.serebit.autotitan.api.*
+import com.serebit.autotitan.extensions.MESSAGE_EMBED_MAX_FIELDS
+import com.serebit.autotitan.extensions.chunkedBy
+import com.serebit.autotitan.extensions.limitLengthTo
+import com.serebit.autotitan.extensions.sendEmbed
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.entities.Message
 import net.dv8tion.jda.core.entities.MessageEmbed

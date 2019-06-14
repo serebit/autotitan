@@ -48,3 +48,5 @@ class DataManager internal constructor(moduleName: String) {
 class GuildResourceMap<K, V> : MutableMap<Long, MutableMap<K, V>> by mutableMapOf()
 
 class GuildResourceList<E> : MutableMap<Long, MutableList<E>> by mutableMapOf()
+
+val logger = com.serebit.logkat.Logger()

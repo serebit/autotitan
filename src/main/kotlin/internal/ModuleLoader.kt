@@ -2,7 +2,7 @@ package com.serebit.autotitan.internal
 
 import com.serebit.autotitan.BotConfig
 import com.serebit.autotitan.api.ModuleTemplate
-import com.serebit.logkat.Logger
+import com.serebit.autotitan.api.logger
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -19,12 +19,12 @@ internal class ModuleLoader {
     suspend fun loadModules(config: BotConfig): List<Module> = coroutineScope {
         loadScripts().map { scriptFile ->
             async {
-                Logger.debug("Loading module from file ${scriptFile.name}...")
+                logger.debug("Loading module from file ${scriptFile.name}...")
                 compiler.eval(scriptFile)
             }
         }.awaitAll()
 
-        Logger.debug("Finished loading modules.")
+        logger.debug("Finished loading modules.")
 
         ScriptContext.popModules().map { it.build(config) }
     }

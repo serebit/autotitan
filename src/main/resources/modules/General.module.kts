@@ -1,3 +1,7 @@
+import com.serebit.autotitan.api.Access
+import com.serebit.autotitan.api.command
+import com.serebit.autotitan.api.module
+import com.serebit.autotitan.extensions.sendEmbed
 import net.dv8tion.jda.core.entities.Member
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import java.time.OffsetDateTime
