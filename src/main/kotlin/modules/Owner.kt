@@ -47,7 +47,7 @@ class Owner : Module() {
         val usedMemoryPercentage = usedMemory.asPercentageOf(totalMemory)
         val processMemory = process.residentSetSize
         val processMemoryPercentage = processMemory.asPercentageOf(totalMemory)
-        val systemUptime = info.hardware.processor.systemUptime
+        val systemUptime = info.operatingSystem.systemUptime
         val processUptime = process.upTime / millisecondsPerSecond
         evt.channel.sendEmbed {
             addField(

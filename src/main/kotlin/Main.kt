@@ -8,7 +8,7 @@ import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.entities.Game
 
 const val NAME = "AutoTitan"
-const val VERSION = "0.5.4"
+const val VERSION = "0.5.5"
 val config: Configuration = Configuration.generate()
 val Logger = Logger()
 
