@@ -32,7 +32,7 @@ internal class ModuleLoader {
     private fun loadScripts() = loadInternalScripts() + loadExternalScripts()
 
     private fun loadInternalScripts(): List<File> {
-        val modulesUri = ModuleLoader::class.java.classLoader.getResource("modules").toURI()
+        val modulesUri = ModuleLoader::class.java.classLoader.getResource("modules")!!.toURI()
 
         val modulesPath: Path = (if (modulesUri.scheme == "jar") {
             val fileSystem = FileSystems.newFileSystem(modulesUri, mutableMapOf<String, Any>())

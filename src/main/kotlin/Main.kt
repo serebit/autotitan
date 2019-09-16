@@ -8,9 +8,9 @@ import com.serebit.autotitan.api.logger
 import com.serebit.autotitan.internal.EventDelegate
 import com.serebit.logkat.LogLevel
 import kotlinx.coroutines.runBlocking
-import net.dv8tion.jda.core.AccountType
-import net.dv8tion.jda.core.JDABuilder
-import net.dv8tion.jda.core.entities.Game
+import net.dv8tion.jda.api.AccountType
+import net.dv8tion.jda.api.JDABuilder
+import net.dv8tion.jda.api.entities.Activity
 import java.util.*
 
 const val NAME = "AutoTitan"
@@ -36,8 +36,8 @@ class Cli : CliktCommand(name = "autotitan") {
         val loadModules = delegate.loadModulesAsync()
         JDABuilder(AccountType.BOT).apply {
             setToken(config.token)
-            addEventListener(delegate)
-            setGame(Game.playing("${config.prefix}help"))
+            addEventListeners(delegate)
+            setActivity(Activity.playing("${config.prefix}help"))
         }.build()
         // wait for the module loaders to finish
         loadModules.await()

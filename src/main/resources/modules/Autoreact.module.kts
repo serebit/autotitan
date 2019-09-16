@@ -3,11 +3,11 @@ import com.serebit.autotitan.extensions.MESSAGE_EMBED_MAX_FIELDS
 import com.serebit.autotitan.extensions.chunkedBy
 import com.serebit.autotitan.extensions.limitLengthTo
 import com.serebit.autotitan.extensions.sendEmbed
-import net.dv8tion.jda.core.Permission
-import net.dv8tion.jda.core.entities.Message
-import net.dv8tion.jda.core.entities.MessageEmbed
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent
-import net.dv8tion.jda.core.requests.RestAction
+import net.dv8tion.jda.api.Permission
+import net.dv8tion.jda.api.entities.Message
+import net.dv8tion.jda.api.entities.MessageEmbed
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.requests.RestAction
 import java.time.Clock
 import java.time.OffsetDateTime
 
@@ -100,7 +100,7 @@ module("Autoreact", isOptional = true, defaultAccess = Access.Guild.All(Permissi
                                 embeds.forEach { addField(it.first, it.second, false) }
                             }.queue()
                         }
-                }, { channel.sendMessage(it.message).queue() })
+                }, { channel.sendMessage(it.message ?: "An exception was thrown without a message.").queue() })
             } else channel.sendMessage("This server has no autoreacts saved.").queue()
         }
     }

@@ -1,7 +1,7 @@
 import com.serebit.autotitan.api.*
 import com.serebit.autotitan.extensions.sendEmbed
-import net.dv8tion.jda.core.entities.Game
-import net.dv8tion.jda.core.entities.User
+import net.dv8tion.jda.api.entities.Activity
+import net.dv8tion.jda.api.entities.User
 import oshi.SystemInfo
 import java.lang.management.ManagementFactory
 import java.time.Duration
@@ -62,7 +62,7 @@ module("Owner", defaultAccess = Access.BotOwner()) {
             addField(
                 "Uptime",
                 """
-                    System: `${Duration.ofMillis(info.hardware.processor.systemUptime).toVerboseTimestamp()}`
+                    System: `${Duration.ofMillis(info.operatingSystem.systemUptime).toVerboseTimestamp()}`
                     Process: `$processUptime`
                     """.trimIndent(),
                 false
@@ -86,7 +86,7 @@ module("Owner", defaultAccess = Access.BotOwner()) {
         }
         config.prefix = prefix
         config.serialize()
-        jda.presence.game = Game.playing("${prefix}help")
+        jda.presence.activity = Activity.playing("${prefix}help")
         channel.sendMessage("Set prefix to `${config.prefix}`.").queue()
     }
 
@@ -115,7 +115,7 @@ module("Owner", defaultAccess = Access.BotOwner()) {
             } else {
                 channel.sendEmbed {
                     addField("Blacklisted Users", config.blackList.joinToString("\n") {
-                        jda.getUserById(it).asMention
+                        jda.getUserById(it)!!.asMention
                     }, true)
                 }.queue()
             }
@@ -125,7 +125,7 @@ module("Owner", defaultAccess = Access.BotOwner()) {
     command("serverList", "Sends the list of servers that the bot is in.") {
         channel.sendEmbed {
             jda.guilds.forEach {
-                addField(it.name, "Owner: ${it.owner.asMention}\nMembers: ${it.members.size}\n", true)
+                addField(it.name, "Owner: ${it.owner!!.asMention}\nMembers: ${it.members.size}\n", true)
             }
         }.queue()
     }

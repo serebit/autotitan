@@ -2,9 +2,9 @@ package com.serebit.autotitan.internal
 
 import com.serebit.autotitan.api.Emote
 import com.serebit.autotitan.api.LongString
-import net.dv8tion.jda.core.JDA
-import net.dv8tion.jda.core.entities.*
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.JDA
+import net.dv8tion.jda.api.entities.*
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import java.math.BigDecimal
 import java.math.BigInteger
 import kotlin.reflect.KClass

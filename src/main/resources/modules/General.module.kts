@@ -1,9 +1,13 @@
+
 import com.serebit.autotitan.api.Access
 import com.serebit.autotitan.api.command
 import com.serebit.autotitan.api.module
+import com.serebit.autotitan.extensions.isBotOwner
 import com.serebit.autotitan.extensions.sendEmbed
-import net.dv8tion.jda.core.entities.Member
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.OnlineStatus
+import net.dv8tion.jda.api.Permission
+import net.dv8tion.jda.api.entities.Member
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -21,7 +25,7 @@ suspend fun sendMemberInfo(evt: MessageReceivedEvent, member: Member) {
 
     val status = buildString {
         append(member.onlineStatus.readableName)
-        member.game?.let { append(" - Playing ${member.game.name}") }
+        member.activities.first()?.let { append(" - Playing ${member.activities.first().name}") }
     }
 
     evt.channel.sendEmbed {
@@ -29,11 +33,11 @@ suspend fun sendMemberInfo(evt: MessageReceivedEvent, member: Member) {
         setDescription(status)
         setColor(member.color)
         setThumbnail(member.user.effectiveAvatarUrl)
-        val creationDate = member.user.creationTime.format(DateTimeFormatter.ISO_DATE)
-        val creationDateDifference = OffsetDateTime.now() - member.user.creationTime
+        val creationDate = member.user.timeCreated.format(DateTimeFormatter.ISO_DATE)
+        val creationDateDifference = OffsetDateTime.now() - member.user.timeCreated
         addField("Joined Discord", "$creationDate ($creationDateDifference)", true)
-        val joinDate = member.joinDate.format(DateTimeFormatter.ISO_DATE)
-        val joinDateDifference = OffsetDateTime.now() - member.joinDate
+        val joinDate = member.timeJoined.format(DateTimeFormatter.ISO_DATE)
+        val joinDateDifference = OffsetDateTime.now() - member.timeJoined
         addField("Joined this Server", "$joinDate ($joinDateDifference)", true)
         addField("Do they own the server?", member.isOwner.asYesNo.capitalize(), true)
         if (member.roles.isNotEmpty()) {
@@ -68,7 +72,7 @@ operator fun OffsetDateTime.minus(other: Temporal): String {
 
 module("General") {
     command("ping", "Pings the bot.") {
-        channel.sendMessage("Pong. The last ping was ${jda.ping}ms.").queue()
+        channel.sendMessage("Pong. The last ping was ${jda.gatewayPing}ms.").queue()
     }
 
     command("serverInfo", "Gets information about the server.", Access.Guild.All()) {
@@ -80,9 +84,9 @@ module("General") {
 
         channel.sendEmbed {
             setTitle(guild.name, null)
-            setDescription("Created on ${guild.creationTime.format(DateTimeFormatter.ISO_DATE)}")
+            setDescription("Created on ${guild.timeCreated.format(DateTimeFormatter.ISO_DATE)}")
             setThumbnail(guild.iconUrl)
-            addField("Owner", guild.owner.asMention, true)
+            addField("Owner", guild.owner!!.asMention, true)
             addField("Region", guild.region.toString(), true)
             addField("Online Members", onlineMemberCount.toString(), true)
             addField("Total Members", guild.members.size.toString(), true)
@@ -91,7 +95,7 @@ module("General") {
             addField("Voice Channels", guild.voiceChannels.size.toString(), true)
             addField("Hoisted Roles", hoistedRoles, true)
             if (guild.selfMember.hasPermission(Permission.MANAGE_SERVER)) {
-                val permanentInvites = guild.invites.complete().filter { !it.isTemporary }
+                val permanentInvites = guild.retrieveInvites().complete().filter { !it.isTemporary }
                 if (permanentInvites.isNotEmpty()) addField(
                     "Invite Link",
                     permanentInvites.first().url,
@@ -102,7 +106,9 @@ module("General") {
         }.queue()
     }
 
-    command("selfInfo", "Gets information about the invoker.") { sendMemberInfo(this, member) }
+    command("selfInfo", "Gets information about the invoker.", Access.Guild.All()) {
+        sendMemberInfo(this, member!!)
+    }
 
     command(
         "memberInfo",
@@ -113,10 +119,10 @@ module("General") {
 
     command("invite", "Sends the bot's invite link.") {
         val inviteMessage = """
-            Invite link: <${jda.asBot().getInviteUrl()}>.
+            Invite link: <${jda.getInviteUrl()}>.
             Remember, you need Manage Server permissions to add me to a server.
         """.trimIndent()
-        jda.asBot().applicationInfo.queue { applicationInfo ->
+        jda.retrieveApplicationInfo().queue { applicationInfo ->
             when {
                 applicationInfo.isBotPublic ->
                     channel.sendMessage(inviteMessage).queue()

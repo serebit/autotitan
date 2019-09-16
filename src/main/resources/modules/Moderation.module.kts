@@ -1,9 +1,9 @@
 import com.serebit.autotitan.api.*
-import net.dv8tion.jda.core.JDA
-import net.dv8tion.jda.core.Permission
-import net.dv8tion.jda.core.entities.*
-import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent
-import net.dv8tion.jda.core.events.guild.member.GuildMemberLeaveEvent
+import net.dv8tion.jda.api.JDA
+import net.dv8tion.jda.api.Permission
+import net.dv8tion.jda.api.entities.*
+import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent
+import net.dv8tion.jda.api.events.guild.member.GuildMemberLeaveEvent
 
 class GuildRoleMap : MutableMap<Long, Long> by mutableMapOf() {
     operator fun contains(key: Guild) = contains(key.idLong)
@@ -24,19 +24,19 @@ module("Moderation") {
     }
 
     command("kick", "Kicks a member.", Access.Guild.All(Permission.KICK_MEMBERS)) { member: Member ->
-        guild.controller.kick(member).queue {
+        guild.kick(member).queue {
             channel.sendMessage("Kicked ${member.effectiveName}.").queue()
         }
     }
 
     command("ban", "Bans a user.", Access.Guild.All(Permission.BAN_MEMBERS)) { user: User ->
-        guild.controller.ban(user, 0).queue {
+        guild.ban(user, 0).queue {
             channel.sendMessage("Banned ${user.name}.").queue()
         }
     }
 
     command("unBan", "Un-bans a banned user.", Access.Guild.All(Permission.BAN_MEMBERS)) { user: User ->
-        guild.controller.unban(user).queue {
+        guild.unban(user).queue {
             channel.sendMessage("Unbanned ${user.name}.").complete()
         }
     }
@@ -73,7 +73,7 @@ module("Moderation") {
                 welcomeMessages[guild.idLong]!!.leaveMessage = message.value
             } else {
                 welcomeMessages[guild.idLong] =
-                    WelcomeMessageData(guild.systemChannel.idLong, leaveMessage = message.value)
+                    WelcomeMessageData(guild.systemChannel!!.idLong, leaveMessage = message.value)
             }
             dataManager.write("welcomemessages.json", welcomeMessages)
             channel.sendMessage("Set the leave message.").queue()
@@ -84,7 +84,7 @@ module("Moderation") {
                 welcomeMessages[guild.idLong]!!.joinMessage = message.value
             } else {
                 welcomeMessages[guild.idLong] =
-                    WelcomeMessageData(guild.systemChannel.idLong, joinMessage = message.value)
+                    WelcomeMessageData(guild.systemChannel!!.idLong, joinMessage = message.value)
 
             }
             dataManager.write("welcomemessages.json", welcomeMessages)
@@ -121,12 +121,12 @@ module("Moderation") {
 
     listener<GuildMemberJoinEvent> {
         if (guild in memberRoleMap) {
-            guild.controller.addRolesToMember(member, memberRoleMap[jda, guild]).queue()
+            guild.addRoleToMember(member, memberRoleMap[jda, guild]!!).queue()
         }
         welcomeMessages[guild.idLong]?.let { data ->
             data.joinMessage?.let {
                 val formatted = it.format(user.name, user.asMention)
-                guild.getTextChannelById(data.channelId).sendMessage(formatted).queue()
+                guild.getTextChannelById(data.channelId)?.sendMessage(formatted)?.queue()
             }
         }
     }
@@ -135,7 +135,7 @@ module("Moderation") {
         welcomeMessages[guild.idLong]?.let { data ->
             data.leaveMessage?.let {
                 val formatted = it.format(user.name, user.asMention)
-                guild.getTextChannelById(data.channelId).sendMessage(formatted).queue()
+                guild.getTextChannelById(data.channelId)?.sendMessage(formatted)?.queue()
             }
         }
     }

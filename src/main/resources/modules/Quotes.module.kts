@@ -1,8 +1,11 @@
 import com.serebit.autotitan.api.*
 import com.serebit.autotitan.extensions.sendEmbed
-import net.dv8tion.jda.core.Permission
-import net.dv8tion.jda.core.entities.Message
-import net.dv8tion.jda.core.entities.MessageEmbed
+import com.serebit.autotitan.extensions.limitLengthTo
+import com.serebit.autotitan.extensions.chunkedBy
+import com.serebit.autotitan.extensions.MESSAGE_EMBED_MAX_FIELDS
+import net.dv8tion.jda.api.Permission
+import net.dv8tion.jda.api.entities.Message
+import net.dv8tion.jda.api.entities.MessageEmbed
 
 fun String.trimWhitespace(): String = replace("(\\s){2,}".toRegex(), "$1$1")
 
@@ -19,7 +22,7 @@ module("Quotes", isOptional = true, defaultAccess = Access.Guild.All()) {
             } else {
                 quoteMap[guild.idLong]!!.apply {
                     add(quote.value)
-                    channel.sendMessage("Added ${member.asMention}'s quote as number `${size - 1}`.").queue()
+                    channel.sendMessage("Added ${member!!.asMention}'s quote as number `${size - 1}`.").queue()
                 }
                 dataManager.write("quotes.json", quoteMap)
             }

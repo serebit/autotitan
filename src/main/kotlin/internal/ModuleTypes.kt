@@ -7,10 +7,10 @@ import com.serebit.autotitan.api.GroupTemplate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import net.dv8tion.jda.core.entities.MessageEmbed
-import net.dv8tion.jda.core.entities.User
-import net.dv8tion.jda.core.events.Event
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.entities.MessageEmbed
+import net.dv8tion.jda.api.entities.User
+import net.dv8tion.jda.api.events.GenericEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import kotlin.reflect.KClass
 
 internal interface HelpProvider {
@@ -48,7 +48,7 @@ internal class Module(
         } else null
     }
 
-    fun invoke(evt: Event) = launch {
+    fun invoke(evt: GenericEvent) = launch {
         listeners.asSequence()
             .filter { it.eventType.isInstance(evt) }
             .forEach { it(evt) }
@@ -70,10 +70,10 @@ internal class Module(
     fun helpFieldsBySignature(signature: String): List<MessageEmbed.Field> =
         allInvokeable.filter { it.helpSignature.matches(signature) }.map { it.helpField }
 
+    private val User.canInvokeCommands get() = !isBot && idLong !in config.blackList
+
     private val MessageReceivedEvent.isCommandInvocation
         get() = message.contentRaw.startsWith(config.prefix) && author.canInvokeCommands
-
-    private val User.canInvokeCommands get() = !isBot && idLong !in config.blackList
 }
 
 internal class Group(
@@ -127,10 +127,10 @@ internal class Command(
 }
 
 internal data class Listener(
-    val eventType: KClass<out Event>,
-    private val function: suspend (Event) -> Unit
+    val eventType: KClass<out GenericEvent>,
+    private val function: suspend (GenericEvent) -> Unit
 ) : CoroutineScope {
     override val coroutineContext = Dispatchers.Default
 
-    operator fun invoke(evt: Event) = launch { function(evt) }
+    operator fun invoke(evt: GenericEvent) = launch { function(evt) }
 }

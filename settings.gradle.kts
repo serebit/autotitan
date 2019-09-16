@@ -1,15 +1,10 @@
-rootProject.name = "autotitan"
+import com.serebit.strife.buildsrc.ProjectInfo
 
-pluginManagement {
-    repositories {
-        gradlePluginPortal()
-        maven("https://dl.bintray.com/kotlin/kotlin-eap")
-        maven("https://dl.bintray.com/kotlin/kotlinx")
-    }
+rootProject.name = ProjectInfo.name
 
-    resolutionStrategy.eachPlugin {
-        if (requested.id.id == "kotlinx-serialization") {
-            useModule("org.jetbrains.kotlin:kotlin-serialization:${requested.version}")
-        }
+pluginManagement.resolutionStrategy.eachPlugin {
+    when(requested.id.id) {
+        "kotlinx-serialization" -> useModule("org.jetbrains.kotlin:kotlin-serialization:${requested.version}")
+        "kotlinx-atomicfu" -> useModule("org.jetbrains.kotlinx:atomicfu-gradle-plugin:${requested.version}")
     }
 }

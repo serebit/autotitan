@@ -12,14 +12,15 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackState
 import com.serebit.autotitan.api.*
 import com.serebit.autotitan.extensions.sendEmbed
-import net.dv8tion.jda.core.audio.AudioSendHandler
-import net.dv8tion.jda.core.audio.hooks.ConnectionListener
-import net.dv8tion.jda.core.audio.hooks.ConnectionStatus
-import net.dv8tion.jda.core.entities.*
-import net.dv8tion.jda.core.events.guild.voice.GuildVoiceLeaveEvent
-import net.dv8tion.jda.core.events.guild.voice.GuildVoiceMoveEvent
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent
-import net.dv8tion.jda.core.managers.AudioManager
+import net.dv8tion.jda.api.audio.AudioSendHandler
+import net.dv8tion.jda.api.audio.hooks.ConnectionListener
+import net.dv8tion.jda.api.audio.hooks.ConnectionStatus
+import net.dv8tion.jda.api.entities.*
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceMoveEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.managers.AudioManager
+import java.nio.ByteBuffer
 import java.time.Duration
 import java.util.concurrent.Future
 
@@ -39,8 +40,8 @@ enum class VoiceStatus(private val errorMessage: String?) {
     companion object {
         fun from(evt: MessageReceivedEvent): VoiceStatus {
             val selfIsConnected = evt.guild.audioManager.isConnected
-            val userIsConnected = evt.member.voiceState.inVoiceChannel()
-            val differentChannel = evt.member.voiceState.channel != evt.guild.audioManager.connectedChannel
+            val userIsConnected = evt.member!!.voiceState!!.inVoiceChannel()
+            val differentChannel = evt.member!!.voiceState!!.channel != evt.guild.audioManager.connectedChannel
             return when {
                 !userIsConnected && selfIsConnected -> VoiceStatus.SELF_CONNECTED_USER_DISCONNECTED
                 !selfIsConnected && userIsConnected -> VoiceStatus.SELF_DISCONNECTED_USER_CONNECTED
@@ -197,7 +198,7 @@ class GuildTrackManager(audioManager: AudioManager) : AudioEventAdapter() {
         // behavior is the same whether we check for frames or not, so always return true
         override fun canProvide(): Boolean = true
 
-        override fun provide20MsAudio(): ByteArray? = player.provide()?.data
+        override fun provide20MsAudio(): ByteBuffer? = player.provide()?.data?.let(ByteBuffer::wrap)
 
         override fun isOpus() = true
     }
@@ -239,7 +240,7 @@ inline fun AudioManager.onConnectionStatusChange(desiredStatus: ConnectionStatus
             }
         }
 
-        override fun onUserSpeaking(user: User?, speaking: Boolean) = Unit
+        override fun onUserSpeaking(user: User, speaking: Boolean) = Unit
 
         override fun onPing(ping: Long) = Unit
     }
@@ -273,7 +274,7 @@ fun handleVoiceStatus(evt: MessageReceivedEvent, shouldConnect: Boolean = false)
     when (val status = VoiceStatus.from(evt)) {
         VoiceStatus.BOTH_CONNECTED_SAME_CHANNEL -> true
         VoiceStatus.SELF_DISCONNECTED_USER_CONNECTED -> if (shouldConnect) {
-            connectToVoiceChannel(evt.member.voiceState.channel)
+            connectToVoiceChannel(evt.member!!.voiceState!!.channel!!)
             true
         } else {
             status.sendErrorMessage(evt.textChannel)
@@ -295,8 +296,8 @@ val Guild.trackManager: GuildTrackManager
 module("Audio", defaultAccess = Access.Guild.All()) {
     command("joinVoice", "Joins the voice channel that the invoker is in.") {
         when (VoiceStatus.from(this)) {
-            VoiceStatus.SELF_DISCONNECTED_USER_CONNECTED -> connectToVoiceChannel(member.voiceState.channel) {
-                channel.sendMessage("Joined ${guild.audioManager.connectedChannel.name}.").queue()
+            VoiceStatus.SELF_DISCONNECTED_USER_CONNECTED -> connectToVoiceChannel(member!!.voiceState!!.channel!!) {
+                channel.sendMessage("Joined ${guild.audioManager.connectedChannel!!.name}.").queue()
             }
             VoiceStatus.BOTH_CONNECTED_SAME_CHANNEL -> {
                 channel.sendMessage("We're already in the same voice channel.").queue()
@@ -312,7 +313,7 @@ module("Audio", defaultAccess = Access.Guild.All()) {
 
     command("leaveVoice", "Leaves the voice channel that the bot is in.") {
         leaveVoiceChannel(guild) {
-            channel.sendMessage("Left ${guild.audioManager.connectedChannel.name}.").queue()
+            channel.sendMessage("Left ${guild.audioManager.connectedChannel!!.name}.").queue()
         }
     }
 
@@ -394,14 +395,14 @@ module("Audio", defaultAccess = Access.Guild.All()) {
 
     listener<GuildVoiceMoveEvent> {
         if (guild.audioManager.connectedChannel != channelLeft) return@listener
-        if (guild.audioManager.connectedChannel.members.all { it.user.isBot }) {
+        if (guild.audioManager.connectedChannel!!.members.all { it.user.isBot }) {
             leaveVoiceChannel(guild)
         }
     }
 
     listener<GuildVoiceLeaveEvent> {
         if (guild.audioManager.connectedChannel != channelLeft) return@listener
-        if (guild.audioManager.connectedChannel.members.all { it.user.isBot }) {
+        if (guild.audioManager.connectedChannel!!.members.all { it.user.isBot }) {
             leaveVoiceChannel(guild)
         }
     }

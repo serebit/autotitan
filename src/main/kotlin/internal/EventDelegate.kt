@@ -9,10 +9,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import net.dv8tion.jda.core.events.Event
-import net.dv8tion.jda.core.events.ReadyEvent
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent
-import net.dv8tion.jda.core.hooks.ListenerAdapter
+import net.dv8tion.jda.api.events.GenericEvent
+import net.dv8tion.jda.api.events.ReadyEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.hooks.ListenerAdapter
 import kotlin.system.exitProcess
 
 internal class EventDelegate(private val config: BotConfig) : ListenerAdapter(), CoroutineScope {
@@ -27,7 +27,7 @@ internal class EventDelegate(private val config: BotConfig) : ListenerAdapter(),
         allModules += moduleLoader.loadModules(config)
     }
 
-    override fun onGenericEvent(evt: Event) {
+    override fun onGenericEvent(evt: GenericEvent) {
         launch {
             loadedModules.forEach { it.invoke(evt) }
         }
@@ -37,8 +37,8 @@ internal class EventDelegate(private val config: BotConfig) : ListenerAdapter(),
         """
             $NAME v$VERSION
             Username:    ${evt.jda.selfUser.name}
-            Ping:        ${evt.jda.ping}ms
-            Invite link: ${evt.jda.asBot().getInviteUrl()}
+            Ping:        ${evt.jda.gatewayPing}ms
+            Invite link: ${evt.jda.getInviteUrl()}
         """.trimIndent()
     )
 
@@ -48,7 +48,8 @@ internal class EventDelegate(private val config: BotConfig) : ListenerAdapter(),
                 channel.sendEmbed {
                     loadedModules.asSequence()
                         .sortedBy { it.name }
-                        .mapNotNull { it.getInvokeableCommandField(this@command) }.toList()
+                        .mapNotNull { it.getInvokeableCommandField(this@command) }
+                        .toList()
                         .forEach { addField(it) }
                 }.queue()
             }
@@ -93,7 +94,7 @@ internal class EventDelegate(private val config: BotConfig) : ListenerAdapter(),
             }
 
             listener<MessageReceivedEvent> {
-                val guildMention = guild?.selfMember?.asMention
+                val guildMention = if (isFromGuild) guild.selfMember.asMention else null
                 if (message.contentRaw == jda.selfUser.asMention || message.contentRaw == guildMention) {
                     channel.sendMessage("My prefix is `${config.prefix}`.").queue()
                 }

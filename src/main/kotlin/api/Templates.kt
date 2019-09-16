@@ -2,8 +2,8 @@ package com.serebit.autotitan.api
 
 import com.serebit.autotitan.BotConfig
 import com.serebit.autotitan.internal.*
-import net.dv8tion.jda.core.events.Event
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.events.GenericEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import kotlin.reflect.KClass
 
 sealed class InvokeableContainerTemplate {
@@ -34,7 +34,7 @@ data class ModuleTemplate(
         groups += template
     }
 
-    fun <T : Event> addListener(eventType: KClass<T>, function: suspend (Event) -> Unit) {
+    fun <T : GenericEvent> addListener(eventType: KClass<T>, function: suspend (GenericEvent) -> Unit) {
         listeners += Listener(eventType, function)
     }
 

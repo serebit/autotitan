@@ -1,40 +1,44 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import com.serebit.strife.buildsrc.ProjectInfo
+import com.serebit.strife.buildsrc.Versions
+import com.serebit.strife.buildsrc.kotlinx
+import com.serebit.strife.buildsrc.ktor
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.3.40-eap-105"
-    id("kotlinx-serialization") version "1.3.40-eap-105"
-    id("com.github.johnrengelman.shadow") version "5.0.0"
-    id("com.github.ben-manes.versions") version "0.21.0"
+    kotlin("jvm") version "1.3.50"
+    id("kotlinx-serialization") version "1.3.50"
+    id("com.github.johnrengelman.shadow") version "5.1.0"
+    id("com.github.ben-manes.versions") version "0.25.0"
 }
 
-group = "com.serebit"
-version = "1.0.0-eap"
-
-description = "AutoTitan is a modular, self-hosted Discord bot built in Kotlin/JVM using the Java Discord API."
+group = ProjectInfo.group
+version = ProjectInfo.version
+description = ProjectInfo.description
 
 repositories {
     jcenter()
-    maven("https://dl.bintray.com/kotlin/kotlin-eap")
-    maven("https://dl.bintray.com/kotlin/kotlinx")
-    maven("https://dl.bintray.com/soywiz/soywiz")
+    kotlinx()
 }
 
 dependencies {
-    fun kotlinx(name: String, version: String) = "org.jetbrains.kotlinx:kotlinx-$name:$version"
-
     implementation(kotlin("stdlib-jdk8"))
     implementation(kotlin("scripting-jvm-host"))
-    implementation(kotlinx("serialization-runtime", version = "0.11.0"))
-    implementation(kotlinx("coroutines-core", version = "1.3.0-M1"))
-    implementation(group = "io.ktor", name = "ktor-client-cio", version = "1.2.1")
-    implementation(group = "org.slf4j", name = "slf4j-simple", version = "1.8.0-beta4")
-    implementation(group = "net.dv8tion", name = "JDA", version = "3.8.1_439")
-    implementation(group = "com.sedmelluq", name = "lavaplayer", version = "1.3.17")
-    implementation(group = "com.serebit", name = "logkat-jvm", version = "0.4.5")
-    implementation(group = "com.github.oshi", name = "oshi-core", version = "3.13.2")
-    implementation(group = "com.github.salomonbrys.kotson", name = "kotson", version = "2.5.0")
-    implementation(group = "com.github.ajalt", name = "clikt", version = "2.0.0")
+    implementation(kotlinx("serialization-runtime", version = Versions.SERIALIZATION))
+    implementation(kotlinx("coroutines-core", version = Versions.COROUTINES))
+    implementation(ktor("client-cio", version = Versions.KTOR))
+    implementation(group = "org.slf4j", name = "slf4j-simple", version = Versions.SLF4J)
+    implementation(group = "net.dv8tion", name = "JDA", version = Versions.JDA)
+    implementation(group = "com.sedmelluq", name = "lavaplayer", version = Versions.LAVAPLAYER)
+    implementation(group = "com.serebit.logkat", name = "logkat-jvm", version = Versions.LOGKAT)
+    implementation(group = "com.github.oshi", name = "oshi-core", version = Versions.OSHI)
+    implementation(group = "com.github.salomonbrys.kotson", name = "kotson", version = Versions.KOTSON)
+    implementation(group = "com.github.ajalt", name = "clikt", version = Versions.CLIKT)
+}
+
+kotlin.sourceSets["main"].languageSettings.apply {
+    useExperimentalAnnotation("kotlin.Experimental")
+    enableLanguageFeature("InlineClasses")
 }
 
 tasks {
@@ -47,9 +51,5 @@ tasks {
     withType<ShadowJar> {
         archiveFileName.set("${archiveBaseName.get()}-${archiveVersion.get()}.${archiveExtension.get()}")
         manifest.attributes["Main-Class"] = "com.serebit.autotitan.MainKt"
-    }
-
-    withType<Test> {
-        environment["AUTOTITAN_TEST_MODE_FLAG"] = "true"
     }
 }

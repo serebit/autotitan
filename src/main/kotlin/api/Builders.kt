@@ -1,8 +1,8 @@
 package com.serebit.autotitan.api
 
 import com.serebit.autotitan.internal.ScriptContext
-import net.dv8tion.jda.core.events.Event
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.events.GenericEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 
 inline fun module(
     name: String,
@@ -88,5 +88,5 @@ inline fun <reified P0, reified P1, reified P2, reified P3, reified P4, reified 
     }
 )
 
-inline fun <reified T : Event> ModuleTemplate.listener(crossinline task: T.() -> Unit) =
+inline fun <reified T : GenericEvent> ModuleTemplate.listener(crossinline task: T.() -> Unit) =
     addListener(T::class) { (it as T).task() }

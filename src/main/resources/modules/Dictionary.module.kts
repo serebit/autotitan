@@ -9,8 +9,8 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.call
 import io.ktor.client.response.readText
 import io.ktor.http.HttpStatusCode
-import net.dv8tion.jda.core.entities.MessageEmbed
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.entities.MessageEmbed
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import java.net.URLEncoder
 
 object UrbanDictionaryApi {

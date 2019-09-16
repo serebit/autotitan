@@ -1,7 +1,7 @@
 package com.serebit.autotitan.api
 
-import net.dv8tion.jda.core.entities.Guild
-import net.dv8tion.jda.core.entities.MessageChannel
+import net.dv8tion.jda.api.entities.Guild
+import net.dv8tion.jda.api.entities.MessageChannel
 
 inline class LongString(val value: String) {
     override fun toString() = value
@@ -14,9 +14,9 @@ sealed class Emote {
 
     data class Jda(val id: Long) : Emote() {
         override fun canInteract(channel: MessageChannel) =
-            channel.jda.getEmoteById(id).canInteract(channel.jda.selfUser, channel, true)
+            channel.jda.getEmoteById(id)!!.canInteract(channel.jda.selfUser, channel, true)
 
-        override fun asMention(guild: Guild): String = guild.getEmoteById(id).asMention
+        override fun asMention(guild: Guild): String = guild.getEmoteById(id)!!.asMention
     }
 
     data class Unicode(val unicode: String) : Emote() {
@@ -34,7 +34,7 @@ sealed class Emote {
             Unicode(string)
         } else guild?.getEmoteByMention(string)?.let { Jda(it.idLong) }
 
-        private fun Guild.getEmoteByMention(mention: String): net.dv8tion.jda.core.entities.Emote? =
+        private fun Guild.getEmoteByMention(mention: String): net.dv8tion.jda.api.entities.Emote? =
             getEmoteById(mention.removeSurrounding("<", ">").replace(":\\S+:".toRegex(), ""))
     }
 }
