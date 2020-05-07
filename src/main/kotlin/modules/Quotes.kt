@@ -10,8 +10,8 @@ import com.serebit.autotitan.extensions.jda.chunkedBy
 import com.serebit.autotitan.extensions.jda.mentionsUsers
 import com.serebit.autotitan.extensions.jda.sendEmbed
 import com.serebit.autotitan.extensions.limitLengthTo
-import net.dv8tion.jda.core.entities.MessageEmbed
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.entities.MessageEmbed
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import java.util.*
 
 @Suppress("UNUSED", "TooManyFunctions")
@@ -33,7 +33,7 @@ class Quotes : Module(isOptional = true) {
         quoteMap[evt.guild].let {
             val quoteIndex = it.keys.map { it.toInt() }.max()?.plus(1) ?: 0
             it[quoteIndex.toString()] = quote
-            evt.channel.sendMessage("Added ${evt.member.asMention}'s quote as number `$quoteIndex`.").complete()
+            evt.channel.sendMessage("Added ${evt.member!!.asMention}'s quote as number `$quoteIndex`.").complete()
         }
         dataManager.write("quotes.json", quoteMap)
     }

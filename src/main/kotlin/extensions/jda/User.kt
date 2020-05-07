@@ -1,7 +1,7 @@
 package com.serebit.autotitan.extensions.jda
 
 import com.serebit.autotitan.config
-import net.dv8tion.jda.core.entities.User
+import net.dv8tion.jda.api.entities.User
 
 val User.isNotBot get() = !isBot
 

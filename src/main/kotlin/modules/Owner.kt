@@ -11,9 +11,10 @@ import com.serebit.autotitan.extensions.asPercentageOf
 import com.serebit.autotitan.extensions.jda.sendEmbed
 import com.serebit.autotitan.extensions.toVerboseTimestamp
 import com.serebit.autotitan.listeners.EventListener
-import net.dv8tion.jda.core.entities.Game
-import net.dv8tion.jda.core.entities.User
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent
+import com.serebit.logkat.info
+import net.dv8tion.jda.api.entities.Activity
+import net.dv8tion.jda.api.entities.User
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import oshi.SystemInfo
 import kotlin.system.exitProcess
 
@@ -39,9 +40,11 @@ class Owner : Module() {
     fun systemInfo(evt: MessageReceivedEvent) {
         val info = SystemInfo()
         val process = info.operatingSystem.getProcess(info.operatingSystem.processId)
-        val processorModel = info.hardware.processor.name.replace("(\\(R\\)|\\(TM\\)|@ .+)".toRegex(), "")
+        val processorModel =
+            info.hardware.processor.processorIdentifier.name.replace("(\\(R\\)|\\(TM\\)|@ .+)".toRegex(), "")
         val processorCores = info.hardware.processor.physicalProcessorCount
-        val processorFrequency = info.hardware.processor.vendorFreq
+        val processorThreads = info.hardware.processor.logicalProcessorCount
+        val processorFrequency = info.hardware.processor.maxFreq
         val totalMemory = info.hardware.memory.total
         val usedMemory = info.hardware.memory.total - info.hardware.memory.available
         val usedMemoryPercentage = usedMemory.asPercentageOf(totalMemory)
@@ -55,6 +58,7 @@ class Owner : Module() {
                 """
                     Model: `$processorModel`
                     Cores: `$processorCores`
+                    Threads: `$processorThreads`
                     Frequency: `${processorFrequency.asMetricUnit("Hz")}`
                 """.trimIndent(),
                 false
@@ -100,7 +104,7 @@ class Owner : Module() {
         }
         config.prefix = prefix
         config.serialize()
-        evt.jda.presence.game = Game.playing("${prefix}help")
+        evt.jda.presence.activity = Activity.playing("${prefix}help")
         evt.channel.sendMessage("Set prefix to `${config.prefix}`.").complete()
     }
 
@@ -131,7 +135,7 @@ class Owner : Module() {
         if (config.blackList.isNotEmpty()) {
             evt.channel.sendEmbed {
                 addField("Blacklisted Users", config.blackList.joinToString("\n") {
-                    evt.jda.getUserById(it).asMention
+                    evt.jda.getUserById(it)!!.asMention
                 }, true)
             }.complete()
         } else {
@@ -142,7 +146,7 @@ class Owner : Module() {
     @Command(description = "Sends the bot's invite link in a private message.", access = Access.BOT_OWNER)
     fun getInvite(evt: MessageReceivedEvent) {
         evt.author.openPrivateChannel().complete().sendMessage(
-            "Invite link: ${evt.jda.asBot().getInviteUrl()}"
+            "Invite link: ${evt.jda.getInviteUrl()}"
         ).complete()
     }
 

@@ -1,8 +1,9 @@
 package com.serebit.autotitan.api
 
-import net.dv8tion.jda.core.entities.MessageEmbed
-import net.dv8tion.jda.core.events.Event
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.entities.MessageEmbed
+import net.dv8tion.jda.api.events.Event
+import net.dv8tion.jda.api.events.GenericEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import kotlin.reflect.KFunction
 import kotlin.reflect.full.declaredMemberFunctions
 import kotlin.reflect.full.findAnnotation
@@ -45,7 +46,7 @@ abstract class Module(name: String = "", val isOptional: Boolean = false) {
         } else null
     }
 
-    internal fun runListeners(evt: Event) {
+    internal fun runListeners(evt: GenericEvent) {
         listeners.filter { it.eventType == evt::class }.forEach { it.invoke(evt) }
     }
 

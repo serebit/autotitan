@@ -7,7 +7,7 @@ import com.serebit.autotitan.api.annotations.Command
 import com.serebit.autotitan.extensions.jda.sendEmbed
 import com.serebit.autotitan.extensions.randomEntry
 import khttp.get
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import org.apache.http.HttpStatus
 
 @Suppress("UNUSED")
@@ -19,7 +19,7 @@ class Rule34 : Module(isOptional = true) {
         splitLastParameter = false
     )
     fun rule34(evt: MessageReceivedEvent, tagString: String) {
-        if (evt.guild != null && evt.textChannel.isNSFW || evt.privateChannel != null) {
+        if (evt.isFromGuild && evt.textChannel.isNSFW || !evt.isFromGuild) {
             randomPostOrNull(ImageProvider.RULE34XXX, formatTags(tagString))?.let { post ->
                 evt.channel.sendEmbed {
                     setImage(post.rule34xxxImageUri)

@@ -11,11 +11,11 @@ import com.serebit.autotitan.extensions.jda.closeAudioConnection
 import com.serebit.autotitan.extensions.jda.openAudioConnection
 import com.serebit.autotitan.extensions.jda.trackManager
 import com.serebit.autotitan.extensions.jda.voiceStatus
-import net.dv8tion.jda.core.entities.Guild
-import net.dv8tion.jda.core.entities.VoiceChannel
-import net.dv8tion.jda.core.events.guild.voice.GuildVoiceLeaveEvent
-import net.dv8tion.jda.core.events.guild.voice.GuildVoiceMoveEvent
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.entities.Guild
+import net.dv8tion.jda.api.entities.VoiceChannel
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceMoveEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import org.apache.commons.validator.routines.UrlValidator
 
 @Suppress("UNUSED", "TooManyFunctions")
@@ -24,10 +24,9 @@ class Audio : Module() {
 
     @Command(description = "Joins the voice channel that the invoker is in.", locale = Locale.GUILD)
     fun joinVoice(evt: MessageReceivedEvent) {
-        val voiceStatus = evt.voiceStatus
-        when (voiceStatus) {
-            VoiceStatus.SELF_DISCONNECTED_USER_CONNECTED -> connectToVoiceChannel(evt.member.voiceState.channel) {
-                evt.channel.sendMessage("Joined ${evt.guild.audioManager.connectedChannel.name}.").complete()
+        when (evt.voiceStatus) {
+            VoiceStatus.SELF_DISCONNECTED_USER_CONNECTED -> connectToVoiceChannel(evt.member!!.voiceState!!.channel!!) {
+                evt.channel.sendMessage("Joined ${evt.guild.audioManager.connectedChannel!!.name}.").complete()
             }
             VoiceStatus.BOTH_CONNECTED_SAME_CHANNEL -> {
                 evt.channel.sendMessage("We're already in the same voice channel.").complete()
@@ -43,7 +42,7 @@ class Audio : Module() {
 
     @Command(description = "Leaves the voice channel that the bot is in.", locale = Locale.GUILD)
     fun leaveVoice(evt: MessageReceivedEvent) {
-        val channelName = evt.guild.audioManager.connectedChannel.name
+        val channelName = evt.guild.audioManager.connectedChannel!!.name
         leaveVoiceChannel(evt.guild) {
             evt.channel.sendMessage("Left $channelName.").complete()
         }
@@ -141,7 +140,7 @@ class Audio : Module() {
     @Listener
     fun leaveVoiceAutomatically(evt: GuildVoiceLeaveEvent) {
         if (evt.guild.audioManager.connectedChannel != evt.channelLeft) return
-        if (evt.guild.audioManager.connectedChannel.members.all { it.user.isBot }) {
+        if (evt.guild.audioManager.connectedChannel!!.members.all { it.user.isBot }) {
             leaveVoiceChannel(evt.guild)
         }
     }
@@ -149,7 +148,7 @@ class Audio : Module() {
     @Listener
     fun leaveVoiceAutomatically(evt: GuildVoiceMoveEvent) {
         if (evt.guild.audioManager.connectedChannel != evt.channelLeft) return
-        if (evt.guild.audioManager.connectedChannel.members.all { it.user.isBot }) {
+        if (evt.guild.audioManager.connectedChannel!!.members.all { it.user.isBot }) {
             leaveVoiceChannel(evt.guild)
         }
     }
@@ -173,7 +172,7 @@ class Audio : Module() {
         return when (evt.voiceStatus) {
             VoiceStatus.BOTH_CONNECTED_SAME_CHANNEL -> true
             VoiceStatus.SELF_DISCONNECTED_USER_CONNECTED -> if (shouldConnect) {
-                connectToVoiceChannel(evt.member.voiceState.channel)
+                connectToVoiceChannel(evt.member!!.voiceState!!.channel!!)
                 true
             } else {
                 voiceStatus.sendErrorMessage(evt.textChannel)

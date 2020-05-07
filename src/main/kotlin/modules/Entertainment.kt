@@ -3,7 +3,7 @@ package com.serebit.autotitan.modules
 import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.api.annotations.Command
 import com.serebit.autotitan.config
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import java.util.*
 import kotlin.math.roundToInt
 

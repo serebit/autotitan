@@ -1,13 +1,13 @@
 package com.serebit.autotitan.extensions.jda
 
 import com.serebit.autotitan.audio.VoiceStatus
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 
 val MessageReceivedEvent.voiceStatus: VoiceStatus
     get() {
         val selfIsConnected = guild.audioManager.isConnected
-        val userIsConnected = member.voiceState.inVoiceChannel()
-        val differentChannel = member.voiceState.channel != guild.audioManager.connectedChannel
+        val userIsConnected = member?.voiceState?.inVoiceChannel() ?: false
+        val differentChannel = member?.voiceState?.channel != guild.audioManager.connectedChannel
         return when {
             !userIsConnected && selfIsConnected -> VoiceStatus.SELF_CONNECTED_USER_DISCONNECTED
             !selfIsConnected && userIsConnected -> VoiceStatus.SELF_DISCONNECTED_USER_CONNECTED

@@ -1,13 +1,13 @@
 package com.serebit.autotitan.extensions.jda
 
-import net.dv8tion.jda.core.AccountType
-import net.dv8tion.jda.core.JDA
-import net.dv8tion.jda.core.JDABuilder
-import net.dv8tion.jda.core.entities.Emote
-import net.dv8tion.jda.core.entities.User
+import net.dv8tion.jda.api.JDA
+import net.dv8tion.jda.api.JDABuilder
+import net.dv8tion.jda.api.entities.Emote
+import net.dv8tion.jda.api.entities.User
+import net.dv8tion.jda.api.requests.GatewayIntent
 
-inline fun jda(accountType: AccountType, init: JDABuilder.() -> Unit): JDA =
-    JDABuilder(accountType).apply(init).build().awaitReady()
+inline fun jda(token: String, init: JDABuilder.() -> Unit): JDA =
+    JDABuilder.create(token, GatewayIntent.getIntents(GatewayIntent.ALL_INTENTS)).apply(init).build().awaitReady()
 
 fun JDA.getUserByMention(mention: String): User? = try {
     getUserById(

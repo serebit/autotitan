@@ -1,6 +1,6 @@
 package com.serebit.autotitan.audio
 
-import net.dv8tion.jda.core.entities.MessageChannel
+import net.dv8tion.jda.api.entities.MessageChannel
 
 enum class VoiceStatus(val errorMessage: String?) {
     NEITHER_CONNECTED("We both need to be in a voice channel for me to do that."),

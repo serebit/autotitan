@@ -7,17 +7,13 @@ import com.serebit.autotitan.data.Emote
 import com.serebit.autotitan.extensions.jda.*
 import com.serebit.autotitan.extensions.toBooleanOrNull
 import com.serebit.autotitan.extensions.toCharOrNull
-import net.dv8tion.jda.core.Permission
-import net.dv8tion.jda.core.entities.Channel
-import net.dv8tion.jda.core.entities.Member
-import net.dv8tion.jda.core.entities.MessageEmbed
-import net.dv8tion.jda.core.entities.User
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.Permission
+import net.dv8tion.jda.api.entities.*
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.full.valueParameters
 import kotlin.reflect.jvm.jvmErasure
-import com.serebit.autotitan.api.annotations.Command as CommandAnnotation
 
 internal class Command(
     private val function: KFunction<Unit>,
@@ -59,8 +55,8 @@ internal class Command(
     fun isInvokeableByAuthor(evt: MessageReceivedEvent): Boolean {
         val correctLocale = when (locale) {
             Locale.ALL -> true
-            Locale.GUILD -> evt.guild != null
-            Locale.PRIVATE_CHANNEL -> evt.guild == null
+            Locale.GUILD -> evt.isFromGuild
+            Locale.PRIVATE_CHANNEL -> !evt.isFromGuild
         }
 
         return authorHasAccess(evt) && correctLocale
@@ -71,7 +67,7 @@ internal class Command(
         return if (splitLastParameter) {
             splitParameters
         } else {
-            splitParameters.slice(0 until parameterTypes.size) +
+            splitParameters.slice(parameterTypes.indices) +
                     splitParameters.drop(parameterTypes.size).joinToString(" ")
         }.filter(String::isNotBlank)
     }
@@ -98,7 +94,7 @@ internal class Command(
         Char::class -> string.toCharOrNull()
         User::class -> evt.jda.getUserByMention(string)
         Member::class -> evt.guild.getMemberByMention(string)
-        Channel::class -> evt.guild.getTextChannelByMention(string)
+        Invite.Channel::class -> evt.guild.getTextChannelByMention(string)
         Emote::class -> Emote.from(string, evt.jda)
         else -> null
     }
@@ -106,10 +102,10 @@ internal class Command(
     private fun authorHasAccess(evt: MessageReceivedEvent) = when (access) {
         Access.ALL -> true
         Access.GUILD_OWNER -> evt.member == evt.member?.guild?.owner
-        Access.BOT_OWNER -> evt.author == evt.jda.asBot().applicationInfo.complete().owner
-        Access.RANK_ABOVE -> evt.guild != null && evt.member.roles[0] > evt.guild.selfMember.roles[0]
-        Access.RANK_SAME -> evt.guild != null && evt.member.roles[0] == evt.guild.selfMember.roles[0]
-        Access.RANK_BELOW -> evt.guild != null && evt.member.roles[0] < evt.guild.selfMember.roles[0]
+        Access.BOT_OWNER -> evt.author == evt.jda.retrieveApplicationInfo().complete().owner
+        Access.RANK_ABOVE -> evt.isFromGuild && evt.member!!.roles[0] > evt.guild.selfMember.roles[0]
+        Access.RANK_SAME -> evt.isFromGuild && evt.member!!.roles[0] == evt.guild.selfMember.roles[0]
+        Access.RANK_BELOW -> evt.isFromGuild && evt.member!!.roles[0] < evt.guild.selfMember.roles[0]
     }
 
     private val MessageReceivedEvent.isValidCommandInvocation: Boolean
@@ -133,7 +129,7 @@ internal class Command(
             Double::class,
             User::class,
             Member::class,
-            Channel::class,
+            MessageChannel::class,
             Emote::class,
             Char::class,
             String::class

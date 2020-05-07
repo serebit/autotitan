@@ -2,8 +2,8 @@ package com.serebit.autotitan.data
 
 import com.serebit.autotitan.extensions.isUnicodeEmoji
 import com.serebit.autotitan.extensions.jda.getEmoteByMention
-import net.dv8tion.jda.core.JDA
-import net.dv8tion.jda.core.entities.MessageChannel
+import net.dv8tion.jda.api.JDA
+import net.dv8tion.jda.api.entities.MessageChannel
 
 class Emote {
     val unicodeValue: String?
@@ -22,11 +22,11 @@ class Emote {
     }
 
     fun canInteract(channel: MessageChannel) = if (isDiscordEmote) {
-        channel.jda.getEmoteById(emoteIdValue!!).canInteract(channel.jda.selfUser, channel, true)
+        channel.jda.getEmoteById(emoteIdValue!!)!!.canInteract(channel.jda.selfUser, channel, true)
     } else true
 
     fun toString(jda: JDA): String {
-        return if (isDiscordEmote) jda.getEmoteById(emoteIdValue!!).asMention else unicodeValue!!
+        return if (isDiscordEmote) jda.getEmoteById(emoteIdValue!!)!!.asMention else unicodeValue!!
     }
 
     override fun equals(other: Any?): Boolean = if (other is Emote) {

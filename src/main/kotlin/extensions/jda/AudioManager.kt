@@ -1,10 +1,10 @@
 package com.serebit.autotitan.extensions.jda
 
-import net.dv8tion.jda.core.audio.hooks.ConnectionListener
-import net.dv8tion.jda.core.audio.hooks.ConnectionStatus
-import net.dv8tion.jda.core.entities.User
-import net.dv8tion.jda.core.entities.VoiceChannel
-import net.dv8tion.jda.core.managers.AudioManager
+import net.dv8tion.jda.api.audio.hooks.ConnectionListener
+import net.dv8tion.jda.api.audio.hooks.ConnectionStatus
+import net.dv8tion.jda.api.entities.User
+import net.dv8tion.jda.api.entities.VoiceChannel
+import net.dv8tion.jda.api.managers.AudioManager
 
 inline fun AudioManager.onConnectionStatusChange(desiredStatus: ConnectionStatus, crossinline task: () -> Unit) {
     connectionListener = object : ConnectionListener {
@@ -15,7 +15,7 @@ inline fun AudioManager.onConnectionStatusChange(desiredStatus: ConnectionStatus
             }
         }
 
-        override fun onUserSpeaking(user: User?, speaking: Boolean) = Unit
+        override fun onUserSpeaking(user: User, speaking: Boolean) = Unit
 
         override fun onPing(ping: Long) = Unit
     }

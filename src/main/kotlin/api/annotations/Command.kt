@@ -2,7 +2,7 @@ package com.serebit.autotitan.api.annotations
 
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.meta.Locale
-import net.dv8tion.jda.core.Permission
+import net.dv8tion.jda.api.Permission
 
 /**
  * Represents a bot command's attributes.

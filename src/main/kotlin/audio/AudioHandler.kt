@@ -8,7 +8,8 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.serebit.autotitan.Logger
-import net.dv8tion.jda.core.entities.MessageChannel
+import com.serebit.logkat.error
+import net.dv8tion.jda.api.entities.MessageChannel
 import java.util.concurrent.Future
 
 object AudioHandler : AudioPlayerManager by DefaultAudioPlayerManager() {

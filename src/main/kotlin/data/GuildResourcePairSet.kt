@@ -1,6 +1,6 @@
 package com.serebit.autotitan.data
 
-import net.dv8tion.jda.core.entities.Guild
+import net.dv8tion.jda.api.entities.Guild
 
 class GuildResourcePairSet<K : Any, V : Any> : MutableMap<GuildId, MutableSet<Pair<K, V>>> by mutableMapOf() {
     operator fun contains(guild: Guild): Boolean = guild.idLong in this

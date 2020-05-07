@@ -1,7 +1,7 @@
 package com.serebit.autotitan.extensions
 
 import com.vdurmont.emoji.EmojiParser
-import net.dv8tion.jda.core.entities.MessageEmbed
+import net.dv8tion.jda.api.entities.MessageEmbed
 
 fun String.toBooleanOrNull() = if (this == "true" || this == "false") toBoolean() else null
 

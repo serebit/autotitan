@@ -5,14 +5,14 @@ import com.serebit.autotitan.api.annotations.Command
 import com.serebit.autotitan.api.annotations.Listener
 import com.serebit.autotitan.api.meta.Locale
 import com.serebit.autotitan.data.DataManager
-import net.dv8tion.jda.core.JDA
-import net.dv8tion.jda.core.Permission
-import net.dv8tion.jda.core.entities.Guild
-import net.dv8tion.jda.core.entities.Member
-import net.dv8tion.jda.core.entities.Role
-import net.dv8tion.jda.core.entities.User
-import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.JDA
+import net.dv8tion.jda.api.Permission
+import net.dv8tion.jda.api.entities.Guild
+import net.dv8tion.jda.api.entities.Member
+import net.dv8tion.jda.api.entities.Role
+import net.dv8tion.jda.api.entities.User
+import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 
 @Suppress("UNUSED", "TooManyFunctions")
 class Moderation : Module() {
@@ -25,7 +25,7 @@ class Moderation : Module() {
         memberPermissions = [Permission.KICK_MEMBERS]
     )
     fun kick(evt: MessageReceivedEvent, member: Member) {
-        evt.guild.controller.kick(member).complete()
+        evt.guild.kick(member).complete()
         evt.channel.sendMessage("Kicked ${member.effectiveName}.").complete()
     }
 
@@ -35,7 +35,7 @@ class Moderation : Module() {
         memberPermissions = [Permission.BAN_MEMBERS]
     )
     fun ban(evt: MessageReceivedEvent, user: User) {
-        evt.guild.controller.ban(user, 0).complete()
+        evt.guild.ban(user, 0).complete()
         evt.channel.sendMessage("Banned ${user.name}.").complete()
     }
 
@@ -45,7 +45,7 @@ class Moderation : Module() {
         memberPermissions = [Permission.BAN_MEMBERS]
     )
     fun unBan(evt: MessageReceivedEvent, user: User) {
-        evt.guild.controller.unban(user).complete()
+        evt.guild.unban(user).complete()
         evt.channel.sendMessage("Unbanned ${user.name}.").complete()
     }
 
@@ -92,15 +92,15 @@ class Moderation : Module() {
     fun smartPrune(evt: MessageReceivedEvent) {
         memberRoleMap[evt.jda, evt.guild]?.let { memberRole ->
             val membersWithBaseRole = evt.guild.getMembersWithRoles(memberRole)
-            membersWithBaseRole.forEach { evt.guild.controller.removeSingleRoleFromMember(it, memberRole).queue() }
-            val prunableMemberCount = evt.guild.getPrunableMemberCount(daysOfInactivity).complete()
-            evt.guild.controller.prune(daysOfInactivity).complete()
+            membersWithBaseRole.forEach { evt.guild.removeRoleFromMember(it, memberRole).queue() }
+            val prunableMemberCount = evt.guild.retrievePrunableMemberCount(daysOfInactivity).complete()
+            evt.guild.prune(daysOfInactivity).complete()
             val membersWithoutBaseRole = evt.guild.members.filter { it.roles.isEmpty() }
-            membersWithoutBaseRole.forEach { evt.guild.controller.addSingleRoleToMember(it, memberRole).queue() }
+            membersWithoutBaseRole.forEach { evt.guild.addRoleToMember(it, memberRole).queue() }
             evt.channel.sendMessage("Pruned $prunableMemberCount members.").complete()
         } ?: run {
-            val prunableMemberCount = evt.guild.getPrunableMemberCount(daysOfInactivity).complete()
-            evt.guild.controller.prune(daysOfInactivity).complete()
+            val prunableMemberCount = evt.guild.retrievePrunableMemberCount(daysOfInactivity).complete()
+            evt.guild.prune(daysOfInactivity).complete()
             evt.channel.sendMessage("Pruned $prunableMemberCount members.").complete()
         }
     }
@@ -108,7 +108,7 @@ class Moderation : Module() {
     @Listener
     fun giveRole(evt: GuildMemberJoinEvent) {
         if (memberRoleMap.contains(evt.guild)) {
-            evt.guild.controller.addRolesToMember(evt.member, memberRoleMap[evt.jda, evt.guild]).complete()
+            evt.guild.addRoleToMember(evt.member, memberRoleMap[evt.jda, evt.guild]!!).complete()
         }
     }
 

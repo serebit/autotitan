@@ -4,10 +4,10 @@ import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.api.annotations.Command
 import com.serebit.autotitan.api.meta.Locale
 import com.serebit.autotitan.extensions.jda.sendEmbed
-import net.dv8tion.jda.core.OnlineStatus
-import net.dv8tion.jda.core.Permission
-import net.dv8tion.jda.core.entities.Member
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.OnlineStatus
+import net.dv8tion.jda.api.Permission
+import net.dv8tion.jda.api.entities.Member
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -20,7 +20,7 @@ class General : Module() {
 
     @Command(description = "Pings the bot.")
     fun ping(evt: MessageReceivedEvent) {
-        evt.channel.sendMessage("Pong. The last ping was ${evt.jda.ping}ms.").complete()
+        evt.channel.sendMessage("Pong. The last ping was ${evt.jda.gatewayPing}ms.").complete()
     }
 
     @Command(description = "Gets information about the server.", locale = Locale.GUILD)
@@ -32,9 +32,9 @@ class General : Module() {
 
         evt.channel.sendEmbed {
             setTitle(evt.guild.name, null)
-            setDescription("Created on ${evt.guild.creationTime.format(dateFormat)}")
+            setDescription("Created on ${evt.guild.timeCreated.format(dateFormat)}")
             setThumbnail(evt.guild.iconUrl)
-            addField("Owner", evt.guild.owner.asMention, true)
+            addField("Owner", evt.guild.owner!!.asMention, true)
             addField("Region", evt.guild.region.toString(), true)
             addField("Online Members", onlineMemberCount.toString(), true)
             addField("Total Members", evt.guild.members.size.toString(), true)
@@ -43,7 +43,7 @@ class General : Module() {
             addField("Voice Channels", evt.guild.voiceChannels.size.toString(), true)
             addField("Hoisted Roles", hoistedRoles, true)
             if (evt.guild.selfMember.hasPermission(Permission.MANAGE_SERVER)) {
-                val permanentInvites = evt.guild.invites.complete().filter { !it.isTemporary }
+                val permanentInvites = evt.guild.retrieveInvites().complete().filter { !it.isTemporary }
                 if (permanentInvites.isNotEmpty()) addField(
                     "Invite Link",
                     permanentInvites.first().url,
@@ -55,7 +55,7 @@ class General : Module() {
     }
 
     @Command(description = "Gets information about the invoker.", locale = Locale.GUILD)
-    fun selfInfo(evt: MessageReceivedEvent) = memberInfo(evt, evt.member)
+    fun selfInfo(evt: MessageReceivedEvent) = memberInfo(evt, evt.member!!)
 
     @Command(description = "Gets information about a specific server member.", locale = Locale.GUILD)
     fun memberInfo(evt: MessageReceivedEvent, member: Member) {
@@ -71,8 +71,8 @@ class General : Module() {
 
         val status = buildString {
             append(member.onlineStatus.readableName)
-            member.game?.let {
-                append(" - Playing ${member.game.name}")
+            member.activities[0]?.let {
+                append(" - Playing ${it.name}")
             }
         }
 
@@ -83,11 +83,11 @@ class General : Module() {
             setDescription(status)
             setColor(member.color)
             setThumbnail(member.user.effectiveAvatarUrl)
-            val creationDate = member.user.creationTime.format(dateFormat)
-            val creationDateDifference = OffsetDateTime.now() - member.user.creationTime
+            val creationDate = member.user.timeCreated.format(dateFormat)
+            val creationDateDifference = OffsetDateTime.now() - member.user.timeCreated
             addField("Joined Discord", "$creationDate ($creationDateDifference)", true)
-            val joinDate = member.joinDate.format(dateFormat)
-            val joinDateDifference = OffsetDateTime.now() - member.joinDate
+            val joinDate = member.timeJoined.format(dateFormat)
+            val joinDateDifference = OffsetDateTime.now() - member.timeJoined
             addField("Joined this Server", "$joinDate ($joinDateDifference)", true)
             addField("Do they own the server?", member.isOwner.asYesNo.capitalize(), true)
             if (roles.isNotEmpty()) addField("Roles", roles, true)

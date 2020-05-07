@@ -12,10 +12,10 @@ import com.serebit.autotitan.extensions.jda.addReaction
 import com.serebit.autotitan.extensions.jda.chunkedBy
 import com.serebit.autotitan.extensions.jda.sendEmbed
 import com.serebit.autotitan.extensions.limitLengthTo
-import net.dv8tion.jda.core.Permission
-import net.dv8tion.jda.core.entities.MessageEmbed
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent
-import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.Permission
+import net.dv8tion.jda.api.entities.MessageEmbed
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import java.time.Clock
 import java.time.OffsetDateTime
 
@@ -90,7 +90,7 @@ class AutoReact : Module(isOptional = true) {
                             embeds.forEach { addField(it.first, it.second, false) }
                         }.queue()
                     }
-            }, { evt.channel.sendMessage(it.message).complete() })
+            }, { evt.channel.sendMessage(it.message!!).complete() })
         } else evt.channel.sendMessage("This server has no autoreacts saved.").complete()
     }
 

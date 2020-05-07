@@ -5,12 +5,14 @@ import com.serebit.autotitan.Logger
 import com.serebit.autotitan.api.Module
 import com.serebit.autotitan.config
 import com.serebit.autotitan.extensions.jda.sendEmbed
+import com.serebit.logkat.info
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import net.dv8tion.jda.core.events.Event
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent
-import net.dv8tion.jda.core.hooks.ListenerAdapter
+import net.dv8tion.jda.api.events.Event
+import net.dv8tion.jda.api.events.GenericEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.hooks.ListenerAdapter
 import kotlin.reflect.full.createInstance
 import com.serebit.autotitan.api.annotations.Command as CommandAnnotation
 
@@ -30,7 +32,7 @@ internal object EventListener : ListenerAdapter(), CoroutineScope {
         Logger.info("Reloaded modules from classpath.")
     }
 
-    override fun onGenericEvent(evt: Event) {
+    override fun onGenericEvent(evt: GenericEvent) {
         launch {
             loadedModules.forEach { it.runListeners(evt) }
         }

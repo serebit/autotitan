@@ -7,8 +7,8 @@ import com.serebit.autotitan.api.annotations.Command
 import com.serebit.autotitan.extensions.jda.sendEmbed
 import com.serebit.autotitan.extensions.limitLengthTo
 import khttp.get
-import net.dv8tion.jda.core.entities.MessageEmbed
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.entities.MessageEmbed
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import java.net.URLEncoder
 
 @Suppress("UNUSED", "TooManyFunctions")

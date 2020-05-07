@@ -7,8 +7,9 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
 import com.serebit.autotitan.extensions.jda.infoString
 import com.serebit.autotitan.extensions.jda.sendEmbed
-import net.dv8tion.jda.core.audio.AudioSendHandler
-import net.dv8tion.jda.core.entities.MessageChannel
+import net.dv8tion.jda.api.audio.AudioSendHandler
+import net.dv8tion.jda.api.entities.MessageChannel
+import java.nio.ByteBuffer
 
 class GuildTrackManager : AudioEventAdapter() {
     private val player: AudioPlayer = AudioHandler.createPlayer().also {
@@ -94,7 +95,7 @@ class GuildTrackManager : AudioEventAdapter() {
         // behavior is the same whether we check for frames or not, so always return true
         override fun canProvide(): Boolean = true
 
-        override fun provide20MsAudio(): ByteArray? = player.provide()?.data
+        override fun provide20MsAudio(): ByteBuffer? = player.provide()?.data?.let { ByteBuffer.wrap(it) }
 
         override fun isOpus() = true
     }
