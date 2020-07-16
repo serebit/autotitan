@@ -36,7 +36,7 @@ class Rule34 : Module(isOptional = true) {
         splitLastParameter = false
     )
     fun gelbooru(evt: MessageReceivedEvent, tagString: String) {
-        if (evt.guild != null && evt.textChannel.isNSFW || evt.privateChannel != null) {
+        if (evt.isFromGuild && evt.textChannel.isNSFW || !evt.isFromGuild) {
             val formattedTags = formatTags(tagString)
             randomPostOrNull(ImageProvider.GELBOORU, formattedTags)?.let { post ->
                 evt.channel.sendEmbed {
