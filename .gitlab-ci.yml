@@ -1,15 +1,20 @@
-image: java:8-jdk
+image: adoptopenjdk:11-jdk-hotspot
 
-stages:
-  - build
+variables:
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+  GRADLE_USER_HOME: $CI_PROJECT_DIR/.gradle_home
+  KONAN_DATA_DIR: $CI_PROJECT_DIR/.konan_home
 
 before_script:
-  - export GRADLE_USER_HOME=`pwd`/.gradle
+  - rm -f $GRADLE_USER_HOME/caches/modules-2/modules-2.lock
+  - rm -f $GRADLE_USER_HOME/caches/build-cache-1/build-cache-1.lock
 
 cache:
+  key: one-key-to-rule-them-all
   paths:
-    - .gradle/wrapper
-    - .gradle/caches
+    - $GRADLE_USER_HOME/wrapper/dists/
+    - $GRADLE_USER_HOME/caches/modules-2/
+    - $GRADLE_USER_HOME/caches/build-cache-1/
 
 build:
   stage: build

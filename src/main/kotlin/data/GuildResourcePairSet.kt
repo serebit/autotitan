@@ -2,7 +2,7 @@ package com.serebit.autotitan.data
 
 import net.dv8tion.jda.api.entities.Guild
 
-class GuildResourcePairSet<K : Any, V : Any> : MutableMap<GuildId, MutableSet<Pair<K, V>>> by mutableMapOf() {
+class GuildResourcePairSet<K : Any, V : Any> : MutableMap<GuildID, MutableSet<Pair<K, V>>> by mutableMapOf() {
     operator fun contains(guild: Guild): Boolean = guild.idLong in this
 
     operator fun get(guild: Guild) = this.getOrPut(guild.idLong) { mutableSetOf() }

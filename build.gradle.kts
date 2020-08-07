@@ -1,35 +1,32 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.3.72"
+    kotlin("jvm") version "1.4.0-rc"
+    kotlin("plugin.serialization") version "1.4.0-rc"
     id("com.github.johnrengelman.shadow") version "6.0.0"
-    id("com.github.ben-manes.versions") version "0.28.0"
+    id("com.github.ben-manes.versions") version "0.29.0"
 }
 
 group = "com.serebit"
-version = "0.5.7"
+version = "0.6.0-SNAPSHOT"
 
 description = "AutoTitan is a modular, self-hosted Discord bot built in Kotlin/JVM using the Java Discord API."
 
 repositories {
     jcenter()
+    mavenCentral()
 }
 
 dependencies {
-    implementation(kotlin("stdlib-jdk8"))
     implementation(kotlin("reflect"))
-    implementation(group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version = "1.3.5")
-    implementation(group = "com.serebit.logkat", name = "logkat-jvm", version = "0.5.2")
-    implementation(group = "net.dv8tion", name = "JDA", version = "4.2.0_179")
-    implementation(group = "commons-validator", name = "commons-validator", version = "1.6")
-    implementation(group = "com.sedmelluq", name = "lavaplayer", version = "1.3.50")
-    implementation(group = "com.github.salomonbrys.kotson", name = "kotson", version = "2.5.0")
-    implementation(group = "khttp", name = "khttp", version = "1.0.0")
-    implementation(group = "com.google.guava", name = "guava", version = "29.0-jre")
-    implementation(group = "org.slf4j", name = "slf4j-simple", version = "2.0.0-alpha1")
-    implementation(group = "com.github.oshi", name = "oshi-core", version = "5.1.2")
-    implementation(group = "com.vdurmont", name = "emoji-java", version = "5.1.1")
+    implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-core", "1.3.8-1.4.0-rc")
+    implementation("org.jetbrains.kotlinx", "kotlinx-serialization-runtime", "1.0-M1-1.4.0-rc")
+    implementation("io.ktor", "ktor-client-cio", "1.3.2-1.4.0-rc")
+    implementation("com.serebit.logkat", "logkat-jvm", "0.5.3")
+    implementation("net.dv8tion", "JDA", "4.2.0_187")
+    implementation("com.sedmelluq", "lavaplayer", "1.3.50")
+    implementation("org.slf4j", "slf4j-simple", "2.0.0-alpha1")
+    implementation("com.vdurmont", "emoji-java", "5.1.1")
 }
 
 tasks {
@@ -37,12 +34,8 @@ tasks {
         kotlinOptions.jvmTarget = "1.8"
     }
 
-    withType<ShadowJar> {
+    shadowJar {
         archiveFileName.set("${archiveBaseName.get()}-${archiveVersion.get()}.${archiveExtension.get()}")
         manifest.attributes["Main-Class"] = "com.serebit.autotitan.MainKt"
-    }
-
-    withType<Test> {
-        environment["AUTOTITAN_TEST_MODE_FLAG"] = "true"
     }
 }

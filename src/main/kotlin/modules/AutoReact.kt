@@ -1,21 +1,23 @@
 package com.serebit.autotitan.modules
 
 import com.serebit.autotitan.api.Module
+import com.serebit.autotitan.api.ModuleCompanion
 import com.serebit.autotitan.api.annotations.Command
 import com.serebit.autotitan.api.annotations.Listener
 import com.serebit.autotitan.api.meta.Locale
 import com.serebit.autotitan.data.DataManager
 import com.serebit.autotitan.data.Emote
 import com.serebit.autotitan.data.GuildResourceMap
-import com.serebit.autotitan.extensions.jda.MESSAGE_EMBED_MAX_FIELDS
-import com.serebit.autotitan.extensions.jda.addReaction
-import com.serebit.autotitan.extensions.jda.chunkedBy
-import com.serebit.autotitan.extensions.jda.sendEmbed
-import com.serebit.autotitan.extensions.limitLengthTo
+import com.serebit.autotitan.extensions.chunkedBy
+import com.serebit.autotitan.extensions.sendEmbed
+import com.serebit.autotitan.extensions.truncate
+import kotlinx.serialization.Serializable
 import net.dv8tion.jda.api.Permission
+import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.requests.RestAction
 import java.time.Clock
 import java.time.OffsetDateTime
 
@@ -79,10 +81,10 @@ class AutoReact : Module(isOptional = true) {
             evt.author.openPrivateChannel().queue({ privateChannel ->
                 reacts
                     .map { (word, emotes) ->
-                        word.limitLengthTo(MessageEmbed.TITLE_MAX_LENGTH) to
+                        word.truncate(MessageEmbed.TITLE_MAX_LENGTH) to
                                 emotes.joinToString("") { it.emote.toString(evt.jda) }
                     }
-                    .chunkedBy(MessageEmbed.EMBED_MAX_LENGTH_BOT, MESSAGE_EMBED_MAX_FIELDS) {
+                    .chunkedBy(MessageEmbed.EMBED_MAX_LENGTH_BOT, 25) {
                         it.first.length + it.second.length
                     }
                     .forEach { embeds ->
@@ -105,6 +107,7 @@ class AutoReact : Module(isOptional = true) {
         }
     }
 
+    @Serializable
     private data class EmoteData(
         val emote: Emote,
         val creationTimestamp: String,
@@ -123,8 +126,14 @@ class AutoReact : Module(isOptional = true) {
         }
     }
 
-    companion object {
+    companion object : ModuleCompanion {
         private const val maxReactionsPerMessage = 20
         private const val maxFieldsPerReactListEmbed = 8
+
+        override fun provide() = AutoReact()
     }
 }
+
+private fun Message.addReaction(emote: Emote): RestAction<Void> = if (emote.isDiscordEmote) addReaction(
+    jda.getEmoteById(emote.emoteIDValue!!)!!
+) else addReaction(emote.unicodeValue!!)

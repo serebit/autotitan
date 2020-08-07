@@ -1,26 +1,28 @@
 package com.serebit.autotitan
 
-import com.github.salomonbrys.kotson.fromJson
-import com.google.gson.Gson
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import java.io.File
 import java.util.*
 
+@Serializable
 class Configuration private constructor(
     val token: String,
     var prefix: String,
     val blackList: MutableSet<Long> = mutableSetOf(),
     val enabledModules: MutableSet<String> = mutableSetOf()
 ) {
-    fun serialize() = file.also { it.createNewFile() }.writeText(Gson().toJson(this))
+    fun serialize() = file.also { it.createNewFile() }.writeText(Json.encodeToString(this))
 
     companion object {
-        private val file = File(this::class.java.protectionDomain.codeSource.location.toURI()).parentFile.let {
+        private val file = File(this::class.java.protectionDomain.codeSource.location.toURI()).parent.let {
             File("$it/.config")
         }
 
         fun generate(): Configuration = when {
-            System.getenv("AUTOTITAN_TEST_MODE_FLAG") == "true" -> generateDummy()
-            file.exists() -> Gson().fromJson(file.readText())
+            file.exists() -> Json.decodeFromString(file.readText())
             else -> Scanner(System.`in`).use { scanner ->
                 Configuration(
                     token = prompt(scanner, "Enter new token:") { !it.contains("\\s".toRegex()) },
@@ -28,11 +30,6 @@ class Configuration private constructor(
                 ).also(Configuration::serialize)
             }
         }
-
-        private fun generateDummy() = Configuration(
-            "",
-            "!"
-        )
 
         private tailrec fun prompt(scanner: Scanner, text: String, condition: (String) -> Boolean): String {
             print("$text\n> ")

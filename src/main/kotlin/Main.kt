@@ -1,14 +1,13 @@
 package com.serebit.autotitan
 
-import com.serebit.autotitan.extensions.jda.jda
+import com.serebit.autotitan.extensions.jda
 import com.serebit.autotitan.listeners.EventListener
 import com.serebit.logkat.LogLevel
 import com.serebit.logkat.Logger
 import net.dv8tion.jda.api.entities.Activity
-import kotlin.system.exitProcess
 
 const val NAME = "AutoTitan"
-const val VERSION = "0.5.7"
+const val VERSION = "0.6.0-SNAPSHOT"
 val config: Configuration = Configuration.generate()
 val Logger = Logger()
 

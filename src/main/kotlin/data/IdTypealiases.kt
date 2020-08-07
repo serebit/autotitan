@@ -2,5 +2,5 @@
 
 package com.serebit.autotitan.data
 
-typealias GuildId = Long
-typealias EmoteId = Long
+typealias GuildID = Long
+typealias EmoteID = Long

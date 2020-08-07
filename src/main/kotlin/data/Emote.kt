@@ -1,48 +1,41 @@
 package com.serebit.autotitan.data
 
-import com.serebit.autotitan.extensions.isUnicodeEmoji
-import com.serebit.autotitan.extensions.jda.getEmoteByMention
+import com.serebit.autotitan.extensions.getEmoteByMention
+import com.vdurmont.emoji.EmojiParser
+import kotlinx.serialization.Serializable
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.MessageChannel
 
-class Emote {
-    val unicodeValue: String?
-    val emoteIdValue: EmoteId?
-    val isDiscordEmote get() = emoteIdValue != null
+@Serializable
+class Emote private constructor(var unicodeValue: String? = null, var emoteIDValue: EmoteID? = null) {
+    val isDiscordEmote get() = emoteIDValue != null
     val isUnicodeEmote get() = unicodeValue != null
 
-    private constructor(unicode: String) {
-        unicodeValue = unicode
-        emoteIdValue = null
-    }
-
-    private constructor(emoteId: EmoteId) {
-        unicodeValue = null
-        emoteIdValue = emoteId
-    }
-
     fun canInteract(channel: MessageChannel) = if (isDiscordEmote) {
-        channel.jda.getEmoteById(emoteIdValue!!)!!.canInteract(channel.jda.selfUser, channel, true)
+        channel.jda.getEmoteById(emoteIDValue!!)!!.canInteract(channel.jda.selfUser, channel, true)
     } else true
 
     fun toString(jda: JDA): String {
-        return if (isDiscordEmote) jda.getEmoteById(emoteIdValue!!)!!.asMention else unicodeValue!!
+        return if (isDiscordEmote) jda.getEmoteById(emoteIDValue!!)!!.asMention else unicodeValue!!
     }
 
     override fun equals(other: Any?): Boolean = if (other is Emote) {
-        other.unicodeValue == unicodeValue && other.emoteIdValue == emoteIdValue
+        other.unicodeValue == unicodeValue && other.emoteIDValue == emoteIDValue
     } else false
 
     @Suppress("MagicNumber")
     override fun hashCode(): Int {
-        return 37 * (unicodeValue?.hashCode() ?: emoteIdValue?.hashCode()!!)
+        return 37 * (unicodeValue?.hashCode() ?: emoteIDValue?.hashCode()!!)
     }
 
     companion object {
         fun from(string: String, jda: JDA? = null): Emote? = if (string.isUnicodeEmoji) {
-            Emote(string)
+            Emote(unicodeValue = string)
         } else {
-            jda?.getEmoteByMention(string)?.let { Emote(it.idLong) }
+            jda?.getEmoteByMention(string)?.let { Emote(emoteIDValue = it.idLong) }
         }
     }
 }
+
+private val String.isUnicodeEmoji: Boolean
+    get() = EmojiParser.extractEmojis(this).size == 1 && EmojiParser.removeAllEmojis(this).isEmpty()

@@ -1,26 +1,27 @@
 package com.serebit.autotitan.modules
 
 import com.serebit.autotitan.api.Module
+import com.serebit.autotitan.api.ModuleCompanion
 import com.serebit.autotitan.api.annotations.Command
 import com.serebit.autotitan.api.annotations.Listener
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.meta.Locale
 import com.serebit.autotitan.audio.AudioHandler
+import com.serebit.autotitan.audio.GuildTrackManager
 import com.serebit.autotitan.audio.VoiceStatus
-import com.serebit.autotitan.extensions.jda.closeAudioConnection
-import com.serebit.autotitan.extensions.jda.openAudioConnection
-import com.serebit.autotitan.extensions.jda.trackManager
-import com.serebit.autotitan.extensions.jda.voiceStatus
+import net.dv8tion.jda.api.audio.hooks.ConnectionListener
+import net.dv8tion.jda.api.audio.hooks.ConnectionStatus
 import net.dv8tion.jda.api.entities.Guild
+import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.entities.VoiceChannel
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceMoveEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
-import org.apache.commons.validator.routines.UrlValidator
+import net.dv8tion.jda.api.managers.AudioManager
 
 @Suppress("UNUSED", "TooManyFunctions")
 class Audio : Module() {
-    private val urlValidator = UrlValidator(arrayOf("http", "https"))
+    val urlRegex = "^(https?)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]".toRegex()
 
     @Command(description = "Joins the voice channel that the invoker is in.", locale = Locale.GUILD)
     fun joinVoice(evt: MessageReceivedEvent) {
@@ -57,7 +58,7 @@ class Audio : Module() {
         if (handleVoiceStatus(evt, true)) {
             val trimmedQuery = query.removeSurrounding("<", ">")
             val formattedQuery = buildString {
-                if (!urlValidator.isValid(trimmedQuery)) {
+                if (!urlRegex.matches(trimmedQuery)) {
                     append("ytsearch: ")
                 }
                 append(trimmedQuery)
@@ -73,7 +74,7 @@ class Audio : Module() {
     fun playPlaylist(evt: MessageReceivedEvent, uri: String) {
         if (handleVoiceStatus(evt, true)) {
             val trimmedUri = uri.removeSurrounding("<", ">")
-            if (urlValidator.isValid(trimmedUri)) {
+            if (urlRegex.matches(trimmedUri)) {
                 AudioHandler.loadPlaylist(trimmedUri, evt.textChannel) { playlist ->
                     evt.channel.sendMessage(
                         "Adding ${playlist.tracks.size} tracks from ${playlist.name} to queue."
@@ -162,7 +163,7 @@ class Audio : Module() {
 
     private inline fun connectToVoiceChannel(voiceChannel: VoiceChannel, crossinline onConnect: () -> Unit = {}) {
         val audioManager = voiceChannel.guild.audioManager
-        if (!audioManager.isConnected && !audioManager.isAttemptingToConnect) {
+        if (!audioManager.isConnected) {
             audioManager.openAudioConnection(voiceChannel, onConnect)
         }
     }
@@ -185,8 +186,58 @@ class Audio : Module() {
         }
     }
 
-    companion object {
+    companion object : ModuleCompanion {
         private const val queueListLength = 8
         private const val millisecondsPerSecond = 1000
+
+        override fun provide(): Module = Audio()
     }
 }
+
+inline fun AudioManager.onConnectionStatusChange(desiredStatus: ConnectionStatus, crossinline task: () -> Unit) {
+    connectionListener = object : ConnectionListener {
+        override fun onStatusChange(status: ConnectionStatus) {
+            if (status == desiredStatus) {
+                task()
+                connectionListener = null
+            }
+        }
+
+        override fun onUserSpeaking(user: User, speaking: Boolean) = Unit
+
+        override fun onPing(ping: Long) = Unit
+    }
+}
+
+private val trackManagers = mutableMapOf<Long, GuildTrackManager>()
+
+private val Guild.trackManager: GuildTrackManager
+    get() = trackManagers.getOrPut(idLong) {
+        GuildTrackManager().also {
+            audioManager.sendingHandler = it.sendHandler
+        }
+    }
+
+private inline fun AudioManager.openAudioConnection(channel: VoiceChannel, crossinline task: () -> Unit) {
+    onConnectionStatusChange(ConnectionStatus.CONNECTED, task)
+    openAudioConnection(channel)
+}
+
+private inline fun AudioManager.closeAudioConnection(crossinline task: () -> Unit) {
+    onConnectionStatusChange(ConnectionStatus.NOT_CONNECTED, task)
+    closeAudioConnection()
+}
+
+val MessageReceivedEvent.voiceStatus: VoiceStatus
+    get() {
+        val selfIsConnected = guild.audioManager.isConnected
+        val userIsConnected = member?.voiceState?.inVoiceChannel() ?: false
+        val differentChannel = member?.voiceState?.channel != guild.audioManager.connectedChannel
+        return when {
+            !userIsConnected && selfIsConnected -> VoiceStatus.SELF_CONNECTED_USER_DISCONNECTED
+            !selfIsConnected && userIsConnected -> VoiceStatus.SELF_DISCONNECTED_USER_CONNECTED
+            !selfIsConnected && !userIsConnected -> VoiceStatus.NEITHER_CONNECTED
+            differentChannel -> VoiceStatus.BOTH_CONNECTED_DIFFERENT_CHANNEL
+            else -> VoiceStatus.BOTH_CONNECTED_SAME_CHANNEL
+        }
+    }

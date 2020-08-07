@@ -2,23 +2,20 @@ package com.serebit.autotitan.modules
 
 import com.serebit.autotitan.Logger
 import com.serebit.autotitan.api.Module
+import com.serebit.autotitan.api.ModuleCompanion
 import com.serebit.autotitan.api.annotations.Command
 import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.meta.Locale
 import com.serebit.autotitan.config
-import com.serebit.autotitan.extensions.asMetricUnit
-import com.serebit.autotitan.extensions.asPercentageOf
-import com.serebit.autotitan.extensions.jda.sendEmbed
-import com.serebit.autotitan.extensions.toVerboseTimestamp
+import com.serebit.autotitan.extensions.sendEmbed
 import com.serebit.autotitan.listeners.EventListener
 import com.serebit.logkat.info
 import net.dv8tion.jda.api.entities.Activity
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
-import oshi.SystemInfo
 import kotlin.system.exitProcess
 
-@Suppress("UNUSED", "TooManyFunctions")
+@Suppress("UNUSED")
 class Owner : Module() {
     @Command(description = "Shuts down the bot with an exit code of 0.", access = Access.BOT_OWNER)
     fun shutdown(evt: MessageReceivedEvent) {
@@ -34,53 +31,6 @@ class Owner : Module() {
         val message = evt.channel.sendMessage("Resetting...").complete()
         EventListener.resetModules()
         message.editMessage("Reset commands and listeners.").complete()
-    }
-
-    @Command(description = "Gets information about the system that the bot is running on.", access = Access.BOT_OWNER)
-    fun systemInfo(evt: MessageReceivedEvent) {
-        val info = SystemInfo()
-        val process = info.operatingSystem.getProcess(info.operatingSystem.processId)
-        val processorModel =
-            info.hardware.processor.processorIdentifier.name.replace("(\\(R\\)|\\(TM\\)|@ .+)".toRegex(), "")
-        val processorCores = info.hardware.processor.physicalProcessorCount
-        val processorThreads = info.hardware.processor.logicalProcessorCount
-        val processorFrequency = info.hardware.processor.maxFreq
-        val totalMemory = info.hardware.memory.total
-        val usedMemory = info.hardware.memory.total - info.hardware.memory.available
-        val usedMemoryPercentage = usedMemory.asPercentageOf(totalMemory)
-        val processMemory = process.residentSetSize
-        val processMemoryPercentage = processMemory.asPercentageOf(totalMemory)
-        val systemUptime = info.operatingSystem.systemUptime
-        val processUptime = process.upTime / millisecondsPerSecond
-        evt.channel.sendEmbed {
-            addField(
-                "Processor",
-                """
-                    Model: `$processorModel`
-                    Cores: `$processorCores`
-                    Threads: `$processorThreads`
-                    Frequency: `${processorFrequency.asMetricUnit("Hz")}`
-                """.trimIndent(),
-                false
-            )
-            addField(
-                "Memory",
-                """
-                    Total: `${totalMemory.asMetricUnit("B")}`
-                    Used: `${usedMemory.asMetricUnit("B")} ($usedMemoryPercentage%)`
-                    Process: `${processMemory.asMetricUnit("B")} ($processMemoryPercentage%)`
-                """.trimIndent(),
-                false
-            )
-            addField(
-                "Uptime",
-                """
-                    System: `${systemUptime.toVerboseTimestamp()}`
-                    Process: `${processUptime.toVerboseTimestamp()}`
-                """.trimIndent(),
-                false
-            )
-        }.complete()
     }
 
     @Command(
@@ -206,7 +156,9 @@ class Owner : Module() {
         evt.channel.sendMessage("Disabled the `$moduleName` module.").complete()
     }
 
-    companion object {
+    companion object : ModuleCompanion {
         private const val millisecondsPerSecond = 1000
+
+        override fun provide() = Owner()
     }
 }

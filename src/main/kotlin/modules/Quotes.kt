@@ -1,20 +1,20 @@
 package com.serebit.autotitan.modules
 
 import com.serebit.autotitan.api.Module
+import com.serebit.autotitan.api.ModuleCompanion
 import com.serebit.autotitan.api.annotations.Command
 import com.serebit.autotitan.api.meta.Locale
 import com.serebit.autotitan.data.DataManager
 import com.serebit.autotitan.data.GuildResourceMap
-import com.serebit.autotitan.extensions.jda.MESSAGE_EMBED_MAX_FIELDS
-import com.serebit.autotitan.extensions.jda.chunkedBy
-import com.serebit.autotitan.extensions.jda.mentionsUsers
-import com.serebit.autotitan.extensions.jda.sendEmbed
-import com.serebit.autotitan.extensions.limitLengthTo
+import com.serebit.autotitan.extensions.chunkedBy
+import com.serebit.autotitan.extensions.sendEmbed
+import com.serebit.autotitan.extensions.truncate
+import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import java.util.*
 
-@Suppress("UNUSED", "TooManyFunctions")
+@Suppress("UNUSED")
 class Quotes : Module(isOptional = true) {
     private val dataManager = DataManager(this::class)
     private val quoteMap = dataManager.read("quotes.json") ?: GuildResourceMap<String, String>()
@@ -30,9 +30,9 @@ class Quotes : Module(isOptional = true) {
             evt.channel.sendMessage("Quotes containing mentions are not permitted.").complete()
             return
         }
-        quoteMap[evt.guild].let {
-            val quoteIndex = it.keys.map { it.toInt() }.max()?.plus(1) ?: 0
-            it[quoteIndex.toString()] = quote
+        quoteMap[evt.guild].let { guildQuotes ->
+            val quoteIndex = guildQuotes.keys.map { it.toInt() }.maxOrNull()?.plus(1) ?: 0
+            guildQuotes[quoteIndex.toString()] = quote
             evt.channel.sendMessage("Added ${evt.member!!.asMention}'s quote as number `$quoteIndex`.").complete()
         }
         dataManager.write("quotes.json", quoteMap)
@@ -92,10 +92,10 @@ class Quotes : Module(isOptional = true) {
             evt.author.openPrivateChannel().queue({ privateChannel ->
                 quotes
                     .map { (index, quote) ->
-                        index.limitLengthTo(MessageEmbed.TITLE_MAX_LENGTH) to
-                                quote.limitLengthTo(MessageEmbed.VALUE_MAX_LENGTH)
+                        index.truncate(MessageEmbed.TITLE_MAX_LENGTH) to
+                                quote.truncate(MessageEmbed.VALUE_MAX_LENGTH)
                     }
-                    .chunkedBy(MessageEmbed.EMBED_MAX_LENGTH_BOT, MESSAGE_EMBED_MAX_FIELDS) {
+                    .chunkedBy(MessageEmbed.EMBED_MAX_LENGTH_BOT, 25) {
                         it.first.length + it.second.length
                     }
                     .forEach { embeds ->
@@ -110,4 +110,11 @@ class Quotes : Module(isOptional = true) {
             })
         } else evt.channel.sendMessage("This server has no quotes saved.").complete()
     }
+
+    companion object : ModuleCompanion {
+        override fun provide() = Quotes()
+    }
 }
+
+private val Message.mentionsUsers
+    get() = mentionedUsers.isNotEmpty() || mentionedMembers.isNotEmpty() || mentionsEveryone()

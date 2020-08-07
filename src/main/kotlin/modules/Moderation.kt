@@ -1,6 +1,7 @@
 package com.serebit.autotitan.modules
 
 import com.serebit.autotitan.api.Module
+import com.serebit.autotitan.api.ModuleCompanion
 import com.serebit.autotitan.api.annotations.Command
 import com.serebit.autotitan.api.annotations.Listener
 import com.serebit.autotitan.api.meta.Locale
@@ -14,7 +15,7 @@ import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 
-@Suppress("UNUSED", "TooManyFunctions")
+@Suppress("UNUSED")
 class Moderation : Module() {
     private val dataManager = DataManager(this::class)
     private val memberRoleMap = dataManager.read("rolemap.json") ?: GuildRoleMap()
@@ -122,8 +123,10 @@ class Moderation : Module() {
         fun put(key: Guild, value: Role) = map.put(key.idLong, value.idLong)
     }
 
-    companion object {
+    companion object : ModuleCompanion {
         private const val daysOfInactivity = 30
         private const val maximumCleanupCount = 99
+
+        override fun provide() = Moderation()
     }
 }

@@ -1,38 +1,21 @@
 package com.serebit.autotitan.modules
 
 import com.serebit.autotitan.api.Module
+import com.serebit.autotitan.api.ModuleCompanion
 import com.serebit.autotitan.api.annotations.Command
 import com.serebit.autotitan.config
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import java.util.*
 import kotlin.math.roundToInt
 
-@Suppress("UNUSED", "TooManyFunctions")
+@Suppress("UNUSED")
 class Entertainment : Module(isOptional = true) {
     private val deterministicRandom = Random()
-    private val random = Random()
-    private val eightBallResponses = listOf(
-        "It is certain.",
-        "It is decidedly so.",
-        "Without a doubt.",
-        "Yes, definitely.",
-        "You may rely on it.",
-        "As I see it, yes.",
-        "Most likely.",
-        "Outlook good.",
-        "Yes.",
-        "Signs point to yes.",
-        "Don't count on it.",
-        "My reply is no.",
-        "My sources say no.",
-        "Outlook not so good.",
-        "Very doubtful."
-    )
 
+    @Suppress("UNUSED_PARAMETER")
     @Command(name = "8", description = "Answers questions in 8-ball fashion.", splitLastParameter = false)
-    fun eightBall(evt: MessageReceivedEvent, @Suppress("UNUSED_PARAMETER") question: String) {
-        val responseIndex = random.next(eightBallResponses.size - 1)
-        evt.channel.sendMessage(eightBallResponses[responseIndex]).complete()
+    fun eightBall(evt: MessageReceivedEvent, question: String) {
+        evt.channel.sendMessage(eightBallResponses.random()).complete()
     }
 
     @Command(
@@ -56,7 +39,26 @@ class Entertainment : Module(isOptional = true) {
 
     private fun Random.next(bound: Int) = (nextFloat() * bound).roundToInt()
 
-    companion object {
+    companion object : ModuleCompanion {
         private const val defaultRatingDenominator = 10
+        private val eightBallResponses = listOf(
+            "It is certain.",
+            "It is decidedly so.",
+            "Without a doubt.",
+            "Yes, definitely.",
+            "You may rely on it.",
+            "As I see it, yes.",
+            "Most likely.",
+            "Outlook good.",
+            "Yes.",
+            "Signs point to yes.",
+            "Don't count on it.",
+            "My reply is no.",
+            "My sources say no.",
+            "Outlook not so good.",
+            "Very doubtful."
+        )
+
+        override fun provide() = Entertainment()
     }
 }

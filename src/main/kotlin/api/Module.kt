@@ -106,3 +106,7 @@ abstract class Module(name: String = "", val isOptional: Boolean = false) {
                 }
         }
 }
+
+interface ModuleCompanion {
+    fun provide(): Module
+}

@@ -9,7 +9,7 @@ AutoTitan is a versatile self-hosted [Discord](https://discordapp.com) bot built
 [Java Discord API](https://github.com/DV8FromTheWorld/JDA). 
 
 ## System Requirements
-AutoTitan requires **Java 8** or newer to run, and **JDK 8** to compile. AutoTitan may have issues with non-LTS 
+AutoTitan requires **Java 8** or newer to run, and **JDK 8** or newer to compile. AutoTitan may have issues with non-LTS 
 versions of the JDK, as some libraries it depends on behave unpredictably. At least 64 MB of RAM is recommended
 to run AutoTitan, and at least 1 GB of RAM is recommended to compile it.
 

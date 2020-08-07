@@ -1,9 +1,10 @@
 package com.serebit.autotitan.modules
 
 import com.serebit.autotitan.api.Module
+import com.serebit.autotitan.api.ModuleCompanion
 import com.serebit.autotitan.api.annotations.Command
 import com.serebit.autotitan.api.meta.Locale
-import com.serebit.autotitan.extensions.jda.sendEmbed
+import com.serebit.autotitan.extensions.sendEmbed
 import net.dv8tion.jda.api.OnlineStatus
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.Member
@@ -14,7 +15,7 @@ import java.time.temporal.ChronoUnit
 import java.time.temporal.Temporal
 import kotlin.math.absoluteValue
 
-@Suppress("UNUSED", "TooManyFunctions")
+@Suppress("UNUSED")
 class General : Module() {
     private val dateFormat = DateTimeFormatter.ofPattern("d MMM, yyyy")
 
@@ -119,5 +120,9 @@ class General : Module() {
         return if (yearDifference > 0) {
             "$yearDifferenceString and $dayDifferenceString ago"
         } else "$dayDifferenceString ago"
+    }
+
+    companion object : ModuleCompanion {
+        override fun provide() = General()
     }
 }

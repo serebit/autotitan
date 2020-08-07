@@ -1,45 +1,42 @@
 package com.serebit.autotitan.listeners
 
-import com.google.common.reflect.ClassPath
 import com.serebit.autotitan.Logger
 import com.serebit.autotitan.api.Module
+import com.serebit.autotitan.api.ModuleCompanion
 import com.serebit.autotitan.config
-import com.serebit.autotitan.extensions.jda.sendEmbed
+import com.serebit.autotitan.extensions.sendEmbed
+import com.serebit.autotitan.modules.*
 import com.serebit.logkat.info
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import net.dv8tion.jda.api.events.Event
 import net.dv8tion.jda.api.events.GenericEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
-import kotlin.reflect.full.createInstance
 import com.serebit.autotitan.api.annotations.Command as CommandAnnotation
 
-internal object EventListener : ListenerAdapter(), CoroutineScope {
-    override val coroutineContext = Dispatchers.Default
-    var allModules: List<Module> = classpathModules
-        private set
-    private val classpathModules
-        get() = ClassPath
-            .from(Thread.currentThread().contextClassLoader)
-            .getTopLevelClassesRecursive("com.serebit.autotitan.modules")
-            .mapNotNull { it.load().kotlin.createInstance() as Module } + Help()
-    private val loadedModules get() = allModules.filter { it.isStandard || it.name in config.enabledModules }
+internal object EventListener : ListenerAdapter() {
+    private val scope = CoroutineScope(Dispatchers.Default)
+    private val moduleProviders =
+        listOf(Audio, AutoReact, Dictionary, Entertainment, General, Moderation, Owner, Quotes, Rule34, Help)
+
+    var allModules: List<Module> = moduleProviders.map { it.provide() }
+    private var loadedModules = allModules.filter { it.isStandard || it.name in config.enabledModules }
 
     fun resetModules() {
-        allModules = classpathModules
-        Logger.info("Reloaded modules from classpath.")
+        allModules = moduleProviders.map { it.provide() }
+        loadedModules = allModules.filter { it.isStandard || it.name in config.enabledModules }
+        Logger.info("Reloaded modules.")
     }
 
     override fun onGenericEvent(evt: GenericEvent) {
-        launch {
+        scope.launch {
             loadedModules.forEach { it.runListeners(evt) }
         }
     }
 
     override fun onMessageReceived(evt: MessageReceivedEvent) {
-        launch {
+        scope.launch {
             if (evt.message.contentRaw.startsWith(config.prefix)) {
                 loadedModules.forEach { it.runCommands(evt) }
             }
@@ -98,6 +95,10 @@ internal object EventListener : ListenerAdapter(), CoroutineScope {
             } else {
                 evt.channel.sendMessage("Could not find any commands matching `$commandName`.").complete()
             }
+        }
+
+        companion object : ModuleCompanion {
+            override fun provide(): Module = Help()
         }
     }
 }

@@ -5,8 +5,8 @@ import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
-import com.serebit.autotitan.extensions.jda.infoString
-import com.serebit.autotitan.extensions.jda.sendEmbed
+import com.sedmelluq.discord.lavaplayer.track.AudioTrackState
+import com.serebit.autotitan.extensions.sendEmbed
 import net.dv8tion.jda.api.audio.AudioSendHandler
 import net.dv8tion.jda.api.entities.MessageChannel
 import java.nio.ByteBuffer
@@ -104,4 +104,25 @@ class GuildTrackManager : AudioEventAdapter() {
         private const val queueListLength = 8
         private const val maxVolume = 100
     }
+}
+
+private val AudioTrack.infoString: String
+    get() {
+        val durationString = (duration / 1000).toBasicTimestamp()
+        return if (state == AudioTrackState.PLAYING) {
+            val positionString = (position / 1000).toBasicTimestamp()
+            "[${info.title}](${info.uri}) [$positionString/$durationString]"
+        } else {
+            "[${info.title}](${info.uri}) [$durationString]"
+        }
+    }
+
+private fun Number.toBasicTimestamp(): String {
+    val asInt = toInt()
+    val hours = asInt / 3600
+    val minutes = asInt % 3600 / 60
+    val seconds = asInt % 60
+    return if (hours == 0) {
+        "%d:%02d".format(minutes, seconds)
+    } else "%d:%02d:%02d".format(hours, minutes, seconds)
 }

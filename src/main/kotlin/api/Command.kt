@@ -4,9 +4,9 @@ import com.serebit.autotitan.api.meta.Access
 import com.serebit.autotitan.api.meta.Locale
 import com.serebit.autotitan.config
 import com.serebit.autotitan.data.Emote
-import com.serebit.autotitan.extensions.jda.*
-import com.serebit.autotitan.extensions.toBooleanOrNull
-import com.serebit.autotitan.extensions.toCharOrNull
+import com.serebit.autotitan.extensions.getUserByMention
+import com.serebit.autotitan.extensions.isNotBot
+import com.serebit.autotitan.extensions.notInBlacklist
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.*
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
@@ -136,3 +136,16 @@ internal class Command(
         )
     }
 }
+
+fun String.toBooleanOrNull() = if (this == "true" || this == "false") toBoolean() else null
+
+fun String.toCharOrNull() = if (length == 1) this[0] else null
+
+fun Guild.getMemberByMention(mention: String): Member? = getMemberById(
+    mention.removeSurrounding("<@", ">")
+        .removePrefix("!")
+)
+
+fun Guild.getTextChannelByMention(mention: String): TextChannel? = getTextChannelById(
+    mention.removeSurrounding("<#", ">")
+)
