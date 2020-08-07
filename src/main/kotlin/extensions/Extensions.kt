@@ -1,10 +1,12 @@
 package com.serebit.autotitan.extensions
 
-import com.serebit.autotitan.config
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDABuilder
-import net.dv8tion.jda.api.entities.*
+import net.dv8tion.jda.api.entities.Emote
+import net.dv8tion.jda.api.entities.MessageChannel
+import net.dv8tion.jda.api.entities.TextChannel
+import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.requests.GatewayIntent
 import net.dv8tion.jda.api.requests.restaction.MessageAction
 
@@ -42,44 +44,49 @@ fun MessageChannel.sendEmbed(embedBuilder: EmbedBuilder): MessageAction =
         setColor((this@sendEmbed as? TextChannel)?.guild?.selfMember?.color)
     }.build())
 
-fun String.truncate(max: Int): String {
-    val trimmedString = replace("(\\s){2,}".toRegex(), "$1$1")
-    return if (trimmedString.length > max) {
-        trimmedString
-            .replace("(\\s){2,}".toRegex(), "$1$1")
-            .substring(0 until MessageEmbed.VALUE_MAX_LENGTH - 1) + '\u2026'
-    } else trimmedString
-}
+fun String.limitLengthTo(max: Int): String = if (length > max) {
+    substring(0 until max - 1) + '\u2026'
+} else this
 
-inline fun <T> Iterable<T>.chunkedBy(
-    size: Int,
-    maxChunkSize: Int = Int.MAX_VALUE,
+fun <T> Iterable<T>.chunkedBy(
+    chunkSize: Int,
+    maxChunks: Int = Int.MAX_VALUE,
     transform: (T) -> Int
-): List<List<T>> {
-    val zipped = toList().zip(toMutableList().map(transform))
-    val list = mutableListOf(mutableListOf<T>())
-    var accumulator = 0
-    zipped.forEach { (item, itemSize) ->
-        when {
-            accumulator + itemSize <= size && list.last().size < maxChunkSize -> {
-                accumulator += itemSize
-                list.last().add(item)
-            }
-            itemSize <= size -> {
-                accumulator = itemSize
-                list.add(mutableListOf(item))
-            }
-            else -> {
-                accumulator = 0
-                list.add(mutableListOf())
-            }
-        }
+): List<List<T>> = zip(map(transform)).fold(Accumulator<T>(chunkSize, maxChunks)) { acc, (item, itemSize) ->
+    acc.accumulate(item, itemSize)
+}.chunks
+
+private data class Accumulator<T>(
+    val maxChunkSize: Int,
+    val maxChunks: Int,
+    val chunks: MutableList<MutableList<T>> = mutableListOf(mutableListOf()),
+    var chunkSizeAccumulator: Int = 0
+) {
+    fun accumulate(item: T, itemSize: Int) = when {
+        chunkSizeAccumulator + itemSize <= maxChunkSize && chunks.last().size < maxChunks -> addToChunk(item, itemSize)
+        itemSize <= maxChunkSize -> newChunkOf(item, itemSize)
+        else -> newChunk()
     }
-    return list.toList()
+
+    private fun addToChunk(item: T, itemSize: Int) = apply {
+        chunkSizeAccumulator += itemSize
+        chunks.last().add(item)
+    }
+
+    private fun newChunkOf(item: T, itemSize: Int) = apply {
+        chunkSizeAccumulator = itemSize
+        chunks.add(mutableListOf(item))
+    }
+
+    private fun newChunk() = apply {
+        chunkSizeAccumulator = 0
+        chunks.add(mutableListOf())
+    }
 }
 
-val User.isNotBot get() = !isBot
+private val ownerMap = mutableMapOf<JDA, User>()
 
-val User.inBlacklist get() = idLong in config.blackList
-
-val User.notInBlacklist get() = !inBlacklist
+val User.isBotOwner
+    get() = this == ownerMap.getOrPut(jda) {
+        jda.retrieveApplicationInfo().complete().owner
+    }
