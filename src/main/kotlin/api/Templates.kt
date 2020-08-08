@@ -4,20 +4,28 @@ import com.serebit.autotitan.BotConfig
 import com.serebit.autotitan.internal.*
 import net.dv8tion.jda.api.events.GenericEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
-import kotlin.reflect.KClass
+import kotlin.reflect.KType
 
 sealed class InvokeableContainerTemplate {
     protected abstract val commands: MutableList<CommandTemplate>
     abstract val defaultAccess: Access
 
-    fun addCommand(template: CommandTemplate) {
-        template.parameterTypes.map { TokenType.from(it) }.requireNoNulls()
-        require(template.name.isNotBlank())
-        commands += template
+    fun addCommand(
+        name: String, description: String, access: Access, parameterTypes: List<KType>,
+        function: (MessageReceivedEvent, List<Any>) -> Unit
+    ) {
+        commands += CommandTemplate.Normal(name, description, access, parameterTypes, function)
+    }
+
+    fun addSuspendCommand(
+        name: String, description: String, access: Access, parameterTypes: List<KType>,
+        function: suspend (MessageReceivedEvent, List<Any>) -> Unit
+    ) {
+        commands += CommandTemplate.Suspending(name, description, access, parameterTypes, function)
     }
 }
 
-data class ModuleTemplate(
+class ModuleTemplate(
     val name: String,
     val isOptional: Boolean = false,
     override inline val defaultAccess: Access
@@ -34,8 +42,12 @@ data class ModuleTemplate(
         groups += template
     }
 
-    fun <T : GenericEvent> addListener(eventType: KClass<T>, function: suspend (GenericEvent) -> Unit) {
-        listeners += Listener(eventType, function)
+    fun addListener(function: (GenericEvent) -> Unit) {
+        listeners += Listener.Normal(function)
+    }
+
+    fun addSuspendListener(function: suspend (GenericEvent) -> Unit) {
+        listeners += Listener.Suspending(function)
     }
 
     internal fun build(config: BotConfig): Module {
@@ -54,13 +66,34 @@ data class GroupTemplate(
     internal fun build() = Group(name.toLowerCase(), description, commands)
 }
 
-data class CommandTemplate(
+sealed class CommandTemplate(
     val name: String, val description: String,
     val access: Access,
-    val parameterTypes: List<KClass<out Any>>,
-    val function: suspend (MessageReceivedEvent, List<Any>) -> Unit
+    val parameterTypes: List<KType>
 ) {
-    private val tokenTypes = parameterTypes.map { TokenType.from(it) }.requireNoNulls()
+    internal abstract fun build(parent: Group?): Command
 
-    internal fun build(parent: Group?) = Command(name.toLowerCase(), description, access, parent, tokenTypes, function)
+    class Normal(
+        name: String, description: String,
+        access: Access,
+        parameterTypes: List<KType>,
+        private inline val function: (MessageReceivedEvent, List<Any>) -> Unit
+    ) : CommandTemplate(name, description, access, parameterTypes) {
+        private val tokenTypes = parameterTypes.map { TokenType.from(it) }.requireNoNulls()
+
+        override fun build(parent: Group?) =
+            Command.Normal(name.toLowerCase(), description, access, parent, tokenTypes, function)
+    }
+
+    class Suspending(
+        name: String, description: String,
+        access: Access,
+        parameterTypes: List<KType>,
+        private inline val function: suspend (MessageReceivedEvent, List<Any>) -> Unit
+    ) : CommandTemplate(name, description, access, parameterTypes) {
+        private val tokenTypes = parameterTypes.map { TokenType.from(it) }.requireNoNulls()
+
+        override fun build(parent: Group?) =
+            Command.Suspending(name.toLowerCase(), description, access, parent, tokenTypes, function)
+    }
 }

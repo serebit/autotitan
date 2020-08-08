@@ -50,7 +50,6 @@ internal class EventDelegate(private val config: BotConfig) : ListenerAdapter(),
                     loadedModules.asSequence()
                         .sortedBy { it.name }
                         .mapNotNull { it.getInvokeableCommandField(this@command) }
-                        .toList()
                         .forEach { addField(it) }
                 }.queue()
             }
@@ -102,7 +101,7 @@ internal class EventDelegate(private val config: BotConfig) : ListenerAdapter(),
             }
         }
         defaultModule("System") {
-            command("reload") {
+            suspendCommand("reload") {
                 val message = channel.sendMessage("Reloading modules...").complete()
                 allModules.clear()
                 loadModulesAsync().await()

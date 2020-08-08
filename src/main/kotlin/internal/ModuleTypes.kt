@@ -6,12 +6,15 @@ import com.serebit.autotitan.api.CommandTemplate
 import com.serebit.autotitan.api.GroupTemplate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.events.GenericEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
-import kotlin.reflect.KClass
 
 internal interface HelpProvider {
     val helpField: MessageEmbed.Field
@@ -25,8 +28,8 @@ internal class Module(
     commandTemplates: List<CommandTemplate>,
     private val listeners: List<Listener>,
     private val config: BotConfig
-) : CoroutineScope {
-    override val coroutineContext = Dispatchers.Default
+) {
+    private val scope = CoroutineScope(Dispatchers.Default)
     val commandListField
         get() = MessageEmbed.Field(name, commands.filter { !it.isHidden }.joinToString { it.summary }, false)
     val isStandard get() = !isOptional
@@ -48,14 +51,18 @@ internal class Module(
         } else null
     }
 
-    fun invoke(evt: GenericEvent) = launch {
-        listeners.asSequence()
-            .filter { it.eventType.isInstance(evt) }
-            .forEach { it(evt) }
+    fun invoke(evt: GenericEvent) = scope.launch {
+        listeners.forEach { listener ->
+            launch {
+                when (listener) {
+                    is Listener.Suspending -> listener(evt)
+                    is Listener.Normal -> listener(evt)
+                }
+            }
+        }
         if (evt is MessageReceivedEvent && evt.isCommandInvocation) {
             val rawContent = evt.message.contentRaw.removePrefix(config.prefix)
-            allCommands
-                .asSequence()
+            allCommands.asFlow()
                 .filter { it.access.matches(evt) }
                 .mapNotNull { command ->
                     Parser.tokenize(rawContent, command.invocationSignature)?.let { command to it }
@@ -63,7 +70,14 @@ internal class Module(
                 .mapNotNull { (command, tokens) ->
                     Parser.parseTokens(evt, tokens, command.tokenTypes)?.let { command to it }
                 }
-                .firstOrNull()?.let { (command, parameters) -> command(evt, parameters) }
+                .firstOrNull()?.let { (command, parameters) ->
+                    launch {
+                        when (command) {
+                            is Command.Normal -> command(evt, parameters)
+                            is Command.Suspending -> command(evt, parameters)
+                        }
+                    }
+                }
         }
     }
 
@@ -89,14 +103,12 @@ internal class Group(
     )
 }
 
-internal class Command(
+internal sealed class Command(
     val name: String, description: String,
     val access: Access,
     parent: Group?,
-    val tokenTypes: List<TokenType>,
-    private val function: suspend (MessageReceivedEvent, List<Any>) -> Unit
-) : HelpProvider, CoroutineScope {
-    override val coroutineContext = Dispatchers.Default
+    val tokenTypes: List<TokenType>
+) : HelpProvider {
     val isHidden = access.hidden
     val summary = buildString {
         append("`")
@@ -121,16 +133,31 @@ internal class Command(
         append("$")
     }.toRegex(RegexOption.DOT_MATCHES_ALL)
 
-    operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>) = launch {
-        function(evt, parameters)
+    class Normal(
+        name: String, description: String,
+        access: Access, parent: Group?,
+        tokenTypes: List<TokenType>,
+        private inline val function: (MessageReceivedEvent, List<Any>) -> Unit
+    ) : Command(name, description, access, parent, tokenTypes) {
+        operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>) = function(evt, parameters)
+    }
+
+    class Suspending(
+        name: String, description: String,
+        access: Access, parent: Group?,
+        tokenTypes: List<TokenType>,
+        private inline val function: suspend (MessageReceivedEvent, List<Any>) -> Unit
+    ) : Command(name, description, access, parent, tokenTypes) {
+        suspend operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>) = function(evt, parameters)
     }
 }
 
-internal data class Listener(
-    val eventType: KClass<out GenericEvent>,
-    private val function: suspend (GenericEvent) -> Unit
-) : CoroutineScope {
-    override val coroutineContext = Dispatchers.Default
+internal sealed class Listener {
+    class Normal(private inline val function: (GenericEvent) -> Unit) : Listener() {
+        operator fun invoke(evt: GenericEvent) = function(evt)
+    }
 
-    operator fun invoke(evt: GenericEvent) = launch { function(evt) }
+    class Suspending(private inline val function: suspend (GenericEvent) -> Unit) : Listener() {
+        suspend operator fun invoke(evt: GenericEvent) = function(evt)
+    }
 }

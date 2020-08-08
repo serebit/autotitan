@@ -7,7 +7,8 @@ import net.dv8tion.jda.api.entities.*
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import java.math.BigDecimal
 import java.math.BigInteger
-import kotlin.reflect.KClass
+import kotlin.reflect.KType
+import kotlin.reflect.typeOf
 
 internal object Parser {
     fun tokenize(message: String, signature: Regex): List<String>? =
@@ -81,15 +82,16 @@ internal sealed class TokenType(val name: String, val signature: Regex) {
         object BigDecimalToken : Number("BigDecimal", "[+-]?(?:\\d*\\.\\d+|\\d+\\.?)(?:[eE]\\d+)?".toRegex())
 
         companion object {
+            @OptIn(ExperimentalStdlibApi::class)
             val typeAssociations = mapOf(
-                Byte::class to ByteToken,
-                Short::class to ShortToken,
-                Int::class to IntToken,
-                Long::class to LongToken,
-                BigInteger::class to BigIntToken,
-                Float::class to FloatToken,
-                Double::class to DoubleToken,
-                BigDecimal::class to BigDecimalToken
+                typeOf<Byte>() to ByteToken,
+                typeOf<Short>() to ShortToken,
+                typeOf<Int>() to IntToken,
+                typeOf<Long>() to LongToken,
+                typeOf<BigInteger>() to BigIntToken,
+                typeOf<Float>() to FloatToken,
+                typeOf<Double>() to DoubleToken,
+                typeOf<BigDecimal>() to BigDecimalToken
             )
         }
     }
@@ -101,12 +103,13 @@ internal sealed class TokenType(val name: String, val signature: Regex) {
         object RoleToken : Jda("Role", "<@&\\d+>|\\d+".toRegex())
 
         companion object {
+            @OptIn(ExperimentalStdlibApi::class)
             val typeAssociations = mapOf(
-                User::class to UserToken,
-                Member::class to MemberToken,
-                TextChannel::class to TextChannelToken,
-                MessageChannel::class to TextChannelToken,
-                Role::class to RoleToken
+                typeOf<User>() to UserToken,
+                typeOf<Member>() to MemberToken,
+                typeOf<TextChannel>() to TextChannelToken,
+                typeOf<MessageChannel>() to TextChannelToken,
+                typeOf<Role>() to RoleToken
             )
         }
     }
@@ -119,18 +122,19 @@ internal sealed class TokenType(val name: String, val signature: Regex) {
         object CharToken : Other("Char", "\\S".toRegex())
 
         companion object {
+            @OptIn(ExperimentalStdlibApi::class)
             val typeAssociations = mapOf(
-                Emote::class to EmoteToken,
-                String::class to StringToken,
-                LongString::class to LongStringToken,
-                Boolean::class to BooleanToken,
-                Char::class to CharToken
+                typeOf<Emote>() to EmoteToken,
+                typeOf<String>() to StringToken,
+                typeOf<LongString>() to LongStringToken,
+                typeOf<Boolean>() to BooleanToken,
+                typeOf<Char>() to CharToken
             )
         }
     }
 
     companion object {
-        fun from(type: KClass<out Any>): TokenType? = when (type) {
+        fun from(type: KType): TokenType? = when (type) {
             in Number.typeAssociations -> Number.typeAssociations[type]
             in Jda.typeAssociations -> Jda.typeAssociations[type]
             in Other.typeAssociations -> Other.typeAssociations[type]
