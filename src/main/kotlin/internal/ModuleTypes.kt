@@ -1,18 +1,11 @@
 package com.serebit.autotitan.internal
 
-import com.serebit.autotitan.BotConfig
 import com.serebit.autotitan.api.Access
 import com.serebit.autotitan.api.CommandTemplate
 import com.serebit.autotitan.api.GroupTemplate
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.launch
 import net.dv8tion.jda.api.entities.MessageEmbed
-import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.events.GenericEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 
@@ -26,10 +19,8 @@ internal class Module(
     val isOptional: Boolean,
     groupTemplates: List<GroupTemplate>,
     commandTemplates: List<CommandTemplate>,
-    private val listeners: List<Listener>,
-    private val config: BotConfig
+    private val listeners: List<Listener>
 ) {
-    private val scope = CoroutineScope(Dispatchers.Default)
     val commandListField
         get() = MessageEmbed.Field(name, commands.filter { !it.isHidden }.joinToString { it.summary }, false)
     val isStandard get() = !isOptional
@@ -51,43 +42,11 @@ internal class Module(
         } else null
     }
 
-    fun invoke(evt: GenericEvent) = scope.launch {
-        listeners.forEach { listener ->
-            launch {
-                when (listener) {
-                    is Listener.Suspending -> listener(evt)
-                    is Listener.Normal -> listener(evt)
-                }
-            }
-        }
-        if (evt is MessageReceivedEvent && evt.isCommandInvocation) {
-            val rawContent = evt.message.contentRaw.removePrefix(config.prefix)
-            allCommands.asFlow()
-                .filter { it.access.matches(evt) }
-                .mapNotNull { command ->
-                    Parser.tokenize(rawContent, command.invocationSignature)?.let { command to it }
-                }
-                .mapNotNull { (command, tokens) ->
-                    Parser.parseTokens(evt, tokens, command.tokenTypes)?.let { command to it }
-                }
-                .firstOrNull()?.let { (command, parameters) ->
-                    launch {
-                        when (command) {
-                            is Command.Normal -> command(evt, parameters)
-                            is Command.Suspending -> command(evt, parameters)
-                        }
-                    }
-                }
-        }
-    }
+    fun listeners(): Flow<Listener> = listeners.asFlow()
+    fun commands(): Flow<Command> = commands.asFlow()
 
     fun helpFieldsBySignature(signature: String): List<MessageEmbed.Field> =
         allInvokeable.filter { it.helpSignature.matches(signature) }.map { it.helpField }
-
-    private val User.canInvokeCommands get() = !isBot && idLong !in config.blackList
-
-    private val MessageReceivedEvent.isCommandInvocation
-        get() = message.contentRaw.startsWith(config.prefix) && author.canInvokeCommands
 }
 
 internal class Group(

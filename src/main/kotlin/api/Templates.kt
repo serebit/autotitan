@@ -52,7 +52,7 @@ class ModuleTemplate(
 
     internal fun build(config: BotConfig): Module {
         this.config = config
-        return Module(name, isOptional, groups, commands, listeners, config)
+        return Module(name, isOptional, groups, commands, listeners)
     }
 }
 

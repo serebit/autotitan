@@ -5,43 +5,76 @@ import com.serebit.autotitan.NAME
 import com.serebit.autotitan.VERSION
 import com.serebit.autotitan.api.*
 import com.serebit.autotitan.extensions.sendEmbed
+import com.serebit.logkat.error
 import com.serebit.logkat.info
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
+import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.events.GenericEvent
 import net.dv8tion.jda.api.events.ReadyEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 import kotlin.system.exitProcess
 
-internal class EventDelegate(private val config: BotConfig) : ListenerAdapter(), CoroutineScope {
-    override val coroutineContext = Dispatchers.Default
+internal class EventDelegate(private val config: BotConfig) : ListenerAdapter() {
+    private val scope = CoroutineScope(Dispatchers.Default)
     private val moduleLoader = ModuleLoader()
     private val allModules = mutableListOf<Module>()
     private val optionalModules get() = allModules.filter { it.isOptional }
     private val loadedModules get() = allModules.filter { it.isStandard || it.name in config.enabledModules }
 
-    fun loadModulesAsync() = async {
+    fun loadModulesAsync() = scope.async {
         addSystemModules()
         allModules += moduleLoader.loadModules(config)
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun onGenericEvent(evt: GenericEvent) {
-        launch {
-            loadedModules.forEach { it.invoke(evt) }
+        loadedModules.map { it.listeners() }.merge()
+            .onEach { listener ->
+                when (listener) {
+                    is Listener.Suspending -> listener(evt)
+                    is Listener.Normal -> listener(evt)
+                }
+            }.catch { logger.error(it.stackTraceToString()) }
+            .launchIn(scope)
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun onMessageReceived(evt: MessageReceivedEvent) {
+        if (evt.isCommandInvocation) scope.launch {
+            val rawContent = evt.message.contentRaw.removePrefix(config.prefix)
+            loadedModules.map { it.commands() }.forEach { flow ->
+                flow.filter { command -> rawContent.startsWith(command.name) && command.access.matches(evt) }
+                    .mapNotNull { command ->
+                        Parser.tokenize(rawContent, command.invocationSignature)?.let { command to it }
+                    }
+                    .mapNotNull { (command, tokens) ->
+                        Parser.parseTokens(evt, tokens, command.tokenTypes)?.let { command to it }
+                    }
+                    .onEach { (command, parameters) ->
+                        when (command) {
+                            is Command.Normal -> command(evt, parameters)
+                            is Command.Suspending -> command(evt, parameters)
+                        }
+                    }.launchIn(scope)
+            }
         }
     }
 
     override fun onReady(evt: ReadyEvent) = println(
         """
-            $NAME v$VERSION
-            Username:    ${evt.jda.selfUser.name}
-            Ping:        ${evt.jda.gatewayPing}ms
-            Invite link: ${evt.jda.getInviteUrl()}
+        $NAME v$VERSION
+        Username:    ${evt.jda.selfUser.name}
+        Ping:        ${evt.jda.gatewayPing}ms
+        Invite link: ${evt.jda.getInviteUrl()}
         """.trimIndent()
     )
+
+    private val User.canInvokeCommands get() = !isBot && idLong !in config.blackList
+
+    private val MessageReceivedEvent.isCommandInvocation
+        get() = message.contentRaw.startsWith(config.prefix) && author.canInvokeCommands
 
     private fun addSystemModules() {
         defaultModule("Help") {
