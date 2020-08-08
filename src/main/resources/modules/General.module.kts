@@ -30,10 +30,10 @@ fun sendMemberInfo(evt: MessageReceivedEvent, member: Member) {
         setDescription(status)
         setColor(member.color)
         setThumbnail(member.user.effectiveAvatarUrl)
-        val creationDate = member.user.timeCreated.format(DateTimeFormatter.ISO_DATE)
+        val creationDate = member.user.timeCreated.format(DateTimeFormatter.ISO_DATE).removeSuffix("Z")
         val creationDateDifference = OffsetDateTime.now() - member.user.timeCreated
         addField("Joined Discord", "$creationDate ($creationDateDifference)", true)
-        val joinDate = member.timeJoined.format(DateTimeFormatter.ISO_DATE)
+        val joinDate = member.timeJoined.format(DateTimeFormatter.ISO_DATE).removeSuffix("Z")
         val joinDateDifference = OffsetDateTime.now() - member.timeJoined
         addField("Joined this Server", "$joinDate ($joinDateDifference)", true)
         addField("Do they own the server?", member.isOwner.asYesNo.capitalize(), true)
@@ -81,7 +81,7 @@ defaultModule("General") {
 
         channel.sendEmbed {
             setTitle(guild.name, null)
-            setDescription("Created on ${guild.timeCreated.format(DateTimeFormatter.ISO_DATE)}")
+            setDescription("Created on ${guild.timeCreated.format(DateTimeFormatter.ISO_DATE).removeSuffix("Z")}")
             setThumbnail(guild.iconUrl)
             addField("Owner", guild.owner!!.asMention, true)
             addField("Region", guild.region.toString(), true)

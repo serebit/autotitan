@@ -50,7 +50,7 @@ class Cli : CliktCommand(name = "autotitan") {
             JDABuilder.create(GatewayIntent.getIntents(GatewayIntent.ALL_INTENTS)).apply {
                 setToken(config.token)
                 addEventListeners(delegate)
-                setActivity(Activity.playing("${config.prefix}help"))
+                setActivity(Activity.listening("for ${config.prefix}help"))
             }.build()
             return // it worked, get out
         } catch (e: Exception) {
