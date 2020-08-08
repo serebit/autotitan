@@ -44,7 +44,7 @@ internal class EventDelegate(private val config: BotConfig) : ListenerAdapter(),
     )
 
     private fun addSystemModules() {
-        module("Help") {
+        defaultModule("Help") {
             command("commands", "Sends an embed with a list of commands that can be used by the invoker.") {
                 channel.sendEmbed {
                     loadedModules.asSequence()
@@ -101,7 +101,7 @@ internal class EventDelegate(private val config: BotConfig) : ListenerAdapter(),
                 }
             }
         }
-        module("System") {
+        defaultModule("System") {
             command("reload") {
                 val message = channel.sendMessage("Reloading modules...").complete()
                 allModules.clear()

@@ -294,7 +294,7 @@ val Guild.trackManager: GuildTrackManager
         }
     }
 
-module("Audio", defaultAccess = Access.Guild.All()) {
+defaultModule("Audio", defaultAccess = Access.Guild.All()) {
     command("joinVoice", "Joins the voice channel that the invoker is in.") {
         when (VoiceStatus.from(this)) {
             VoiceStatus.SELF_DISCONNECTED_USER_CONNECTED -> connectToVoiceChannel(member!!.voiceState!!.channel!!) {

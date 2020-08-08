@@ -35,7 +35,7 @@ data class EmoteData(
 
 val maxReactionsPerMessage = 20
 
-module("Autoreact", isOptional = true, defaultAccess = Access.Guild.All(Permission.MESSAGE_ADD_REACTION)) {
+optionalModule("Autoreact", defaultAccess = Access.Guild.All(Permission.MESSAGE_ADD_REACTION)) {
     val reactMap = dataManager.readOrDefault("reacts.json") {
         GuildResourceMap<String, MutableList<EmoteData>>()
     }

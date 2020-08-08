@@ -1,6 +1,6 @@
 import com.serebit.autotitan.api.Access
 import com.serebit.autotitan.api.command
-import com.serebit.autotitan.api.module
+import com.serebit.autotitan.api.defaultModule
 import com.serebit.autotitan.extensions.isBotOwner
 import com.serebit.autotitan.extensions.sendEmbed
 import net.dv8tion.jda.api.OnlineStatus
@@ -13,9 +13,7 @@ import java.time.temporal.ChronoUnit
 import java.time.temporal.Temporal
 import kotlin.math.absoluteValue
 
-// has to be suspend for the event listener to accept it as a valid function
-@Suppress("RedundantSuspendModifier")
-suspend fun sendMemberInfo(evt: MessageReceivedEvent, member: Member) {
+fun sendMemberInfo(evt: MessageReceivedEvent, member: Member) {
     val title = buildString {
         append("${member.user.name}#${member.user.discriminator}")
         member.nickname?.let { append(" ($it)") }
@@ -69,7 +67,7 @@ operator fun OffsetDateTime.minus(other: Temporal): String {
     } else "$dayDifferenceString ago"
 }
 
-module("General") {
+defaultModule("General") {
     command("ping", "Pings the bot.") {
         channel.sendMessage("Pong. The last ping was ${jda.gatewayPing}ms.").queue()
     }
@@ -109,12 +107,9 @@ module("General") {
         sendMemberInfo(this, member!!)
     }
 
-    command(
-        "memberInfo",
-        "Gets information about a specific server member.",
-        Access.Guild.All(),
-        task = ::sendMemberInfo
-    )
+    command("memberInfo", "Gets information about a specific server member.", Access.Guild.All()) { member: Member ->
+        sendMemberInfo(this, member)
+    }
 
     command("invite", "Sends the bot's invite link.") {
         val inviteMessage = """

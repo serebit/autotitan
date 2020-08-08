@@ -1,6 +1,6 @@
 import com.serebit.autotitan.api.LongString
 import com.serebit.autotitan.api.command
-import com.serebit.autotitan.api.module
+import com.serebit.autotitan.api.optionalModule
 import kotlin.random.Random
 
 fun String.normalize(): String = toLowerCase().filter { it.isLetterOrDigit() }
@@ -24,7 +24,7 @@ val eightBallResponses = listOf(
     "Very doubtful."
 )
 
-module("Entertainment", isOptional = true) {
+optionalModule("Entertainment") {
     command("8", "Answers questions in 8-ball fashion.") { question: LongString ->
         channel.sendMessage("In response to $question: ${eightBallResponses.random()}").queue()
     }

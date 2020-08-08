@@ -2,7 +2,6 @@ package com.serebit.autotitan
 
 import com.serebit.autotitan.internal.classpathResource
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -17,11 +16,9 @@ data class BotConfig(
 
     companion object {
         private val file = classpathResource(".config")
-        private val dummy by lazy { BotConfig("", "!") }
 
-        fun generate(): BotConfig? = when {
-            file.exists() -> Json.decodeFromString(serializer(), file.readText())
-            else -> null
-        }
+        fun generate(): BotConfig? = if (file.exists()) {
+            Json.decodeFromString(serializer(), file.readText())
+        } else null
     }
 }

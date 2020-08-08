@@ -40,9 +40,9 @@ internal class Module(
         return if (validCommands.isNotEmpty()) {
             val fieldValue = buildString {
                 if (groups.isNotEmpty()) {
-                    append("Groups: ${groups.joinToString(prefix = "`", postfix = "`") { it.name }}")
+                    appendLine("*Groups:* ${groups.joinToString(prefix = "`", postfix = "`") { it.name }}")
                 }
-                if (commands.isNotEmpty()) append("\nCommands: ${validCommands.joinToString { it.summary }}")
+                if (commands.isNotEmpty()) append("*Commands:* ${validCommands.joinToString { it.summary }}")
             }
             MessageEmbed.Field(name, fieldValue, false)
         } else null
@@ -101,7 +101,7 @@ internal class Command(
     val summary = buildString {
         append("`")
         parent?.let { append("${it.name} ") }
-        append("$name ${tokenTypes.joinToString(" ") { "<${it.name}>" }}")
+        append("$name ${tokenTypes.joinToString(" ") { "<${it.name}>" }}".trimEnd())
         append("`")
     }
 

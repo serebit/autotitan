@@ -21,14 +21,12 @@ dependencies {
     implementation(kotlin("scripting-jvm-host"))
     implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-core", "1.3.8-1.4.0-rc")
     implementation("org.jetbrains.kotlinx", "kotlinx-serialization-runtime", "1.0-M1-1.4.0-rc")
-    implementation("io.ktor", "ktor-client-cio", "1.3.2-1.4.0-rc")
     implementation("com.serebit.logkat", "logkat-jvm", "0.5.3")
     implementation("net.dv8tion", "JDA", "4.2.0_187")
     implementation("com.sedmelluq", "lavaplayer", "1.3.50")
     implementation("org.slf4j", "slf4j-simple", "2.0.0-alpha1")
     implementation("com.vdurmont", "emoji-java", "5.1.1")
     implementation("com.github.ajalt", "clikt", "2.8.0")
-    implementation("com.github.salomonbrys.kotson", "kotson", "2.5.0")
 }
 
 kotlin.sourceSets["main"].languageSettings.apply {

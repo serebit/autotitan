@@ -4,12 +4,17 @@ import com.serebit.autotitan.internal.ScriptContext
 import net.dv8tion.jda.api.events.GenericEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 
-inline fun module(
+inline fun defaultModule(
     name: String,
-    isOptional: Boolean = false,
     defaultAccess: Access = Access.All(),
     init: ModuleTemplate.() -> Unit
-) = ScriptContext.pushModule(ModuleTemplate(name, isOptional, defaultAccess).apply(init))
+) = ScriptContext.pushModule(ModuleTemplate(name, false, defaultAccess).apply(init))
+
+inline fun optionalModule(
+    name: String,
+    defaultAccess: Access = Access.All(),
+    init: ModuleTemplate.() -> Unit
+) = ScriptContext.pushModule(ModuleTemplate(name, true, defaultAccess).apply(init))
 
 inline fun ModuleTemplate.group(
     name: String,

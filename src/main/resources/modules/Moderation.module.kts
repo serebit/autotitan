@@ -17,7 +17,7 @@ data class WelcomeMessageData(var channelId: Long, var joinMessage: String? = nu
 
 val maximumCleanupCount = 99
 
-module("Moderation") {
+defaultModule("Moderation") {
     val memberRoleMap: GuildRoleMap = dataManager.readOrDefault("rolemap.json") { GuildRoleMap() }
     val welcomeMessages = dataManager.readOrDefault("welcomemessages.json") {
         mutableMapOf<Long, WelcomeMessageData>()

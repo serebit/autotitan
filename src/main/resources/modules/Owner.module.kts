@@ -1,4 +1,3 @@
-
 import com.serebit.autotitan.api.*
 import com.serebit.autotitan.extensions.sendEmbed
 import net.dv8tion.jda.api.entities.Activity
@@ -6,7 +5,7 @@ import net.dv8tion.jda.api.entities.User
 
 val usernameLengthRange = 2..32
 
-module("Owner", defaultAccess = Access.BotOwner()) {
+defaultModule("Owner", defaultAccess = Access.BotOwner()) {
     command("setName", "Changes the bot's username.") { name: LongString ->
         if (name.value.length !in usernameLengthRange) {
             channel.sendMessage("Usernames must be between 2 and 32 characters in length.").queue()

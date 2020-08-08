@@ -1,10 +1,10 @@
 import com.serebit.autotitan.api.LongString
 import com.serebit.autotitan.api.command
-import com.serebit.autotitan.api.module
+import com.serebit.autotitan.api.optionalModule
 import kotlin.random.Random
 import kotlin.random.nextInt
 
-module("Text", isOptional = true) {
+optionalModule("Text") {
     command("randomCase", "Randomizes the case of the input text.") { text: LongString ->
         channel.sendMessage(text.value.map {
             if (Random.nextBoolean()) it.toUpperCase() else it.toLowerCase()
