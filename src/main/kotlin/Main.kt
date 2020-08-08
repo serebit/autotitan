@@ -11,7 +11,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import net.dv8tion.jda.api.AccountType
 import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.api.entities.Activity
 import net.dv8tion.jda.api.requests.GatewayIntent
@@ -64,10 +63,10 @@ class Cli : CliktCommand(name = "autotitan") {
     private fun generateConfig(token: String?, prefix: String?) = BotConfig.generate()?.let { config ->
         prefix?.let { config.prefix = it }
         token?.let { config.copy(token = it) } ?: config
-    } ?: Scanner(System.`in`).use {
+    } ?: Scanner(System.`in`).use { scanner ->
         BotConfig(
-            token ?: prompt(it, "Enter token:"),
-            prefix ?: prompt(it, "Enter command prefix:")
+            token ?: prompt(scanner, "Enter token:"),
+            prefix ?: prompt(scanner, "Enter command prefix:")
         ).also { it.serialize() }
     }
 
