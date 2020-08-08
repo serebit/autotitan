@@ -1,5 +1,4 @@
 import com.serebit.autotitan.api.*
-import com.serebit.autotitan.extensions.MESSAGE_EMBED_MAX_FIELDS
 import com.serebit.autotitan.extensions.chunkedBy
 import com.serebit.autotitan.extensions.limitLengthTo
 import com.serebit.autotitan.extensions.sendEmbed
@@ -92,7 +91,7 @@ module("Autoreact", isOptional = true, defaultAccess = Access.Guild.All(Permissi
                             word.limitLengthTo(MessageEmbed.TITLE_MAX_LENGTH) to
                                     emotes.joinToString("") { it.emote.asMention(guild) }
                         }
-                        .chunkedBy(MessageEmbed.EMBED_MAX_LENGTH_BOT, MESSAGE_EMBED_MAX_FIELDS) {
+                        .chunkedBy(MessageEmbed.EMBED_MAX_LENGTH_BOT, 25) {
                             it.first.length + it.second.length
                         }
                         .forEach { embeds ->
@@ -106,12 +105,12 @@ module("Autoreact", isOptional = true, defaultAccess = Access.Guild.All(Permissi
     }
 
     listener<MessageReceivedEvent> {
-        if (guild?.idLong in reactMap && author != jda.selfUser) {
+        if (guild.idLong in reactMap && author != jda.selfUser) {
             reactMap[guild.idLong]!!
                 .filter { it.key in message.contentRaw }
                 .values
                 .flatten()
-                .forEach { message?.addReaction(it.emote)?.queue() }
+                .forEach { message.addReaction(it.emote)?.queue() }
         }
     }
 }

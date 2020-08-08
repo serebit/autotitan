@@ -4,18 +4,18 @@ import com.serebit.autotitan.api.LongString
 import com.serebit.autotitan.api.command
 import com.serebit.autotitan.api.module
 import com.serebit.autotitan.extensions.sendEmbed
-import io.ktor.client.HttpClient
-import io.ktor.client.call.call
-import io.ktor.client.response.readText
-import io.ktor.http.HttpStatusCode
+import io.ktor.client.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
 
 val gson = Gson()
 val client = HttpClient()
 
 suspend fun randomPostOrNull(provider: ImageProvider, tags: String): ApiPost? {
-    val response = client
-        .call("https://${provider.baseUri}/index.php?page=dapi&s=post&q=index&tags=$tags&json=1")
-        .response
+    val response: HttpResponse =
+        client.get("https://${provider.baseUri}/index.php?page=dapi&s=post&q=index&tags=$tags&json=1")
+
     return if (response.status == HttpStatusCode.OK && response.readText().isNotBlank()) {
         gson.fromJson<List<ApiPost>>(response.readText())
             .filter { !it.image.endsWith(".webm") }
@@ -42,7 +42,7 @@ data class ApiPost(
 
 module("Rule34", isOptional = true) {
     command("rule34", "Searches Rule34.xxx for the given tags and returns a random image.") { tagString: LongString ->
-        if (guild != null && textChannel.isNSFW || privateChannel != null) {
+        if (isFromGuild && textChannel.isNSFW || !isFromGuild) {
             randomPostOrNull(ImageProvider.RULE34XXX, formatTags(tagString.value))?.let { post ->
                 channel.sendEmbed {
                     setImage(post.rule34xxxImageUri)
@@ -58,7 +58,7 @@ module("Rule34", isOptional = true) {
         "gelbooru",
         "Searches Gelbooru.com for the given tags and returns a random image."
     ) { tagString: LongString ->
-        if (guild != null && textChannel.isNSFW || privateChannel != null) {
+        if (isFromGuild && textChannel.isNSFW || !isFromGuild) {
             val formattedTags = formatTags(tagString.value)
             randomPostOrNull(ImageProvider.GELBOORU, formattedTags)?.let { post ->
                 channel.sendEmbed {

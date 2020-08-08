@@ -5,13 +5,12 @@ import com.serebit.autotitan.api.command
 import com.serebit.autotitan.api.module
 import com.serebit.autotitan.extensions.limitLengthTo
 import com.serebit.autotitan.extensions.sendEmbed
-import io.ktor.client.HttpClient
-import io.ktor.client.call.call
-import io.ktor.client.response.readText
-import io.ktor.http.HttpStatusCode
+import io.ktor.client.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
-import java.net.URLEncoder
 
 object UrbanDictionaryApi {
     private val serializer = Gson()
@@ -29,9 +28,9 @@ object UrbanDictionaryApi {
     private suspend fun existsOrCacheDefinition(query: String): Boolean = if (query in resultCache) {
         true
     } else {
-        val uri = "https://api.urbandictionary.com/v0/define?term=${URLEncoder.encode(query, "UTF-8")}"
+        val uri = "https://api.urbandictionary.com/v0/define?term=$query"
 
-        val response = client.call(uri).response
+        val response: HttpResponse = client.get(uri)
         if (response.status == HttpStatusCode.OK) {
             val definitions = serializer.fromJson<Result>(response.readText()).list
             if (definitions.isNotEmpty()) {

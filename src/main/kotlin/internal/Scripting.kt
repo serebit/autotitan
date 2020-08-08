@@ -2,7 +2,7 @@ package com.serebit.autotitan.internal
 
 import java.io.File
 import kotlin.script.experimental.annotations.KotlinScript
-import kotlin.script.experimental.api.defaultImports
+import kotlin.script.experimental.api.ScriptDiagnostic
 import kotlin.script.experimental.host.toScriptSource
 import kotlin.script.experimental.jvm.dependenciesFromCurrentContext
 import kotlin.script.experimental.jvm.jvm
@@ -18,16 +18,12 @@ internal class ScriptCompiler {
         jvm {
             dependenciesFromCurrentContext(wholeClasspath = true)
         }
-
-        defaultImports(
-            "com.serebit.autotitan.api.*", "com.serebit.autotitan.extensions.*",
-            "net.dv8tion.jda.core.*"
-        )
     }
 
     fun eval(file: File) {
         host.eval(file.readText().toScriptSource(), config, null)
-            .reports.forEach { println(it.message) }
+            .reports
+            .filter { it.severity == ScriptDiagnostic.Severity.ERROR }.forEach { println(it.message) }
     }
 
     companion object {

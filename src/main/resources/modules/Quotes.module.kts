@@ -1,8 +1,7 @@
 import com.serebit.autotitan.api.*
-import com.serebit.autotitan.extensions.sendEmbed
-import com.serebit.autotitan.extensions.limitLengthTo
 import com.serebit.autotitan.extensions.chunkedBy
-import com.serebit.autotitan.extensions.MESSAGE_EMBED_MAX_FIELDS
+import com.serebit.autotitan.extensions.limitLengthTo
+import com.serebit.autotitan.extensions.sendEmbed
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.MessageEmbed
@@ -52,7 +51,7 @@ module("Quotes", isOptional = true, defaultAccess = Access.Guild.All()) {
                 author.openPrivateChannel().queue({ privateChannel ->
                     quoteMap[guild.idLong]!!.filterNotNull().mapIndexed { index, quote ->
                         index.toString() to quote.trimWhitespace().limitLengthTo(MessageEmbed.VALUE_MAX_LENGTH)
-                    }.chunkedBy(MessageEmbed.EMBED_MAX_LENGTH_BOT, MESSAGE_EMBED_MAX_FIELDS) {
+                    }.chunkedBy(MessageEmbed.EMBED_MAX_LENGTH_BOT, 25) {
                         it.first.length + it.second.length
                     }.forEach { embeds ->
                         privateChannel.sendEmbed {

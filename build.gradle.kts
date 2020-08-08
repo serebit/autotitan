@@ -17,7 +17,6 @@ repositories {
 }
 
 dependencies {
-    implementation(kotlin("reflect"))
     implementation(kotlin("scripting-jvm"))
     implementation(kotlin("scripting-jvm-host"))
     implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-core", "1.3.8-1.4.0-rc")

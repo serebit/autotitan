@@ -3,7 +3,6 @@ package com.serebit.autotitan.extensions
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDABuilder
-import net.dv8tion.jda.api.entities.Emote
 import net.dv8tion.jda.api.entities.MessageChannel
 import net.dv8tion.jda.api.entities.TextChannel
 import net.dv8tion.jda.api.entities.User
@@ -13,35 +12,10 @@ import net.dv8tion.jda.api.requests.restaction.MessageAction
 inline fun jda(token: String, init: JDABuilder.() -> Unit): JDA =
     JDABuilder.create(token, GatewayIntent.getIntents(GatewayIntent.ALL_INTENTS)).apply(init).build().awaitReady()
 
-fun JDA.getUserByMention(mention: String): User? = try {
-    getUserById(
-        mention
-            .removeSurrounding("<@", ">")
-            .removePrefix("!")
-    )
-} catch (ex: IllegalArgumentException) {
-    null
-}
-
-fun JDA.getEmoteByMention(mention: String): Emote? = try {
-    getEmoteById(
-        mention
-            .removeSurrounding("<", ">")
-            .replace(":\\S+:".toRegex(), "")
-    )
-} catch (ex: IllegalArgumentException) {
-    null
-}
-
 inline fun MessageChannel.sendEmbed(init: EmbedBuilder.() -> Unit): MessageAction =
     sendMessage(EmbedBuilder().apply {
         setColor((this@sendEmbed as? TextChannel)?.guild?.selfMember?.color)
         init()
-    }.build())
-
-fun MessageChannel.sendEmbed(embedBuilder: EmbedBuilder): MessageAction =
-    sendMessage(embedBuilder.apply {
-        setColor((this@sendEmbed as? TextChannel)?.guild?.selfMember?.color)
     }.build())
 
 fun String.limitLengthTo(max: Int): String = if (length > max) {

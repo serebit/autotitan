@@ -10,17 +10,15 @@ import kotlinx.coroutines.coroutineScope
 import java.io.File
 import java.nio.file.FileSystems
 import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
-import kotlin.streams.toList
+import kotlin.streams.asSequence
 
 internal class ModuleLoader {
     private val compiler = ScriptCompiler()
 
     suspend fun loadModules(config: BotConfig): List<Module> = coroutineScope {
-        loadScripts().map { scriptFile ->
+        loadScripts().map { (fileName, scriptFile) ->
             async {
-                logger.debug("Loading module from file ${scriptFile.name}...")
+                logger.debug("Loading module from file $fileName...")
                 compiler.eval(scriptFile)
             }
         }.awaitAll()
@@ -32,23 +30,22 @@ internal class ModuleLoader {
 
     private fun loadScripts() = loadInternalScripts() + loadExternalScripts()
 
-    private fun loadInternalScripts(): List<File> {
+    private fun loadInternalScripts(): List<Pair<String, File>> {
         val modulesUri = ModuleLoader::class.java.classLoader.getResource("modules")!!.toURI()
+        val modulesPath = FileSystems.newFileSystem(modulesUri, mutableMapOf<String, Any>()).getPath("modules")
 
-        val modulesPath: Path = (if (modulesUri.scheme == "jar") {
-            val fileSystem = FileSystems.newFileSystem(modulesUri, mutableMapOf<String, Any>())
-            fileSystem.getPath("modules")
-        } else Paths.get(modulesUri))
-
-        val validScripts = Files.walk(modulesPath, 1).map { path ->
-            path.toString().let { it.removePrefix(it.substringBefore("modules")) }
-        }.toList()
-
-        return validScripts.filter { it.endsWith(ScriptCompiler.SCRIPT_EXTENSION) }.mapNotNull { internalResource(it) }
+        return Files.walk(modulesPath, 1).asSequence()
+            .map { it.toString() }
+            .map { it.removePrefix(it.substringBefore("modules")) }
+            .filter { it.endsWith(ScriptCompiler.SCRIPT_EXTENSION) }
+            .mapNotNull { path -> internalResource(path)?.let { path to it } }
+            .toList()
     }
 
-    private fun loadExternalScripts(): List<File> = classpathResource("modules").listFiles()
-        ?.filter { it.extension == ScriptCompiler.SCRIPT_EXTENSION } ?: emptyList()
+    private fun loadExternalScripts(): List<Pair<String, File>> = classpathResource("modules").listFiles()
+        ?.filter { it.extension == ScriptCompiler.SCRIPT_EXTENSION }
+        ?.map { it.name to it }
+        ?: emptyList()
 }
 
 @PublishedApi

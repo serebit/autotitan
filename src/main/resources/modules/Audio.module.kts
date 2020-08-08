@@ -12,6 +12,8 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackState
 import com.serebit.autotitan.api.*
 import com.serebit.autotitan.extensions.sendEmbed
+import com.serebit.logkat.error
+import com.serebit.logkat.warn
 import net.dv8tion.jda.api.audio.AudioSendHandler
 import net.dv8tion.jda.api.audio.hooks.ConnectionListener
 import net.dv8tion.jda.api.audio.hooks.ConnectionStatus
@@ -43,11 +45,11 @@ enum class VoiceStatus(private val errorMessage: String?) {
             val userIsConnected = evt.member!!.voiceState!!.inVoiceChannel()
             val differentChannel = evt.member!!.voiceState!!.channel != evt.guild.audioManager.connectedChannel
             return when {
-                !userIsConnected && selfIsConnected -> VoiceStatus.SELF_CONNECTED_USER_DISCONNECTED
-                !selfIsConnected && userIsConnected -> VoiceStatus.SELF_DISCONNECTED_USER_CONNECTED
-                !selfIsConnected && !userIsConnected -> VoiceStatus.NEITHER_CONNECTED
-                differentChannel -> VoiceStatus.BOTH_CONNECTED_DIFFERENT_CHANNEL
-                else -> VoiceStatus.BOTH_CONNECTED_SAME_CHANNEL
+                !userIsConnected && selfIsConnected -> SELF_CONNECTED_USER_DISCONNECTED
+                !selfIsConnected && userIsConnected -> SELF_DISCONNECTED_USER_CONNECTED
+                !selfIsConnected && !userIsConnected -> NEITHER_CONNECTED
+                differentChannel -> BOTH_CONNECTED_DIFFERENT_CHANNEL
+                else -> BOTH_CONNECTED_SAME_CHANNEL
             }
         }
     }
@@ -126,7 +128,6 @@ class GuildTrackManager(audioManager: AudioManager) : AudioEventAdapter() {
             player.volume = value.coerceIn(0..maxVolume)
         }
     val isPlaying: Boolean get() = player.playingTrack != null
-    val isNotPlaying get() = !isPlaying
     val isPaused: Boolean get() = isPlaying && player.isPaused
     val isNotPaused: Boolean get() = !isPaused
 
@@ -265,7 +266,7 @@ inline fun leaveVoiceChannel(guild: Guild, crossinline onDisconnect: () -> Unit 
 
 inline fun connectToVoiceChannel(voiceChannel: VoiceChannel, crossinline onConnect: () -> Unit = {}) {
     val audioManager = voiceChannel.guild.audioManager
-    if (!audioManager.isConnected && !audioManager.isAttemptingToConnect) {
+    if (!audioManager.isConnected) {
         audioManager.openAudioConnection(voiceChannel, onConnect)
     }
 }

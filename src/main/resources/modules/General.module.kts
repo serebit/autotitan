@@ -1,4 +1,3 @@
-
 import com.serebit.autotitan.api.Access
 import com.serebit.autotitan.api.command
 import com.serebit.autotitan.api.module

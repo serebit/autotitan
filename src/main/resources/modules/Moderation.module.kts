@@ -3,7 +3,7 @@ import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.*
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent
-import net.dv8tion.jda.api.events.guild.member.GuildMemberLeaveEvent
+import net.dv8tion.jda.api.events.guild.member.GuildMemberRemoveEvent
 
 class GuildRoleMap : MutableMap<Long, Long> by mutableMapOf() {
     operator fun contains(key: Guild) = contains(key.idLong)
@@ -131,7 +131,7 @@ module("Moderation") {
         }
     }
 
-    listener<GuildMemberLeaveEvent> {
+    listener<GuildMemberRemoveEvent> {
         welcomeMessages[guild.idLong]?.let { data ->
             data.leaveMessage?.let {
                 val formatted = it.format(user.name, user.asMention)
