@@ -27,7 +27,7 @@ dependencies {
     implementation("org.slf4j", "slf4j-simple", "2.0.0-alpha1")
     implementation("com.vdurmont", "emoji-java", "5.1.1")
     implementation("com.github.ajalt", "clikt", "2.8.0")
-    implementation("com.github.salomonbrys.kotson", "kotson", "2.5.0")
+    implementation("com.fasterxml.jackson.module", "jackson-module-kotlin", "2.11.2")
 }
 
 kotlin.sourceSets["main"].languageSettings.apply {

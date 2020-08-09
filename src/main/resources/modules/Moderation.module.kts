@@ -5,9 +5,7 @@ import net.dv8tion.jda.api.entities.*
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRemoveEvent
 
-private class GuildRoleMap {
-    private val map = mutableMapOf<Long, Long>()
-
+data class GuildRoleMap(val map: MutableMap<Long, Long> = mutableMapOf()) {
     operator fun contains(key: Guild) = map.contains(key.idLong)
 
     operator fun get(jda: JDA, key: Guild): Role? = jda.getRoleById(map[key.idLong] ?: -1L)

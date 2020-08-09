@@ -1,6 +1,7 @@
 package com.serebit.autotitan.internal
 
-import java.io.File
+import com.serebit.autotitan.api.logger
+import com.serebit.logkat.error
 import kotlin.script.experimental.annotations.KotlinScript
 import kotlin.script.experimental.api.ScriptDiagnostic
 import kotlin.script.experimental.host.toScriptSource
@@ -20,10 +21,11 @@ internal class ScriptCompiler {
         }
     }
 
-    fun eval(file: File) {
-        host.eval(file.readText().toScriptSource(), config, null)
+    fun eval(fileName: String, scriptText: String) {
+        host.eval(scriptText.toScriptSource(), config, null)
             .reports
-            .filter { it.severity == ScriptDiagnostic.Severity.ERROR }.forEach { println(it.message) }
+            .filter { it.severity == ScriptDiagnostic.Severity.ERROR }
+            .forEach { logger.error("Error in ${fileName}: ${it.message}") }
     }
 
     companion object {

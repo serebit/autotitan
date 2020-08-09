@@ -7,7 +7,6 @@ import com.serebit.logkat.debug
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import java.io.File
 import java.nio.file.FileSystems
 import java.nio.file.Files
 import kotlin.streams.asSequence
@@ -16,10 +15,10 @@ internal class ModuleLoader {
     private val compiler = ScriptCompiler()
 
     suspend fun loadModules(config: BotConfig): List<Module> = coroutineScope {
-        loadScripts().map { (fileName, scriptFile) ->
+        loadScripts().map { (fileName, scriptText) ->
             async {
                 logger.debug("Loading module from file $fileName...")
-                compiler.eval(scriptFile)
+                compiler.eval(fileName, scriptText)
             }
         }.awaitAll()
 
@@ -30,7 +29,7 @@ internal class ModuleLoader {
 
     private fun loadScripts() = loadInternalScripts() + loadExternalScripts()
 
-    private fun loadInternalScripts(): List<Pair<String, File>> {
+    private fun loadInternalScripts(): Map<String, String> {
         val modulesUri = ModuleLoader::class.java.classLoader.getResource("modules")!!.toURI()
         val modulesPath = FileSystems.newFileSystem(modulesUri, mutableMapOf<String, Any>()).getPath("modules")
 
@@ -38,14 +37,14 @@ internal class ModuleLoader {
             .map { it.toString() }
             .map { it.removePrefix(it.substringBefore("modules")) }
             .filter { it.endsWith(ScriptCompiler.SCRIPT_EXTENSION) }
-            .mapNotNull { path -> internalResource(path)?.let { path to it } }
-            .toList()
+            .mapNotNull { path -> readInternalResource(path)?.let { path to it } }
+            .toMap()
     }
 
-    private fun loadExternalScripts(): List<Pair<String, File>> = classpathResource("modules").listFiles()
+    private fun loadExternalScripts(): Map<String, String> = classpathResource("modules").listFiles()
         ?.filter { it.extension == ScriptCompiler.SCRIPT_EXTENSION }
-        ?.map { it.name to it }
-        ?: emptyList()
+        ?.associate { it.name to it.readText() }
+        ?: emptyMap()
 }
 
 @PublishedApi

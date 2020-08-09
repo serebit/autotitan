@@ -10,6 +10,5 @@ private val classpath: File = codeSource.parentFile
 
 internal fun classpathResource(path: String) = classpath.resolve(path)
 
-internal fun internalResource(path: String): File? = createTempFile().also {
-    classLoader.getResourceAsStream(path)?.copyTo(it.outputStream())
-}
+internal fun readInternalResource(path: String): String? =
+    classLoader.getResourceAsStream(path)?.readBytes()?.decodeToString()
