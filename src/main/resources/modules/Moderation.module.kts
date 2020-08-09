@@ -5,12 +5,14 @@ import net.dv8tion.jda.api.entities.*
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRemoveEvent
 
-class GuildRoleMap : MutableMap<Long, Long> by mutableMapOf() {
-    operator fun contains(key: Guild) = contains(key.idLong)
+private class GuildRoleMap {
+    private val map = mutableMapOf<Long, Long>()
 
-    operator fun get(jda: JDA, key: Guild): Role? = jda.getRoleById(get(key.idLong) ?: -1L)
+    operator fun contains(key: Guild) = map.contains(key.idLong)
 
-    operator fun set(key: Guild, value: Role) = put(key.idLong, value.idLong)
+    operator fun get(jda: JDA, key: Guild): Role? = jda.getRoleById(map[key.idLong] ?: -1L)
+
+    operator fun set(key: Guild, value: Role) = map.put(key.idLong, value.idLong)
 }
 
 data class WelcomeMessageData(var channelId: Long, var joinMessage: String? = null, var leaveMessage: String? = null)
