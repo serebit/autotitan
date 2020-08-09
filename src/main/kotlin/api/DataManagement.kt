@@ -3,7 +3,6 @@ package com.serebit.autotitan.api
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.serebit.autotitan.internal.classpathResource
-import kotlinx.serialization.Serializable
 
 /*
  kotlinx.serialization needs to do a pass over classes marked with @Serializable during compile time, so because scripts
@@ -29,10 +28,10 @@ class DataManager internal constructor(moduleName: String) {
     }
 }
 
-@Serializable
-class GuildResourceMap<K, V> : MutableMap<Long, MutableMap<K, V>> by mutableMapOf()
+data class GuildResourceMap<K, V>(val map: MutableMap<Long, MutableMap<K, V>> = mutableMapOf()) :
+    MutableMap<Long, MutableMap<K, V>> by map
 
-@Serializable
-class GuildResourceList<E> : MutableMap<Long, MutableList<E>> by mutableMapOf()
+data class GuildResourceList<E>(val map: MutableMap<Long, MutableList<E>> = mutableMapOf()) :
+    MutableMap<Long, MutableList<E>> by map
 
 val logger = com.serebit.logkat.Logger()
