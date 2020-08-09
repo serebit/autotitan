@@ -1,11 +1,11 @@
 package com.serebit.autotitan.internal
 
+import com.serebit.autotitan.BotConfig
 import com.serebit.autotitan.api.Access
 import com.serebit.autotitan.api.CommandTemplate
 import com.serebit.autotitan.api.GroupTemplate
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.asFlow
 import net.dv8tion.jda.api.entities.MessageEmbed
+import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.events.GenericEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 
@@ -19,7 +19,8 @@ internal class Module(
     val isOptional: Boolean,
     groupTemplates: List<GroupTemplate>,
     commandTemplates: List<CommandTemplate>,
-    private val listeners: List<Listener>
+    private val listeners: List<Listener>,
+    val config: BotConfig
 ) {
     val allCommandsField get() = getCommandField(commands)
     val isStandard get() = !isOptional
@@ -43,8 +44,37 @@ internal class Module(
         return if (fieldValue.isNotEmpty()) MessageEmbed.Field(name, fieldValue, false) else null
     }
 
-    fun listeners(): Flow<Listener> = listeners.asFlow()
-    fun commands(): Flow<Command> = commands.asFlow()
+    suspend fun invoke(evt: GenericEvent) {
+        listeners.forEach {
+            when (it) {
+                is Listener.Suspending -> it(evt)
+                is Listener.Normal -> it(evt)
+            }
+        }
+        if (evt is MessageReceivedEvent && evt.isCommandInvocation) {
+            val rawContent = evt.message.contentRaw.removePrefix(config.prefix)
+            allCommands
+                .asSequence()
+                .filter { it.access.matches(evt) }
+                .mapNotNull { command ->
+                    Parser.tokenize(rawContent, command.invocationSignature)?.let { command to it }
+                }
+                .mapNotNull { (command, tokens) ->
+                    Parser.parseTokens(evt, tokens, command.tokenTypes)?.let { command to it }
+                }
+                .firstOrNull()?.let { (command, parameters) ->
+                    when (command) {
+                        is Command.Suspending -> command(evt, parameters)
+                        is Command.Normal -> command(evt, parameters)
+                    }
+                }
+        }
+    }
+
+    private val MessageReceivedEvent.isCommandInvocation
+        get() = message.contentRaw.startsWith(config.prefix) && author.canInvokeCommands
+
+    private val User.canInvokeCommands get() = !isBot && idLong !in config.blackList
 
     fun helpFieldsBySignature(signature: String): List<MessageEmbed.Field> =
         allInvokeable.filter { it.helpSignature.matches(signature) }.map { it.helpField }
