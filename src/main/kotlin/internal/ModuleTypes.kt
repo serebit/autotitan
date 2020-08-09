@@ -21,25 +21,26 @@ internal class Module(
     commandTemplates: List<CommandTemplate>,
     private val listeners: List<Listener>
 ) {
-    val commandListField
-        get() = MessageEmbed.Field(name, commands.filter { !it.isHidden }.joinToString { it.summary }, false)
+    val allCommandsField get() = getCommandField(commands)
     val isStandard get() = !isOptional
     private val groups = groupTemplates.map { it.build() }
     private val commands = commandTemplates.map { it.build(null) }
     private val allCommands = commands + groups.map { it.commands }.flatten()
     private val allInvokeable = allCommands + groups
 
-    fun getInvokeableCommandField(evt: MessageReceivedEvent): MessageEmbed.Field? {
-        val validCommands = commands.filter { it.access.matches(evt) && !it.isHidden }
-        return if (validCommands.isNotEmpty()) {
-            val fieldValue = buildString {
-                if (groups.isNotEmpty()) {
-                    appendLine("*Groups:* ${groups.joinToString(prefix = "`", postfix = "`") { it.name }}")
-                }
-                if (commands.isNotEmpty()) append("*Commands:* ${validCommands.joinToString { it.summary }}")
+    fun getInvokeableCommandField(evt: MessageReceivedEvent) =
+        getCommandField(commands.filter { it.access.matches(evt) && !it.isHidden })
+
+    private fun getCommandField(includedCommands: List<Command>): MessageEmbed.Field? {
+        val fieldValue = buildString {
+            if (groups.isNotEmpty()) {
+                appendLine("*Groups:* ${groups.joinToString { "`${it.name}`" }}")
             }
-            MessageEmbed.Field(name, fieldValue, false)
-        } else null
+            if (includedCommands.isNotEmpty()) {
+                append("*Commands:* ${includedCommands.joinToString { it.summary }}")
+            }
+        }
+        return if (fieldValue.isNotEmpty()) MessageEmbed.Field(name, fieldValue, false) else null
     }
 
     fun listeners(): Flow<Listener> = listeners.asFlow()

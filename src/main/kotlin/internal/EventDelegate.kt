@@ -90,7 +90,7 @@ internal class EventDelegate(private val config: BotConfig) : ListenerAdapter() 
             command("allCommands", "Sends an embed with all commands listed.") {
                 channel.sendEmbed {
                     loadedModules.sortedBy { it.name }.forEach { module ->
-                        addField(module.commandListField)
+                        addField(module.allCommandsField)
                     }
                 }.queue()
             }
