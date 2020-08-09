@@ -153,7 +153,7 @@ internal class EventDelegate(private val config: BotConfig) : ListenerAdapter() 
                 command("list", "Sends a list of all the modules.") {
                     channel.sendEmbed {
                         setTitle("Modules")
-                        setDescription(allModules.joinToString("\n") {
+                        setDescription(allModules.sortedBy { it.name }.joinToString("\n") {
                             it.name + if (it.isOptional) " (Optional)" else ""
                         })
                     }.queue()
