@@ -9,6 +9,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.requests.RestAction
 import java.time.Clock
 import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
 
 fun Message.addReaction(emote: Emote): RestAction<Void>? = when (emote) {
     is Emote.Jda -> jda.getEmoteById(emote.id)?.let { addReaction(it) }
@@ -26,7 +27,7 @@ data class EmoteData(
     companion object {
         fun from(emote: Emote, evt: MessageReceivedEvent): EmoteData = EmoteData(
             emote,
-            OffsetDateTime.now(Clock.systemUTC()).toString(),
+            OffsetDateTime.now(Clock.systemUTC()).format(DateTimeFormatter.ISO_INSTANT),
             evt.author.idLong,
             evt.channel.idLong
         )
@@ -35,7 +36,7 @@ data class EmoteData(
 
 val maxReactionsPerMessage = 20
 
-optionalModule("Autoreact", defaultAccess = Access.Guild.All(Permission.MESSAGE_ADD_REACTION)) {
+optionalModule("AutoReact", defaultAccess = Access.Guild.All(Permission.MESSAGE_ADD_REACTION)) {
     val reactMap = dataManager.readOrDefault("reacts.json") {
         GuildResourceMap<String, MutableList<EmoteData>>()
     }

@@ -7,12 +7,15 @@ import com.serebit.logkat.debug
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import java.net.URI
+import java.nio.file.FileSystem
 import java.nio.file.FileSystems
 import java.nio.file.Files
 import kotlin.streams.asSequence
 
 internal class ModuleLoader {
     private val compiler = ScriptCompiler()
+    private val fileSystems: MutableMap<URI, FileSystem> = mutableMapOf()
 
     suspend fun loadModules(config: BotConfig): List<Module> = coroutineScope {
         loadScripts().map { (fileName, scriptText) ->
@@ -30,8 +33,10 @@ internal class ModuleLoader {
     private fun loadScripts() = loadInternalScripts() + loadExternalScripts()
 
     private fun loadInternalScripts(): Map<String, String> {
-        val modulesUri = ModuleLoader::class.java.classLoader.getResource("modules")!!.toURI()
-        val modulesPath = FileSystems.newFileSystem(modulesUri, mutableMapOf<String, Any>()).getPath("modules")
+        val modulesUri: URI = ModuleLoader::class.java.classLoader.getResource("modules")!!.toURI()
+        val modulesPath = fileSystems.getOrPut(modulesUri) {
+            FileSystems.newFileSystem(modulesUri, mutableMapOf<String, Any>())
+        }.getPath("modules")
 
         return Files.walk(modulesPath, 1).asSequence()
             .map { it.toString() }
