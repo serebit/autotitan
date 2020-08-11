@@ -1,3 +1,4 @@
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.serebit.autotitan.api.*
 import com.serebit.autotitan.extensions.chunkedBy
 import com.serebit.autotitan.extensions.limitLengthTo
@@ -12,8 +13,8 @@ import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
 fun Message.addReaction(emote: Emote): RestAction<Void>? = when (emote) {
-    is Emote.Jda -> jda.getEmoteById(emote.id)?.let { addReaction(it) }
-    is Emote.Unicode -> addReaction(emote.unicode)
+    is Emote.Jda -> jda.getEmoteById(emote.emoteIdValue!!)?.let { addReaction(it) }
+    is Emote.Unicode -> addReaction(emote.unicodeValue!!)
 }
 
 data class EmoteData(
@@ -22,7 +23,8 @@ data class EmoteData(
     val authorId: Long,
     val channelId: Long
 ) {
-    val creationTime: OffsetDateTime get() = OffsetDateTime.parse(creationTimestamp)
+    @JsonIgnore
+    val creationTime: OffsetDateTime = OffsetDateTime.parse(creationTimestamp)
 
     companion object {
         fun from(emote: Emote, evt: MessageReceivedEvent): EmoteData = EmoteData(

@@ -1,5 +1,7 @@
 package com.serebit.autotitan.api
 
+import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonProperty
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.MessageChannel
 
@@ -12,17 +14,17 @@ sealed class Emote {
 
     abstract fun asMention(guild: Guild): String
 
-    data class Jda(val id: Long) : Emote() {
+    data class Jda(val emoteIdValue: Long) : Emote() {
         override fun canInteract(channel: MessageChannel) =
-            channel.jda.getEmoteById(id)!!.canInteract(channel.jda.selfUser, channel, true)
+            channel.jda.getEmoteById(emoteIdValue)!!.canInteract(channel.jda.selfUser, channel, true)
 
-        override fun asMention(guild: Guild): String = guild.getEmoteById(id)!!.asMention
+        override fun asMention(guild: Guild): String = guild.getEmoteById(emoteIdValue)!!.asMention
     }
 
-    data class Unicode(val unicode: String) : Emote() {
+    data class Unicode(val unicodeValue: String) : Emote() {
         override fun canInteract(channel: MessageChannel) = true
 
-        override fun asMention(guild: Guild): String = unicode
+        override fun asMention(guild: Guild): String = unicodeValue
     }
 
     companion object {
@@ -36,5 +38,10 @@ sealed class Emote {
 
         private fun Guild.getEmoteByMention(mention: String): net.dv8tion.jda.api.entities.Emote? =
             getEmoteById(mention.removeSurrounding("<", ">").replace(":\\S+:".toRegex(), ""))
+
+        @JsonCreator
+        @JvmStatic
+        fun fromJson(@JsonProperty emoteIdValue: Long? = null, @JsonProperty unicodeValue: String?) =
+            if (emoteIdValue != null) Jda(emoteIdValue) else if (unicodeValue != null) Unicode(unicodeValue) else null
     }
 }

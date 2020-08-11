@@ -1,6 +1,7 @@
 package com.serebit.autotitan.api
 
 import com.serebit.autotitan.internal.ScriptContext
+import com.serebit.logkat.error
 import net.dv8tion.jda.api.events.GenericEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import kotlin.reflect.typeOf
@@ -9,13 +10,21 @@ inline fun defaultModule(
     name: String,
     defaultAccess: Access = Access.All(),
     init: ModuleTemplate.() -> Unit
-) = ScriptContext.pushModule(ModuleTemplate(name, false, defaultAccess).apply(init))
+) = try {
+    ScriptContext.pushModule(ModuleTemplate(name, false, defaultAccess).apply(init))
+} catch (ex: Exception) {
+    logger.error("Failed to load module with name $name due to ${ex.stackTraceToString()}")
+}
 
 inline fun optionalModule(
     name: String,
     defaultAccess: Access = Access.All(),
     init: ModuleTemplate.() -> Unit
-) = ScriptContext.pushModule(ModuleTemplate(name, true, defaultAccess).apply(init))
+) = try {
+    ScriptContext.pushModule(ModuleTemplate(name, false, defaultAccess).apply(init))
+} catch (ex: Exception) {
+    logger.error("Failed to load module with name $name due to ${ex.stackTraceToString()}")
+}
 
 inline fun ModuleTemplate.group(
     name: String,
