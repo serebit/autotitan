@@ -1,8 +1,8 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.4.0-rc"
-    kotlin("plugin.serialization") version "1.4.0-rc"
+    kotlin("jvm") version "1.4.0"
+    kotlin("plugin.serialization") version "1.4.0"
     id("com.github.johnrengelman.shadow") version "6.0.0"
     id("com.github.ben-manes.versions") version "0.29.0"
 }
@@ -19,7 +19,7 @@ repositories {
 dependencies {
     implementation(kotlin("scripting-jvm"))
     implementation(kotlin("scripting-jvm-host"))
-    implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-core", "1.3.8-1.4.0-rc")
+    implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-core", "1.3.9")
     implementation("org.jetbrains.kotlinx", "kotlinx-serialization-runtime", "1.0-M1-1.4.0-rc")
     implementation("com.serebit.logkat", "logkat-jvm", "0.5.3")
     implementation("net.dv8tion", "JDA", "4.2.0_187")
