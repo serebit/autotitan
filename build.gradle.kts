@@ -8,12 +8,12 @@ plugins {
 }
 
 group = "com.serebit"
-version = "0.7.2"
+version = "0.7.3"
 description = "AutoTitan is a modular, self-hosted Discord bot built in Kotlin/JVM using the Java Discord API."
 
 repositories {
-    jcenter()
     mavenCentral()
+    jcenter()
 }
 
 dependencies {
@@ -22,7 +22,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-core", "1.3.9")
     implementation("org.jetbrains.kotlinx", "kotlinx-serialization-core", "1.0.0-RC")
     implementation("com.serebit.logkat", "logkat", "0.6.0")
-    implementation("net.dv8tion", "JDA", "4.2.0_187")
+    implementation("net.dv8tion", "JDA", "4.2.0_194")
     implementation("com.sedmelluq", "lavaplayer", "1.3.50")
     implementation("org.slf4j", "slf4j-simple", "2.0.0-alpha1")
     implementation("com.vdurmont", "emoji-java", "5.1.1")
@@ -35,13 +35,16 @@ kotlin.sourceSets["main"].languageSettings.apply {
     enableLanguageFeature("InlineClasses")
 }
 
-tasks {
-    withType<KotlinCompile> {
-        kotlinOptions.jvmTarget = "1.8"
-    }
+kotlin.sourceSets["main"].languageSettings.progressiveMode = true
 
-    shadowJar {
-        archiveFileName.set("${archiveBaseName.get()}-${archiveVersion.get()}.${archiveExtension.get()}")
-        manifest.attributes["Main-Class"] = "com.serebit.autotitan.MainKt"
+tasks.withType<KotlinCompile>().configureEach {
+    kotlinOptions {
+        useIR = true
+        jvmTarget = "1.8"
     }
+}
+
+tasks.shadowJar {
+    archiveFileName.set("${archiveBaseName.get()}-${archiveVersion.get()}.${archiveExtension.get()}")
+    manifest.attributes["Main-Class"] = "com.serebit.autotitan.MainKt"
 }
