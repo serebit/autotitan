@@ -38,10 +38,7 @@ kotlin.sourceSets["main"].languageSettings.apply {
 kotlin.sourceSets["main"].languageSettings.progressiveMode = true
 
 tasks.withType<KotlinCompile>().configureEach {
-    kotlinOptions {
-        useIR = true
-        jvmTarget = "1.8"
-    }
+    kotlinOptions.jvmTarget = "1.8"
 }
 
 tasks.shadowJar {
