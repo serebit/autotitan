@@ -6,6 +6,7 @@ import com.serebit.autotitan.extensions.sendEmbed
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.MessageEmbed
+import net.dv8tion.jda.api.entities.TextChannel
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.requests.RestAction
 import java.time.Clock
@@ -13,8 +14,8 @@ import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
 fun Message.addReaction(emote: Emote): RestAction<Void>? = when (emote) {
-    is Emote.Jda -> jda.getEmoteById(emote.emoteIdValue!!)?.let { addReaction(it) }
-    is Emote.Unicode -> addReaction(emote.unicodeValue!!)
+    is Emote.Jda -> jda.getEmoteById(emote.emoteIdValue)?.let { addReaction(it) }
+    is Emote.Unicode -> addReaction(emote.unicodeValue)
 }
 
 data class EmoteData(
@@ -108,7 +109,7 @@ optionalModule("AutoReact", defaultAccess = Access.Guild.All(Permission.MESSAGE_
     }
 
     listener<MessageReceivedEvent> {
-        if (guild.idLong in reactMap && author != jda.selfUser) {
+        if (channel is TextChannel && guild.idLong in reactMap && author != jda.selfUser) {
             reactMap[guild.idLong]!!
                 .filter { it.key in message.contentRaw }
                 .values

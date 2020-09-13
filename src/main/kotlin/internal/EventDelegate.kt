@@ -7,6 +7,7 @@ import com.serebit.autotitan.api.*
 import com.serebit.autotitan.extensions.sendEmbed
 import com.serebit.logkat.info
 import kotlinx.coroutines.*
+import net.dv8tion.jda.api.entities.TextChannel
 import net.dv8tion.jda.api.events.GenericEvent
 import net.dv8tion.jda.api.events.ReadyEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
@@ -92,9 +93,11 @@ internal class EventDelegate(private val config: BotConfig) : ListenerAdapter() 
             }
 
             listener<MessageReceivedEvent> {
-                val guildMention = if (isFromGuild) guild.selfMember.asMention else null
-                if (message.contentRaw == jda.selfUser.asMention || message.contentRaw == guildMention) {
-                    channel.sendMessage("My prefix is `${config.prefix}`.").queue()
+                if (channel is TextChannel) {
+                    val guildMention = if (isFromGuild) guild.selfMember.asMention else null
+                    if (message.contentRaw == jda.selfUser.asMention || message.contentRaw == guildMention) {
+                        channel.sendMessage("My prefix is `${config.prefix}`.").queue()
+                    }
                 }
             }
         }

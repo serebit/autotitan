@@ -11,11 +11,6 @@ fun String.trimWhitespace(): String = replace("(\\s){2,}".toRegex(), "$1$1")
 val Message.mentionsUsers get() = mentionedUsers.isNotEmpty() || mentionedMembers.isNotEmpty() || mentionsEveryone()
 
 optionalModule("Quotes", defaultAccess = Access.Guild.All()) {
-    try {
-        val quoteMap = dataManager.readOrDefault("quotes.json") { GuildResourceMap<Int, String>() }
-    } catch (e: Exception) {
-        e.printStackTrace()
-    }
     val quoteMap = dataManager.readOrDefault("quotes.json") { GuildResourceMap<Int, String>() }
         .withDefault { mutableMapOf() }
 

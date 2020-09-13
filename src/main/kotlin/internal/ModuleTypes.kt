@@ -129,7 +129,11 @@ internal sealed class Command(
         tokenTypes: List<TokenType>,
         private inline val function: (MessageReceivedEvent, List<Any>) -> Unit
     ) : Command(name, description, access, parent, tokenTypes) {
-        operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>) = function(evt, parameters)
+        operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>) = try {
+            function(evt, parameters)
+        } catch (ex: Exception) {
+            ex.printStackTrace()
+        }
     }
 
     class Suspending(
@@ -138,16 +142,28 @@ internal sealed class Command(
         tokenTypes: List<TokenType>,
         private inline val function: suspend (MessageReceivedEvent, List<Any>) -> Unit
     ) : Command(name, description, access, parent, tokenTypes) {
-        suspend operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>) = function(evt, parameters)
+        suspend operator fun invoke(evt: MessageReceivedEvent, parameters: List<Any>) = try {
+            function(evt, parameters)
+        } catch (ex: Exception) {
+            ex.printStackTrace()
+        }
     }
 }
 
 internal sealed class Listener {
     class Normal(private inline val function: (GenericEvent) -> Unit) : Listener() {
-        operator fun invoke(evt: GenericEvent) = function(evt)
+        operator fun invoke(evt: GenericEvent) = try {
+            function(evt)
+        } catch (ex: Exception) {
+            ex.printStackTrace()
+        }
     }
 
     class Suspending(private inline val function: suspend (GenericEvent) -> Unit) : Listener() {
-        suspend operator fun invoke(evt: GenericEvent) = function(evt)
+        suspend operator fun invoke(evt: GenericEvent) = try {
+            function(evt)
+        } catch (ex: Exception) {
+            ex.printStackTrace()
+        }
     }
 }
