@@ -34,7 +34,7 @@ optionalModule("Entertainment") {
             .hashCode()
             .plus(config.token.hashCode())
             .toLong()
-        val rating = Random(seed).nextInt(ratingDenominator)
+        val rating = Random(seed).nextInt(ratingDenominator + 1)
         channel.sendMessage("I'd give $thingToRate a `$rating/$ratingDenominator`.").queue()
     }
 }

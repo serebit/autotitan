@@ -17,7 +17,7 @@ import net.dv8tion.jda.api.requests.GatewayIntent
 import java.util.*
 
 const val NAME = "AutoTitan"
-const val VERSION = "0.7.4"
+const val VERSION = "0.7.5"
 
 class Cli : CliktCommand(name = "autotitan") {
     private val token by option("-t", "--token", help = "Specifies the token to use when logging into Discord.")
